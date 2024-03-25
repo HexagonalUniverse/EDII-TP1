@@ -4,7 +4,6 @@
 /.vs/
 /.vscode/
 
-
 # Object files
 *.o
 
@@ -17,8 +16,7 @@
 *.so
 
 # Executables
-*.exe
-
+# *.exe
 
 # Logging files
 *.out
