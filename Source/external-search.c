@@ -7,17 +7,17 @@
 */
 
 
-#include <iostream>
+#include <stdio.h>
 
 
 // Register and Data
 // -----------------
 
 // Register Data 2 array size.
-constexpr int RD2_SIZE = 1000;
+#define RD2_SIZE	1000;
 
 // Register Data 3 array size.
-constexpr int RD3_SIZE = 5000;
+#define RD3_SIZE	5000;
 
 
 // (...)
@@ -28,7 +28,6 @@ typedef struct {
 	char data_2[RD2_SIZE];
 	char data_3[RD3_SIZE];
 } register_t;	// 6008 [bytes]
-
 
 
 int main(int argc, char ** argsv) 
