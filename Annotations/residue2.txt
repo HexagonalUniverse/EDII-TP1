@@ -1,0 +1,13 @@
+#ifdef PAGESTACK_IMPLEMENTATION
+
+
+typedef struct {
+	page_t frames[page_frame_size];
+	size_t length;
+} PageStack;
+
+
+#endif
+
+
+

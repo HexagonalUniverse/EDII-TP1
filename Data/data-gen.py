@@ -19,6 +19,10 @@ from struct import pack
 from dataclasses import dataclass
 
 
+
+alpha_numericals: list[str] = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)] + [chr(i) for i in range(48, 58)]
+
+
 @dataclass(frozen=True)
 class Constants(object):
     """
@@ -30,11 +34,14 @@ class Constants(object):
         # method of imposing that restriction, an RuntimeError is raised at __init__.
         raise RuntimeError
 
-    data_2_string_length: int = 1000
-    data_3_string_length: int = 5000
+    data_2_string_length: int = 1_000
+    data_3_string_length: int = 5_000
 
     data_2_pack_fstr: str = f"{data_2_string_length}s"
     data_3_pack_fstr: str = f"{data_3_string_length}s"
+
+    INT_MAX: int = 2 ** 31 - 1
+    INT_MIN: int = - 2 ** 31
 
 
 
@@ -78,8 +85,7 @@ class Registry(object):
         return __key_data1 + __data2 + __data3
 
 
-
-class DataGen(object):
+class DataFactory(object):
     """
         TODO: The data has to be generated based on something...
     """
@@ -87,24 +93,63 @@ class DataGen(object):
     __acc_data: list[Registry]
     
     def __init__(self) -> None:
-        raise NotImplementedError
+        self.__acc_data: list[Registry] = list()
     
-    
-    def write_data(self, __filename: str) -> bool:
+    def write(self, __filename: str, sort: bool = True) -> bool:
         
-        with open(f"{__filename}", "wb") as bin_datafile:
-            ...
-            
-        raise NotImplementedError
+        # Sorting by key
+        if sort:
+            self.__acc_data.sort(key=lambda r: r.key)
 
+
+        with open(f"{__filename}", "wb") as bin_datafile:
+            
+            # For instance, let's just say that the header only contains
+            # the number of elements and that is it...
+            
+            bin_datafile.write(pack("i", len(self.__acc_data)))
+            
+            # Then the data itself...
+
+            for r in self.__acc_data:
+                bin_datafile.write(r.struct_bytes())
+            
+        # raise NotImplementedError
 
     def add_data(self, __reg: Registry) -> None: ...
     def gen_random_data(self) -> Registry: ...
+        
+    @staticmethod
+    def gen_random_noisy_registry() -> Registry:
+        from random import choice, randint
+
+        KEY_MIN: int = Constants.INT_MIN // 2 ** 8
+        KEY_MAX: int = Constants.INT_MAX // 2 ** 8
+
+        key: int = randint(KEY_MIN, KEY_MAX)
+        data_1: int = randint(Constants.INT_MIN, Constants.INT_MAX)
+               
+        data_2: str = "".join([choice(alpha_numericals) for _ in range(Constants.data_2_string_length - 1)]) + "\0"
+        data_3: str = "".join([choice(alpha_numericals) for _ in range(Constants.data_3_string_length - 1)]) + "\0"
+
+        r: Registry = Registry(key, data_1, data_2, data_3)
+        
+        print(f"Generated: {r}")
+        
+        return r
+
+    def gen_random_noisy_data(self, N: int) -> None:
+        for _ in range(N):
+            self.__acc_data.append(self.gen_random_noisy_registry())
+        return None
 
 
 if __name__ == "__main__":
-    r1: Registry = Registry(1, 123, "nothing", "very nothing")
-    print(
-        len(r1.struct_bytes())
-    )
+    # r1: Registry = Registry(1, 123, "nothing", "very nothing")
+    
+    df: DataFactory = DataFactory()
+    df.gen_random_noisy_data(13)
+    df.write("nothing.bin")
+
+
     

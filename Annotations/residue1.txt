@@ -1,0 +1,45 @@
+bool indexed_seq_search(const int key, const PageStack * stack, page_t * return_page)
+{
+
+	// 1. Indexed Sequential Search over the page's frames-stack.
+	// (...)
+	size_t iterator = 0;
+	while (iterator < stack -> length && page_key(stack -> frames[iterator]) <= key)
+		iterator ++;
+
+	// 2. Page validation step.
+	// If the item is not in any possible frame in the stack, then it is not there.
+	// 1
+	if (iterator == 0) {
+		// ISS_1_1();
+		return false;
+	}
+
+	else if (key > page_last(stack -> frames[iterator - 1])) {
+		// ISS_1_2();
+		return false;
+	}
+
+	page_t page = stack -> frames[iterator - 1];
+
+	printf("\t> Perhaps the item on searching is on the following page:\n\t>\t");
+	// PrintPage(page);
+	printf("\n\n");
+		
+	// 3. Sequential search on the found page: is the key in there?
+	for (size_t i = 0; i < page.n_itens; i++)
+		if (page.itens[i].key == key) 
+		{
+			// ISS_3();
+
+			* return_page = page;
+			return true;
+		}
+
+
+	// 4. TODO: (Implementation)	To complete.
+
+	// ISS_4();
+
+	return false;
+}
