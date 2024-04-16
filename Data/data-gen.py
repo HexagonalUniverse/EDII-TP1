@@ -78,7 +78,7 @@ class Registry(object):
     def struct_bytes(self) -> bytes:
         """Assembles the Registry information into a (C) struct, represented in bytes."""
 
-        __key_data1: bytes = pack("il", self.key, self.data_1)
+        __key_data1: bytes = pack("iq", self.key, self.data_1)
         __data2: bytes = pack(Constants.data_2_pack_fstr, fullfill_string_bytes(self.data_2, Constants.data_2_string_length))
         __data3: bytes = pack(Constants.data_3_pack_fstr, fullfill_string_bytes(self.data_3, Constants.data_3_string_length))
         

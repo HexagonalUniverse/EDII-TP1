@@ -4,6 +4,9 @@
 /.vs/
 /.vscode/
 
+# Research and local annotations
+/Annotations/*
+
 # Object files
 *.o
 
