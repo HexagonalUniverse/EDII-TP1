@@ -34,9 +34,9 @@ static bool search_item_in_page(const int key, const page_t * page, registry_t *
 	
 
 	size_t length = 0;
-	while (length < itens_per_page && page->itens[length].key != null_reg.key)
+	while (length < itens_per_page && page -> itens[length].key != null_reg.key)
 		length ++;
-
+		
 #define next_bs_middle_pos(x, y)	(x + ((y - x) >> 1))
 
 	for (size_t l = 0, r = length - 1, m = length >> 1; r >= l; m = next_bs_middle_pos(l, r))

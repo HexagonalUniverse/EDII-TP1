@@ -12,7 +12,7 @@
 #include <inttypes.h>
 
 
-#define INT_MAX		((int) - 1)
+#define INT_MAX		((int) ((unsigned) - 1))
 
 
 // Registry and Data
@@ -37,17 +37,10 @@ typedef struct {
 } registry_t; // Occupies 6008 [bytes]. Allign by 4 [bytes].
 
 
+#define NULLREG_KEY		INT_MAX;
+
 // The identitary null registry.
 extern const registry_t null_reg;
-
-
-// Data-file header.
-typedef struct {
-	// * For instance, just contains information about its size.
-	// It is, "how much itens are in there."
-
-	int size;
-} DF_header;
 
 
 
@@ -55,6 +48,8 @@ typedef struct {
 // -----------------
 
 #define in_range(a, b, x)	((b >= x) && (x >= a))
+#define nin_range(a, b, x)	(! in_range(a, b, x))
+
 #define is_numeral(x)		in_range(48, 57, x)
 
 #define NUMERICAL_BASE		10

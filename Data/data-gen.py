@@ -107,7 +107,7 @@ class DataFactory(object):
             # For instance, let's just say that the header only contains
             # the number of elements and that is it...
             
-            bin_datafile.write(pack("i", len(self.__acc_data)))
+            # bin_datafile.write(pack("i", len(self.__acc_data)))
             
             # Then the data itself...
 
@@ -134,7 +134,7 @@ class DataFactory(object):
 
         r: Registry = Registry(key, data_1, data_2, data_3)
         
-        print(f"Generated: {r}")
+        # print(f"Generated: {r}")
         
         return r
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     # r1: Registry = Registry(1, 123, "nothing", "very nothing")
     
     df: DataFactory = DataFactory()
-    df.gen_random_noisy_data(13)
+    df.gen_random_noisy_data(100)
     df.write("nothing.bin")
 
 

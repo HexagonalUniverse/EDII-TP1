@@ -67,7 +67,6 @@ static void PrintPage(const page_t * __Page, const size_t id) {
 
 
 
-
 const registry_t null_reg = { INT_MAX, 0 };
 
 
