@@ -28,8 +28,8 @@ $$
     r_1 \\
     \dots \\
     r_{\lfloor n / 2 \rfloor - 1}
-\end{array}\right], \;\;
-r_{\lfloor n / 2 \rfloor}, \;\;
+\end{array}\right], 
+r_{\lfloor n / 2 \rfloor}, 
 \mathcal{B}
 \left[\begin{array}{c}
     r_{\lfloor n / 2 \rfloor + 1} \\
@@ -54,7 +54,7 @@ The data-structure is as follows. It will be an array with each node being $h = 
 
 Interpret the input stream as an array $\langle r_0, r_1, \dots, r_{n - 1} \rangle$. Since we have the granularity precision for seeking one register in external memory as well, while obvious, we'll use the same throughout the process. And it can be achieved considering that a subfile (representing a subtree) is that of all sequential elements, from the positions $l$ to $r$, $l \leq r$ - inclusive in both ends. Being so, define $midpoint(l, r) = l + \lfloor \frac{r - l}{2} \rfloor$. At each iteration we'll keep seeking for the middlemost registry of a subfile with it.
 
-If a node $h$ in reality kept pointers to registries in the original file, $l_{\text{child}} = midpoint(l, m - 1)$ and $r_{\text{child}} = midpoint(m + 1, r)$, if them existed, given that $m$ is the current midpoint of $h$. Since it is not the case, a further observation of structure of the ebst is needed. In that sense, realize that, for whatever subfile, we first write down the root, and then the children - in a predictable order. So it is the case that root is always on top of it. Hence, the next $a$ itens after the root $h$ is (either) the left (or the right) subtree; top of which is its root and so, if root is on the position $p$, that child will be on $p + 1$. Similarly, the other child will be on $p + 1 + a$. $a$ relates with $l$ and $r$ in the following way: after a division of a subfile with $n$ itens, the left child will have $\lfloor \frac{n - 1}{2} \rfloor$ itens and the right will have $(n - 1 - \lfloor \frac{n - 1}{2} \rfloor)$. Since $r - l + 1 = n$, $a$ is either $lfloor \frac{r - l}{2} \rfloor$ or $r - l -\lfloor \frac{r - l}{2}\rfloor$.
+If a node $h$ in reality kept pointers to registries in the original file, $l_{\text{child}} = midpoint(l, m - 1)$ and $r_{\text{child}} = midpoint(m + 1, r)$, if them existed, given that $m$ is the current midpoint of $h$. Since it is not the case, a further observation of structure of the ebst is needed. In that sense, realize that, for whatever subfile, we first write down the root, and then the children - in a predictable order. So it is the case that root is always on top of it. Hence, the next $a$ itens after the root $h$ is (either) the left (or the right) subtree; top of which is its root and so, if root is on the position $p$, that child will be on $p + 1$. Similarly, the other child will be on $p + 1 + a$. $a$ relates with $l$ and $r$ in the following way: after a division of a subfile with $n$ itens, the left child will have $\lfloor \frac{n - 1}{2} \rfloor$ itens and the right will have $(n - 1 - \lfloor \frac{n - 1}{2} \rfloor)$. Since $r - l + 1 = n$, $a$ is either $\lfloor \frac{r - l}{2} \rfloor$ or $r - l -\lfloor \frac{r - l}{2}\rfloor$.
 
 
 Implementation
@@ -83,17 +83,22 @@ And then we add two more itens conditionally. Saying that the resulting tree wil
 In our current convention, the right children is always processed before the left one. By effect, we exhaust all the right subtree before the left one. Note that if is there no left-subtree, the stack size continues the same, because we push but pop in sequence.
 
 
-If we denote the stack-space used by a perfecly balanced bst of size $T$ by $\mathcal{S}(T)$, then 
+If we denote the stack-space used by a perfecly balanced bst of size $T$ by $\mathcal{S}(T)$, then
+
 $$
-\mathcal{S}(0) = C, \;\;\;\;\mathcal{S}(T) = 1 + \mathcal{S}(\lfloor T / 2 \rfloor) \implies$$
+\mathcal{S}(0) = C, \mathcal{S}(T) = 1 + \mathcal{S}(\lfloor T / 2 \rfloor) \implies$$
+$$
+
 $$
 \mathcal{S}(T) = 1 + 1   + S(\lfloor T / 2^2 \rfloor) = \dots = n + S(\lfloor T/2^n \rfloor).
 $$
+
 $$
 \lfloor \frac{T}{2^n} \rfloor = 0 \implies2^n > T \implies n > \log_2{T};
 $$
 
 taking $n = \lceil \log_2{T} \rceil$,
+
 $$
 \mathcal{S}(T) = \lceil \log_2{T} \rceil,
 $$
