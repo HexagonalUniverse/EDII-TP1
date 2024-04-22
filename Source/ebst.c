@@ -93,7 +93,7 @@ static bool ebstStackPush(ebstStack * __Stack, const stack_item * _Item) {
 
 //
 static bool ebstStackPop(ebstStack * __Stack, stack_item * _ReturnItem) {
-	if (__Stack->head == NULL)
+	if (__Stack -> head == NULL)
 		return false;
 
 	stack_node * node_buffer = __Stack -> head;
@@ -163,10 +163,12 @@ static void middlepointRootTraversalTranscript(
 }
 
 
-// * It is for sure costly; O(n).
 static size_t 
 registryFilesize(FILE * input_stream)
 {
+#if false	
+	// * It is for sure costly; O(n).
+
 	rewind(input_stream); 
 	size_t counter = 0;
 	
@@ -178,6 +180,14 @@ registryFilesize(FILE * input_stream)
 	
 	rewind(input_stream);
 	return counter - 1;
+#else
+	// Uhuul, O(1), but it raises me concerns about if will work in every case...
+	// TODO: Analysis.
+
+	fseek(input_stream, 0, SEEK_END);
+	size_t storage_size = (size_t) ftell(input_stream);
+	return storage_size / sizeof(registry_t);
+#endif
 }
 
 
@@ -209,9 +219,46 @@ bool assembleEBST_ordered(
 }
 
 
-
 search_response ebst_search(const int _key, FILE * __ebstStream, registry_t * __Return)
 {
-	return 0;
+	int pos = 0;
+	ebst_node node_buffer;
+
+	while (
+		// pos >= 0		
+		// is a possible condition. We loose tough the ability to report 
+		// exactly the direction in which the search failed effortlessly.
+
+		true
+	) {
+		fseek(__ebstStream, pos, SEEK_SET);
+		fread(& node_buffer, sizeof(ebst_node), 1, __ebstStream);
+
+		if (_key == node_buffer.root_item.key) {
+			* __Return = node_buffer.root_item;
+			return SEARCH_SUCCESS;
+		}
+
+		else if (_key < node_buffer.root_item.key) {
+			if (node_buffer.left < 0)
+			{
+				break;
+			}
+
+			pos = node_buffer.left;
+		}
+
+		else // Invariamt: _key > node_buffer.root_item.key, necessarily.
+		{
+			if (node_buffer.right < 0)
+			{
+				break;
+			}
+
+			pos = node_buffer.right;
+		}
+	}
+
+	return SEARCH_EXHAUSTION;
 }
 
