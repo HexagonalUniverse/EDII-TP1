@@ -11,9 +11,12 @@
 #define _ISS_BIN_SEARCH	true
 
 
+// TODOs: 
+// - Parametrization: if the search will be done by binary-search or not;
+// - Parametrization: the page-state will tell whether it is ordered...
 static bool search_item_in_page(const int key, const page_t * page, registry_t * __ReturnItem) 
 {
-#if ! _ISS_BIN_SEARCH	// Sequential search.
+#if ! _ISS_BIN_SEARCH		// Sequential search.
 	
 	for (size_t i = 0; i < itens_per_page; i ++)
 	{
@@ -30,9 +33,9 @@ static bool search_item_in_page(const int key, const page_t * page, registry_t *
 			return false;
 	}
 	return false;
-#else					// Binary search.
-	
 
+#else						// Binary search.
+	
 	size_t length = 0;
 	while (length < itens_per_page && page -> itens[length].key != null_reg.key)
 		length ++;
@@ -57,18 +60,15 @@ static bool search_item_in_page(const int key, const page_t * page, registry_t *
 }
 
 
-/*
-	...
+/* 
+	TODO: (Documentation) Specs.
+	TODO: (Documentation) Invariants and logic.
 */
 search_response indexed_seq_search
 (
 	const int key, const PagesIndexTable * __Table, FILE *  __DataFile,
 	registry_t * __ReturnItem
 ) {
-	/*
-	TODO: (Documentation) Invariants and logic.
-	*/
-
 	* __ReturnItem = null_reg;
 
 	// 1. Indexed sequential search over table.
@@ -88,7 +88,7 @@ search_response indexed_seq_search
 	// 3. Retrieving the page found.
 
 	page_t target_page;
-	if (! read_page(__DataFile, iterator - 1, & target_page))
+	if (! readPage(__DataFile, iterator - 1, & target_page))
 		return PAGE_SEARCH_FAIL;
 
 	// 4. Search for the item in the page.
@@ -97,5 +97,5 @@ search_response indexed_seq_search
 		return SEARCH_SUCCESS;
 
 	// 5. If none of the cases above fell down, then the search were not successful.
-	return SEARCH_END;
+	return SEARCH_EXHAUSTION;
 }

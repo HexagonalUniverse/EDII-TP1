@@ -46,8 +46,6 @@ static void PrintNode(const ebst_node * __Node) {
 static void MiddlepointRootTraversalTranscript(
     FILE * input_stream, FILE * output_stream
 ) {
-    // initialize stack with (0, length - 1)
-
     long l = 0, r = 99, m;
     stack_item split_buffer = {0, 99};
 

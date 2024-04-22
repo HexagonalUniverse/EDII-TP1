@@ -87,7 +87,7 @@ class Registry(object):
 
 class DataFactory(object):
     """
-        TODO: The data has to be generated based on something...
+        TODO: The data has to be generated based on something (?)...
     """
 
     __acc_data: list[Registry]

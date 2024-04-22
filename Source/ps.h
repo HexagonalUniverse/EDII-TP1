@@ -9,19 +9,20 @@
 
 
 #include "common.h"
+#include <stdio.h>
 
 
 // How many itens, at its maximum, holds each page.
+// TODO: Decide it more broadly.
 #define itens_per_page		5
 
-// How many frames are there to be stored in the pagination-system.
+// How many page-frames are there to be stored in the pagination-system.
 #define page_frame_size		10
 
 
+// Represents a single page in the pagination-system.
+// Structurally: an static array.
 typedef struct {
-	// "Number of itens": How many itens are stored within the page.
-	// size_t n_itens;
-
 	registry_t itens[itens_per_page];
 } page_t; // Occupies 30080 [bytes]. Allign by 8 [bytes].
 
@@ -33,9 +34,13 @@ typedef struct {
 // #define page_last_key(p)	(p.itens[p.n_itens - 1].key)
 
 
-// From a data file-stream, reads a single registry page. Returns success.
-bool read_page(FILE *, size_t index, page_t * __return);
+// From a data file-stream, reads a single registry page, specified by 
+// its index. Returns success.
+bool readPage(FILE *, size_t index, page_t * __return);
 
+// Loads a page into main memory by the page-frames.
+// TODO: def
+bool loadPage(void);
 
 
 // A representational for the pages index-table, used for the ISS;
@@ -46,11 +51,26 @@ typedef struct {
 } PagesIndexTable;
 
 // Calculates how many pages are there given the registry quantity in data file.
-#define NumberOfPages(n_itens)	((n_itens / itens_per_page) + (n_itens % itens_per_page ? 1 : 0))
+#define FileNPages(n_itens)	((n_itens / itens_per_page) + (n_itens % itens_per_page ? 1 : 0))
 
 
 PagesIndexTable assemblePIT(FILE *);	// * ds constructor
 void DestroyPIT(PagesIndexTable*);		// * ds deconstructor
+
+
+
+// Other tools
+// -----------
+
+// TODO: def
+void printRegistry(void);
+
+// TODO: def
+void printPage(void);
+
+// TODO: def
+void printPagesIndexTable(void);
+
 
 
 #endif // _PAGINATION_SYSTEM_HEADER_

@@ -19,29 +19,19 @@ typedef enum {
 
 	PAGE_SEARCH_FAIL,
 
-	SEARCH_END
-
+	SEARCH_EXHAUSTION,
+	
 } search_response;
 
 
-// ISS
 
 search_response indexed_seq_search(const int _key, const PagesIndexTable *, 
 	FILE *, registry_t * __ReturnItem);
 
-
-// EBST
-
-#define pages_on_frame	4
+search_response ebst_search(const int _key, FILE* __ebstStream, registry_t * __Return);
 
 
-// * lru
-typedef struct {
-	page_t page_heap[pages_on_frame];
-	size_t pages_index[pages_on_frame];
 
-	size_t _start, _end;
-} PageFrames;
 
 
 #endif // _SEARCHING_HEADER_

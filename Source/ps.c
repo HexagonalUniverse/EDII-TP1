@@ -4,16 +4,15 @@
 */
 
 
-#include <stdio.h>
+#include "ps.h"
 #include <stdlib.h>
 #include <string.h>
-#include "ps.h"
 
 
 // Retrieves a single page from the file stream. Returns success.
-inline bool read_page(FILE * __Stream, size_t index, page_t * __return_page)
+inline bool readPage(FILE * __Stream, size_t index, page_t * __return_page)
 {
-	fseek(__Stream, sizeof(DF_header) + index * sizeof(page_t), SEEK_SET);
+	fseek(__Stream, index * sizeof(page_t), SEEK_SET);
 	fread(__return_page, sizeof(page_t), 1, __Stream);
 	return (ferror(__Stream) == 0);
 }
@@ -66,7 +65,6 @@ static void PrintPage(const page_t * __Page, const size_t id) {
 }
 
 
-
 const registry_t null_reg = { INT_MAX, 0 };
 
 
@@ -79,21 +77,22 @@ inline PagesIndexTable assemblePIT(FILE * __Stream)
 
 	fseek(__Stream, 0, SEEK_SET);
 
-	DF_header header;
-	fread(& header, sizeof(DF_header), 1, __Stream);
+	// DF_header header;
+	// fread(& header, sizeof(DF_header), 1, __Stream);
 
 	if (ferror(__Stream)) {
 		fprintf(stderr, "E: [assemblePIT]\tHeader.\n");
 		return table;
 	}
 
-	const size_t n_pages = NumberOfPages(header.size);
+	// const size_t n_pages = NumberOfPages(header.size);
+	size_t n_pages = 0;
 
 	// File data section.
 
 	page_t dummy; size_t page_id = 1;
 
-	while (page_id < n_pages) {
+	while (! feof(__Stream)) {
 		fread(& dummy, sizeof(page_t), 1, __Stream);
 
 		if (ferror(__Stream)) {
@@ -105,9 +104,9 @@ inline PagesIndexTable assemblePIT(FILE * __Stream)
 		table.keys[table.length - 1] = dummy.itens[0].key;
 
 		printf(">\tread page\n");
-		PrintPage(& dummy, page_id);
+		PrintPage(& dummy, n_pages + 1);
 
-		page_id ++;
+		n_pages ++;
 	}
 
 	// The last page is a case apart, for which it can be incomplete.
