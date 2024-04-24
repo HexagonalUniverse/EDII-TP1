@@ -1,0 +1,9 @@
+
+
+
+Makefile.
+
+	. It seems that the OS pointed by makefile at windows 11 is windows NT.
+	So it must be the case that there is retro-compability up to it; so any
+	modern windows version should work equally with it. Is it the case for gcc?
+	Is so, the product binaries doensn't need to specify up to the version of OS.

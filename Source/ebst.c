@@ -109,10 +109,10 @@ static bool ebstStackPop(ebstStack * __Stack, stack_item * _ReturnItem) {
 
 
 static void middlepointRootTraversalTranscript(
-	FILE * input_stream, FILE * output_stream, const size_t n_registries
+	FILE * input_stream, FILE * output_stream, const uint64_t n_registries
 ) {
 	// Pointer for a subfile division in the input-stream.
-	long left = 0, right = (long) n_registries - 1, middle;
+	long long left = 0, right = (long long) n_registries - 1, middle;
 	
 	stack_item split_buffer = { left, right };
 	
@@ -163,30 +163,33 @@ static void middlepointRootTraversalTranscript(
 }
 
 
-static size_t 
+static uint64_t 
 registryFilesize(FILE * input_stream)
 {
-#if false	
+#if true	
 	// * It is for sure costly; O(n).
 
-	rewind(input_stream); 
-	size_t counter = 0;
-	
-	registry_t dummy_buffer;
-	while (! feof(input_stream)) {
-		fread(& dummy_buffer, sizeof(registry_t), 1, input_stream);
-		counter ++;
-	}
-	
-	rewind(input_stream);
-	return counter - 1;
+#define CHUNK_SIZE	1048576
+
+	char buffer[CHUNK_SIZE];
+	uint64_t counter = 0, bytes_read;
+	while ((bytes_read = fread(buffer, 1, CHUNK_SIZE, input_stream)) > 0)
+		counter += bytes_read;
+
+	return counter / sizeof(registry_t);
+
+
+
 #else
 	// Uhuul, O(1), but it raises me concerns about if will work in every case...
 	// TODO: Analysis.
 
 	fseek(input_stream, 0, SEEK_END);
-	size_t storage_size = (size_t) ftell(input_stream);
-	return storage_size / sizeof(registry_t);
+	uint64_t storage_size = (uint64_t) ftell(input_stream);
+
+	// printf("ftell value: " PRIu64 ", > 1: %d\n", storage_size, storage_size > (uint64_t) 1);
+
+	return (uint64_t) storage_size / sizeof(registry_t);
 #endif
 }
 
@@ -209,7 +212,7 @@ bool assembleEBST_ordered(
 		return false;
 	}
 
-	printf("# registries identified: %u\n", (unsigned int) n_registries);
+	printf("# registries identified: %llu\n", (unsigned long long) n_registries);
 
 	middlepointRootTraversalTranscript(input_stream, output_stream, n_registries);
 
