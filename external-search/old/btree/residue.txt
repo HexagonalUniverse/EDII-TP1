@@ -1,0 +1,19 @@
+
+    /*
+    b_node new = { 0 };
+    new.children_ptr[0] = 0;
+
+    BTree_SplitChild(& new, 0, _BTreeStream);
+    new.children_ptr[0] = _BTreeStream -> qtd_nodes;
+
+    aec_fg_rgb(100, 255, 100); printf("[%s]\t", __func__); aec_reset();
+    new.children_ptr[0] = _BTreeStream -> qtd_nodes ++;
+    DiskWrite(& new, 0, _BTreeStream);
+
+    aec_fg_rgb(100, 255, 100); printf("[%s]\t", __func__); aec_reset();
+    DiskWrite(& tree -> root, _BTreeStream -> qtd_nodes, _BTreeStream);
+
+    DebugPrint("_BTreeStream -> qtd_nodes = %u\n", _BTreeStream -> qtd_nodes);
+
+    tree -> root = new;
+    */
