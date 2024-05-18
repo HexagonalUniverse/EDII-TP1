@@ -4,7 +4,6 @@
 # Directories
 # ==============================
 
-#define uma variável para um diretório
 dir_drivers	:= cleber/
 dir_src		:= src/
 dir_hdr		:= $(dir_src)
@@ -51,7 +50,7 @@ $(dir_exe)%.exe: $(dir_drivers)%.c $(target_lib)
 # Joining the library.
 $(target_lib): $(object_files)
 	ar cr $@ $^
-	@echo STDLIB.H: Library'd.
+	@echo STDLIB.H: Libraryd.
 
 # Assembling each object file.
 $(dir_obj)%.o: $(dir_src)%.c 
@@ -63,7 +62,7 @@ $(dir_obj)%.o: $(dir_src)%.c
 # Cleaning		<make clean>
 # ================================
 
-
+# TODO: Complete...
 
 
 

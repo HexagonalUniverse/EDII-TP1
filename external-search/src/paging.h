@@ -29,11 +29,11 @@ typedef struct {
 
 /*  From a data file-stream, reads a single registry-page, specified by
     its index. Returns the number of registries read that were read onto the page. */
-size_t read_regpage(FILE * _RegistryStream, uint32_t _Index, regpage_t * _ReturnPage);
+size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _ReturnPage);
 
 /*  From a data file-stream, writes a single registry-page, specified by
     its index. Returns the number of registries that had been written. */
-size_t write_regpage(FILE * _RegistryStream, uint32_t _Index, const regpage_t * _WritePage);
+size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage_t * _WritePage);
 
 
 /*  The minimum degree is here defined as:
@@ -63,16 +63,16 @@ typedef struct {
     B-Tree file stream. */
 #define bnode_pos(_Index)     (sizeof(b_node) * _Index)
 
-/*  Writes a single b-node on the BTree data stream, given its index. Returns whether the writing
-    was successful - so the node was written on its entirety. */
-bool bnode_write(const b_node * _Node, size_t _Index, FILE * _BTreeStream);
-
 /*  Reads a single b-node on the BTree data stream, given its index. Returns whether the reading
     was successful - so the node was read on its entirety. */
-bool bnode_read(b_node * _ReturnNode, size_t _Index, FILE * _BTreeStream);
+bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNode);
+
+/*  Writes a single b-node on the BTree data stream, given its index. Returns whether the writing
+    was successful - so the node was written on its entirety. */
+bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _WriteNode);
 
 
-/*  A B - star node / page. (...) */
+/*  A B-star node / page. (...) */
 typedef struct {
     // 1 [byte], 1 [byte] alignment.
     struct {
@@ -101,12 +101,12 @@ typedef struct {
 /*  */
 #define bstarnode_pos(_Index)       (_Index * sizeof(bstar_node))
 
-/*  */
-bool bstar_write(const bstar_node * _Node, size_t _Index, FILE * _BTreeStream);
 
 /*  */
-bool bstar_read(bstar_node * _ReturnNode, size_t _Index, FILE * _BTreeStream);
+bool read_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, bstar_node * _ReturnNode);
 
+/*  */
+bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_node * _WriteNode);
 
 
 // The frame
@@ -153,12 +153,13 @@ bool makeFrame(frame_t * _Frame, const size_t _PageSize);
 
 bool removePage(frame_t *_Frame);
 
-bool addPage_regpage_t(uint32_t num_page, frame_t *_Frame, FILE *_Stream);
-bool addPage_b_node(uint32_t num_page, frame_t *_Frame, FILE *_Stream);
+bool addPage_regpage(uint32_t num_page, frame_t *_Frame, REG_STREAM *_Stream);
+bool addPage_b_node(uint32_t num_page, frame_t *_Frame, B_STREAM *_Stream);
+bool addPage_bstar(uint32_t _Index, frame_t * _Frame, BSTAR_STREAM *_Stream);
 
-void showFrame(frame_t * _Frame);
+void show_regpage_frame(const frame_t* _Frame);
 
-
+void show_bnode_frame(const frame_t *_Frame);
 
 
 
@@ -177,35 +178,35 @@ typedef struct {
 typedef struct {
     BSTAR_STREAM * file_stream;
     uint32_t nodes_qtt;
-    frame_t * frame;
+    frame_t frame;
+    bstar_node root;
 } BStar_Builder;
 
 
-
-// * aeiou
-typedef struct {
-    FILE * file_stream;
-    size_t qtd_nodes;
-    frame_t * frame;
-} BTreeStream;
+/*  */
+bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Index, uint32_t * _ReturIndex);
 
 
 
+/*  */
+bool retrieve_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, b_node * _ReturnNode);
+
+/*  */
+bool update_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const b_node * _WriteNode);
 
 
+
+/*  */
+bool retrieve_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, bstar_node * _ReturnNode);
+
+/*  */
+bool update_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const bstar_node * _WriteNode);
 
 
 
 /*  */
 bool searchIndexPageInFrame(const frame_t * _Frame, const uint32_t _Index, uint32_t * _ReturnFrameIndex);
 
-
-bool bnode_retrieve(b_node * _ReturnNode, frame_t * _Frame, size_t _Index, FILE * _BTreeStream);
-
-bool bnode_update(const b_node * _WriteNode, frame_t * _Frame, size_t _NodeIndex, FILE * _BTreeStream);
-
-
-void show_bnode_frame(const frame_t *_Frame);
 
 
 
@@ -228,4 +229,8 @@ void show_bnode_frame(const frame_t *_Frame);
 #define incr_frame(x)               mod_incr(x, PAGES_PER_FRAME)
 
 
-#endif  // _PAGING_HEADER_
+// The key of the regpage is simply the key of first one by its itens.
+#define regpage_key(p)			(p.reg[0].key)	
+
+
+#endif  //_PAGING_HEADER_

@@ -1,4 +1,4 @@
-// <paging.c>
+    // <paging.c>
 
 #include "paging.h"
 
@@ -9,8 +9,7 @@
 
 /*  From a data file-stream, reads a single registry page, specified by
     its index. Returns the number of registries read that were read onto the page. */
-inline size_t read_regpage(FILE * _Stream, uint32_t _Index, regpage_t * _ReturnPage)
-{
+inline size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _ReturnPage) {
     // Setting the file pointer to the beggining of the indexed page on the file.
     fseek(_Stream, regpage_pos(_Index), SEEK_SET);
     return fread(_ReturnPage -> reg, sizeof(registry_t), ITENS_PER_PAGE, _Stream);
@@ -18,43 +17,40 @@ inline size_t read_regpage(FILE * _Stream, uint32_t _Index, regpage_t * _ReturnP
 
 /*  From a data file-stream, writes a single registry-page, specified by
     its index. Returns the number of registries on the page written. */
-inline size_t write_regpage(FILE * _Stream, uint32_t _Index, const regpage_t * _Page)
-{
+inline size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage_t * _Page) {
     //
     fseek(_Stream, regpage_pos(_Index), SEEK_SET);
     return fwrite(_Page -> reg, sizeof(registry_t), ITENS_PER_PAGE, _Stream);
 }
 
-
-/*  Writes a single b-node on the BTree data stream, given its index. Returns whether the writing
-    was successful - so the node was written on its entirety. */
-inline bool bnode_write(const b_node * _Node, size_t _Index, FILE * _BTreeStream) {
-    // DebugPrint("[%s] %u\n", _Index);
-    fseek(_BTreeStream, bnode_pos(_Index), SEEK_SET);
-    return fwrite(_Node, sizeof(b_node), 1, _BTreeStream) > 0;
-}
-
 /*  Reads a single b-node on the BTree data stream, given its index. Returns whether the reading
     was successful - so the node was read on its entirety. */
-inline bool bnode_read(b_node * _ReturnNode, size_t _Index, FILE * _BTreeStream) {
+inline bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNode) {
     // DebugPrint("index: %u\n", _Index);
-    fseek(_BTreeStream, bnode_pos(_Index), SEEK_SET);
-    return fread(_ReturnNode, sizeof(b_node), 1, _BTreeStream) > 0;
+    fseek(_Stream, bnode_pos(_NodeIndex), SEEK_SET);
+    return fread(_ReturnNode, sizeof(b_node), 1, _Stream) > 0;
 }
-
 
 /*  Writes a single b-node on the BTree data stream, given its index. Returns whether the writing
     was successful - so the node was written on its entirety. */
-inline bool bstar_write(const bstar_node * _Node, size_t _Index, FILE * _BTreeStream) {
-    fseek(_BTreeStream, bstarnode_pos(_Index), SEEK_SET);
-    return fwrite(_Node, sizeof(bstar_node), 1, _BTreeStream);
+inline bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _WriteNode) {
+    // DebugPrint("[%s] %u\n", _Index);
+    fseek(_Stream, bnode_pos(_NodeIndex), SEEK_SET);
+    return fwrite(_WriteNode, sizeof(b_node), 1, _Stream) > 0;
 }
 
 /*  Reads a single b-node on the BTree data stream, given its index. Returns whether the reading
     was successful - so the node was read on its entirety. */
-inline bool bstar_read(bstar_node * _ReturnNode, size_t _Index, FILE * _BTreeStream) {
-    fseek(_BTreeStream, bstarnode_pos(_Index), SEEK_SET);
-    return fread(_ReturnNode, sizeof(bstar_node), 1, _BTreeStream);
+inline bool read_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, bstar_node * _ReturnNode) {
+    fseek(_Stream, bstarnode_pos(_NodeIndex), SEEK_SET);
+    return fread(_ReturnNode, sizeof(bstar_node), 1, _Stream) > 0;
+}
+
+/*  Writes a single b-node on the BTree data stream, given its index. Returns whether the writing
+    was successful - so the node was written on its entirety. */
+inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_node * _WriteNode) {
+    fseek(_Stream, bstarnode_pos(_NodeIndex), SEEK_SET);
+    return fwrite(_WriteNode, sizeof(bstar_node), 1, _Stream) > 0;
 }
 
 
@@ -141,7 +137,7 @@ bool removePage(frame_t * _Frame) {
     return true;
 }
 
-bool addPage_regpage_t(uint32_t num_page, frame_t * _Frame, FILE * _Stream) { // Adiciona uma página nova para o _Frame. Recebe o número da página que será colocada
+bool addPage_regpage(uint32_t num_page, frame_t * _Frame, FILE * _Stream) { // Adiciona uma página nova para o _Frame. Recebe o número da página que será colocada
     // In case the frame is full, the last page in it is removed.
     if (isFrameFull(_Frame)) {
         if (! removePage(_Frame))
@@ -170,8 +166,9 @@ bool addPage_regpage_t(uint32_t num_page, frame_t * _Frame, FILE * _Stream) { //
     return true;
 }
 
-
-bool addPage_b_node(uint32_t _Index, frame_t * _Frame, FILE *_Stream) { // Adiciona uma página nova para o _Frame. Recebe o número da página que será colocada
+// Adiciona uma página nova para o _Frame. Recebe o número da página que será colocada
+bool addPage_b_node(uint32_t _Index, frame_t * _Frame, B_STREAM *_Stream) {
+     
     // In case the frame is full, the last page in it is removed.
     if (isFrameFull(_Frame)) {
         if (! removePage(_Frame))
@@ -185,7 +182,7 @@ bool addPage_b_node(uint32_t _Index, frame_t * _Frame, FILE *_Stream) { // Adici
         _Frame -> first = 0;
         _Frame -> last = 0;
     }
-
+    
     // Otherwise we increase the last pointer circularly.
     // The fall into the first "isFrameFull" verification will also
     // lead to this one.
@@ -193,7 +190,7 @@ bool addPage_b_node(uint32_t _Index, frame_t * _Frame, FILE *_Stream) { // Adici
         _Frame -> last = incr_frame(_Frame -> last);
     
     // Copying the page into the frame, as well as its index.
-    bnode_read(& ((b_node *) _Frame -> pages)[_Frame -> last], _Index, _Stream);
+    read_bnode(_Stream, _Index, & ((b_node *) _Frame -> pages)[_Frame -> last]);
     _Frame -> indexes[_Frame -> last] = _Index; 
     
     _Frame -> sized ++;
@@ -202,13 +199,46 @@ bool addPage_b_node(uint32_t _Index, frame_t * _Frame, FILE *_Stream) { // Adici
     return true;
 }
 
+// Adiciona uma página nova para o _Frame. Recebe o número da página que será colocada
+bool addPage_bstar(uint32_t _Index, frame_t * _Frame, BSTAR_STREAM *_Stream) {
+     
+    // In case the frame is full, the last page in it is removed.
+    if (isFrameFull(_Frame)) {
+        if (! removePage(_Frame))
+            // Fail in removing means an overall fail on the addition process.
+            return false;
+    }
+    
+    // If the frame at this point is empty, then
+    // the circular-queue indexes are reset.
+    if (isFrameEmpty(_Frame)) {
+        _Frame -> first = 0;
+        _Frame -> last = 0;
+    }
+    
+    // Otherwise we increase the last pointer circularly.
+    // The fall into the first "isFrameFull" verification will also
+    // lead to this one.
+    else
+        _Frame -> last = incr_frame(_Frame -> last);
+    
+    // Copying the page into the frame, as well as its index.
+    read_bstar(_Stream, _Index, & ((bstar_node *) _Frame -> pages)[_Frame -> last]);
+    _Frame -> indexes[_Frame -> last] = _Index; 
+    
+    _Frame -> sized ++;
+    return true;
+}
+
+
+
 
 void show_regpage_frame(const frame_t *_Frame) { // Mostra as páginas do _Frame, com apenas o seus registros e o número da respectiva página
     if(isFrameEmpty(_Frame)){
         return;
     }
     for (uint32_t i = 0; i < PAGES_PER_FRAME; i++) {
-        printf("Page %d | (%d)\t", i + 1, _Frame ->indexes[i]);
+        printf("Page %d | (%d)\t", i + 1, _Frame -> indexes[i]);
         if (i == _Frame -> first) {
             printf("<- first");
         } else if (_Frame -> last == i) {
@@ -263,11 +293,27 @@ searchIndexPageInFrame(const frame_t * _Frame, const uint32_t _Index, uint32_t *
 
 
 
+inline bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Index, uint32_t * _ReturnIndex){
+    uint32_t frame_index = 0;
+    if (searchIndexPageInFrame(_Frame, _Index, & frame_index)) {
+        * _ReturnIndex = frame_index;
+        return true;
+    }
+
+    if(!addPage_regpage(_Index, _Frame, _Stream)){
+        printf("\t>addpage");
+        return false;
+    }
+
+    * _ReturnIndex = _Frame -> last;
+    return true;
+}
+
 
 
 
 /*  */
-inline bool bnode_retrieve(b_node * _ReturnNode, frame_t * _Frame, size_t _Index, FILE * _BTreeStream)
+inline bool retrieve_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _Index, b_node * _ReturnNode)
 {
     DebugPrintR("index: %u\n", (unsigned int) _Index);
 
@@ -278,19 +324,14 @@ inline bool bnode_retrieve(b_node * _ReturnNode, frame_t * _Frame, size_t _Index
         PrintBNode(& ((b_node *) _Frame -> pages)[frame_index]);
         
         /*
+        b_node node_buffer = ((b_node *) _Frame -> pages)[frame_index];
+        uint32_t index_buffer =  _Frame -> indexes[frame_index];
 
-            [4, 1, 2, 3, 7]
-                   ^
-                   |
-         frame_index
-        */
-        /* TODO: consertar dps zé nó
-        
         for (uint32_t i = frame_index, j; i < _Frame -> last; i = j) {
             j = incr_frame(i);
 
             ((b_node *) _Frame -> pages)[i] = ((b_node *) _Frame -> pages)[j];
-                _Frame -> indexes[i] = _Frame -> indexes[j];
+            _Frame -> indexes[i] = _Frame -> indexes[j];
         }
         
         ((b_node *) _Frame -> pages)[_Frame -> last] = node_buffer;
@@ -298,13 +339,14 @@ inline bool bnode_retrieve(b_node * _ReturnNode, frame_t * _Frame, size_t _Index
         
         * _ReturnNode = ((b_node *) _Frame -> pages)[_Frame -> last];
         */
+
         * _ReturnNode = ((b_node *) _Frame -> pages)[frame_index]; 
 
         printf("\nReturn node: ");
         PrintBNode(_ReturnNode);
         return true;
     }
-    if (! addPage_b_node(_Index, _Frame, _BTreeStream)) {
+    if (! addPage_b_node(_Index, _Frame, _Stream)) {
         printf("\t> addpage\n");
         return false;
     }
@@ -315,7 +357,7 @@ inline bool bnode_retrieve(b_node * _ReturnNode, frame_t * _Frame, size_t _Index
 }
 
 /*  */
-bool bnode_update(const b_node * _WriteNode, frame_t * _Frame, size_t _NodeIndex, FILE * _BTreeStream)
+bool update_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const b_node * _WriteNode)
 {
     DebugPrintR("index: %u\n", (unsigned int) _NodeIndex);
     
@@ -325,12 +367,48 @@ bool bnode_update(const b_node * _WriteNode, frame_t * _Frame, size_t _NodeIndex
     if (searchIndexPageInFrame(_Frame, _NodeIndex, & frame_index)) {
 
         printf("frame_index: <%u>\n", frame_index);
-        ((b_node *) _Frame -> pages)[frame_index] = * _WriteNode;
+        ((b_node *) _Frame -> pages)[frame_index] = *_WriteNode;
     }
 
     //Updating the b_node in file.
-    return bnode_write(_WriteNode, _NodeIndex, _BTreeStream);
+    return write_bnode(_Stream, _NodeIndex, _WriteNode);
 }
 
+/*  */
+inline bool retrieve_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _Index, bstar_node * _ReturnNode)
+{
+    uint32_t frame_index = 0;
+    if (searchIndexPageInFrame(_Frame, _Index, & frame_index))
+    {
+        // TODO: Refresh
+        
+        * _ReturnNode = ((bstar_node *) _Frame -> pages)[frame_index]; 
+        return true;
+    }
+    if (! addPage_bstar(_Index, _Frame, _Stream)) {
+        printf("\t> addpage\n");
+        return false;
+    }
+    
+    printf("\t> pega o último direto msm. last: %u\n", _Frame -> last);
+    * _ReturnNode = ((bstar_node *) _Frame -> pages)[_Frame -> last];
+    return true;
+}
 
-// B-star
+/*  */
+bool update_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const bstar_node * _WriteNode)
+{
+    DebugPrintR("index: %u\n", (unsigned int) _NodeIndex);
+    
+    uint32_t frame_index = 0;
+    
+    //If _WriteNode is in the frame, updates the frame also.
+    if (searchIndexPageInFrame(_Frame, _NodeIndex, & frame_index)) {
+
+        printf("frame_index: <%u>\n", frame_index);
+        ((bstar_node *) _Frame -> pages)[frame_index] = * _WriteNode;
+    }
+
+    //Updating the b_node in file.
+    return write_bstar(_Stream, _NodeIndex, _WriteNode);
+}

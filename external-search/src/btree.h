@@ -27,10 +27,10 @@ typedef struct {
 //bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointer * _reg, BTreeStream * _BTreeStream);
 
 /*  */
-bool BTree_Build(FILE *, FILE*);
+bool BTree_Build(REG_STREAM *, B_STREAM *);
 
 /*  */
-bool BTree_Search(key_t key, BTreeStream * _BTreeStream, FILE * _InputStream, registry_t * target);
+bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream, frame_t * _Frame, registry_t * target);
 
 #endif // _BTREE_HEADER_
 

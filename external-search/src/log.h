@@ -10,7 +10,7 @@
 
 
 #define _Blue()     aec_fg_rgb(75, 135, 225)
-#define _Red()      aec_fg_rgb(225, 135, 75)
+#define _Red()      aec_fg_rgb(225, 75, 75)
 #define _Yellow()   aec_fg_rgb(225, 225, 75)
 #define _Green()	aec_fg_rgb(75, 255, 75)
 

@@ -26,6 +26,8 @@
 #define in_range(a, b, x)       (((b) >= x) && (x >= (a)))
 
 
+	// 
+#define ceil_div(x, y)	((x / y) + ((x % y) ? 1 : 0))
 
 // Registry and Data
 // -----------------
@@ -81,8 +83,8 @@ typedef struct {
 
 
 
-// Files and strreams
-// ------------------
+// Files and streams
+// -----------------
 
 /*	A stream representing the registries file. */
 typedef FILE	REG_STREAM;
@@ -95,7 +97,9 @@ typedef FILE	BSTAR_STREAM;
 
 
 // The default registries filename.
-#define INPUT_DATAFILENAME		    "input-data.bin"
+//#define INPUT_DATAFILENAME		    "input-data.bin"
+#define INPUT_DATAFILENAME				"src/200.fotinite"
+
 
 // The default b-tree data-structure filename.
 #define OUTPUT_BTREE_FILENAME	    "data.btree"
@@ -111,8 +115,6 @@ typedef FILE	BSTAR_STREAM;
 
 
 
-// The key of the page is simply the key of first one by its itens.
-#define page_key(p)			(p.itens[0].key)	
 
 
 
