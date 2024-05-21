@@ -1,4 +1,6 @@
 
+# 17/5
+# ----
 
 STRUCTURE:
 	. BTreeStream, BTree -> B_Builder
@@ -6,14 +8,12 @@ STRUCTURE:
 	>> We pass fewer arguments to lower functions.
 	>> No longer it is have to be passed to BTree_Build, but rather there it is instantiated.
 
-
 REFACTOR:
 	. bnode_write, bnode_read -> write_bnode, read_bnode;
 	same for bstar. The order of thir arguments also
 	had been changed in the same sense. Same for bnode_retrieve / update.
 	>> For naming concordance with write_regpage, read_regpage.
 	>> Also for signature concordance.
-
 
 DEFINITIONS & ORGANIZATION:
 	. B_STREAM, REG_STREAM; all typedef'ing FILE.
@@ -23,9 +23,15 @@ DEFINITIONS & ORGANIZATION:
 	 
 	. retriver / update bstar. Integration bstar with the frame.
 
-
 IMPLEMENTATIONS:
 	. Integrated the indexed sequential search on to <pesquisa>.
 
 
-	
+# 20 / 5
+# ------
+
+REFACTOR:
+	Extracted "search_registry" from _SearchPage, as it is used more than once.
+
+DOCUMENTATION AND POLISHMENT:
+	BSTree_Search, BTree_Search.

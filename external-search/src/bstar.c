@@ -309,45 +309,45 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream) {
 }
 
 
-static bool _SearchPage(const registry_pointer * _RegistryPointer, FILE * _Stream, registry_t * _ReturnRegistry)
-{   
-    regpage_t page = { 0 };
-    const size_t page_index = _RegistryPointer -> original_pos / ITENS_PER_PAGE;
-    if (! read_regpage(_Stream, page_index, & page)) 
-        return false;
-
-    * _ReturnRegistry = page.reg[_RegistryPointer -> original_pos % ITENS_PER_PAGE];
-    printf("KEY FOUND! pointer at or.file: %u\n", (unsigned int) _RegistryPointer ->original_pos);
-    return true;
-}
-
-
-bool BSTree_Search(key_t key, REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream, frame_t * _Frame, registry_t * target)
+/*  Sopa de macaco. */
+bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStream, frame_t * _Frame, registry_t * target)
 {
-    bstar_node node_buffer = { 0 }; uint8_t i = 0;
-    retrieve_bstar(_OutputStream, _Frame, 0, & node_buffer);
+    // Tracks the tree node we're at. Initialized to the root.
+    bstar_node node_buffer = { 0 };
+    retrieve_bstar(_BStarStream, _Frame, 0, & node_buffer);
+    
+    // Tracks the index to the pointer to the next node.
+    uint8_t i = 0;
     
     while (! node_buffer.is_leaf) {
-        for (i = 0; i < node_buffer.item_count; i ++) { 
-            printf("node_buffer.inner.keys[%u] = %d >= %d\n",
-                (unsigned int) i, node_buffer.inner.keys[i], key);
-            if (node_buffer.inner.keys[i] >= key)
-            {
-                break; 
-            }
-        }
-        printf("> page <%u>\n", node_buffer.inner.children_ptr[i]);
-        retrieve_bstar(_OutputStream, _Frame, node_buffer.inner.children_ptr[i], & node_buffer);
+        /*  Encontering the next node indirectly via a sequential search. */
+        i = 0;
+        while ((node_buffer.inner.keys[i] <= key) && (i < node_buffer.item_count)) 
+            i ++;
+        
+        retrieve_bstar(_BStarStream, _Frame, node_buffer.inner.children_ptr[i], & node_buffer);
     }
-    PrintBSNode(& node_buffer);
 
+    /*  Once the target leaf node is found, a binary-search 
+        will attempt finding the exact registry pointer stored
+        in it; if it does, it proceeds reading the registry
+        on the registries-file. */
+
+    // Binary-search parameters.
     long position, beg = 0, end = node_buffer.item_count - 1;
+
     while (beg <= end) {
         position = ((end - beg) >> 1) + beg;
+
         if (node_buffer.leaf.reg_ptr[position].key == key)
-            return _SearchPage(& node_buffer.leaf.reg_ptr[position], _InputStream, target);
-        else if(node_buffer.leaf.reg_ptr[position].key > key)
+            /*  Once the registry-pointer is found, it will attempt 
+                reading it from the registries-file. If it fails, 
+                the whole searching so does. */
+            return search_registry(_RegStream, & node_buffer.leaf.reg_ptr[position], target);
+
+        else if (node_buffer.leaf.reg_ptr[position].key > key)
             end = position - 1;
+
         else
             beg = position + 1;
     }

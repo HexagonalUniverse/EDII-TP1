@@ -3,8 +3,10 @@
 #include <time.h>
 #include "../src/commons.h"
 
-#define PARAMETER           0 //Alterar para definir a ordem dos registros: 0 - crescente, 1 - decrescente, 2 - aleatório
-#define NUM_REG             1000 // Alterar para definir o número de registros
+#define PARAMETER           0       //Alterar para definir a ordem dos registros: 0 - crescente, 1 - decrescente, 2 - aleatório
+#define NUM_REG             1000    // Alterar para definir o número de registros
+#define NAME_BIN            "1000A.bin" 
+
 #define CONST_GAP_RANGE     2146
 
 char *createRandStr(char *data, int number) {
@@ -15,7 +17,7 @@ char *createRandStr(char *data, int number) {
 }
 
 // S = O(N), T = O(N)
-void createReg(registry_t *_reg) {
+void createData(registry_t *_reg) {
     for (int i = 0; i < NUM_REG; i++) {
         _reg[i].data_1 = rand() % LONG_MAX;
         strcpy(_reg[i].data_2, createRandStr(_reg[i].data_2, RD2_SIZE));
@@ -68,12 +70,7 @@ int main() {
     registry_t *reg = calloc(NUM_REG, sizeof(registry_t));
 
     createKey(reg);
-    createReg(reg);
-
-    /*
-    for(int i=0; i<NUM_REG; i++)
-      printf("%d\n", reg[i].key);
-    */
+    createData(reg);
 
     FILE *arq = fopen("reg.bin", "wb");
     fwrite(reg, sizeof(registry_t), NUM_REG, arq);

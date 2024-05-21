@@ -1,4 +1,5 @@
 // <paging.h>
+// io manipulations
 
 
 #ifndef _PAGING_HEADER_
@@ -14,7 +15,7 @@
 
 
 
-// Pages
+// Reg_pages
 // -----
 
 /*  Registries-page. A page in the registries stream. 
@@ -27,6 +28,9 @@ typedef struct {
 /*  Returns the position at which the registries-page is located on the registries-stream. */
 #define regpage_pos(_Index)    (_Index * sizeof(regpage_t))
 
+/*  The key of the regpage is simply the key of first one by its itens. */
+#define regpage_key(p)			(p.reg[0].key)	
+
 /*  From a data file-stream, reads a single registry-page, specified by
     its index. Returns the number of registries read that were read onto the page. */
 size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _ReturnPage);
@@ -35,6 +39,14 @@ size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _ReturnPa
     its index. Returns the number of registries that had been written. */
 size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage_t * _WritePage);
 
+/*  From a data file-stream and a reference pointer, attempts retrieving the entire
+    registry data from it. Returns success. */
+bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Reference, registry_t * _ReturnRegistry);
+
+
+
+// Btree
+// -----------
 
 /*  The minimum degree is here defined as:
         2t = MAX_ITENS_PER_PAGE + 1
@@ -71,6 +83,10 @@ bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNode);
     was successful - so the node was written on its entirety. */
 bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _WriteNode);
 
+
+
+// BStar
+// -----------
 
 /*  A B-star node / page. (...) */
 typedef struct {
@@ -109,6 +125,30 @@ bool read_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, bstar_node * _ReturnN
 bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_node * _WriteNode);
 
 
+
+// EBST
+// --------------
+
+typedef struct {
+    registry_pointer reg_ptr;
+
+    int32_t left, right;   // children ptr*
+
+    int32_t father;
+    int32_t line;
+
+    bool color;
+} ebst_node;
+
+
+/*  */
+bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _ReturnNode);
+
+/*  */
+bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode);
+
+#define ebstnode_pos(_Index)    (sizeof(ebst_node) * _Index)
+
 // The frame
 // ---------
 
@@ -138,6 +178,8 @@ typedef struct {
 } frame_t;  
 // TODO: (Refactor) -> Frame? For which it can be considered as an ds object.
 
+/*  Increments a pointer in the frame context. It is (x + 1) % PAGES_PER_FRAME. */
+#define incr_frame(x)               mod_incr(x, PAGES_PER_FRAME)
 
 #define NULL_INDEX      0
 
@@ -165,28 +207,18 @@ void show_bnode_frame(const frame_t *_Frame);
 
 // builders
 
-/*  (...) */
-typedef struct {
-    B_STREAM * file_stream;
-    uint32_t nodes_qtt;
-    frame_t frame;
-    b_node root;
-} B_Builder;
 
 
-/*  (...) */
-typedef struct {
-    BSTAR_STREAM * file_stream;
-    uint32_t nodes_qtt;
-    frame_t frame;
-    bstar_node root;
-} BStar_Builder;
 
+
+
+//reg_page
 
 /*  */
 bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Index, uint32_t * _ReturIndex);
 
 
+//bnode
 
 /*  */
 bool retrieve_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, b_node * _ReturnNode);
@@ -195,6 +227,7 @@ bool retrieve_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, b_n
 bool update_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const b_node * _WriteNode);
 
 
+//bstar
 
 /*  */
 bool retrieve_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, bstar_node * _ReturnNode);
@@ -203,34 +236,9 @@ bool retrieve_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex,
 bool update_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const bstar_node * _WriteNode);
 
 
+//
 
 /*  */
 bool searchIndexPageInFrame(const frame_t * _Frame, const uint32_t _Index, uint32_t * _ReturnFrameIndex);
-
-
-
-
-
-
-
-
-
-
-
-
-
-// loc
-
-
-/*  */
-#define mod_incr(x, m)				((x + 1) % m)
-
-/*  */
-#define incr_frame(x)               mod_incr(x, PAGES_PER_FRAME)
-
-
-// The key of the regpage is simply the key of first one by its itens.
-#define regpage_key(p)			(p.reg[0].key)	
-
 
 #endif  //_PAGING_HEADER_

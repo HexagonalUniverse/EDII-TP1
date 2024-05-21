@@ -77,7 +77,7 @@ PrintFile(FILE * _OutputStream, size_t _HowManyPages)
 /*  Splits a full node y into two in the B-Tree, y being x's child by the specified index 
     and x an internal node. Updates y and writes the new z node.
     (The node x has to be updated in the file stream afterwards, externally.) */
-bool BTree_SplitChild(b_node * x, const size_t _Index, B_Builder * _builder) {
+static bool BTree_SplitChild(b_node * x, const size_t _Index, B_Builder * _builder) {
     /* Invariants:
         . x is a non-full internal node;
         . y is a full node with (2t - 1) keys;
@@ -89,10 +89,9 @@ bool BTree_SplitChild(b_node * x, const size_t _Index, B_Builder * _builder) {
     
     retrieve_bnode(_builder -> file_stream, & _builder -> frame, x -> children_ptr[_Index], & y);
 
-    printf("y retrieved: ");
-    PrintBNode(& y);
-    printf("\n\n");
-
+    // printf("y retrieved: ");
+    // PrintBNode(& y);
+    // printf("\n\n");
     // show_bnode_frame(_BTreeStream -> frame);
 
     const size_t x_within_index = x -> children_ptr[_Index];
@@ -145,14 +144,15 @@ bool BTree_SplitChild(b_node * x, const size_t _Index, B_Builder * _builder) {
 }
 
 /*  */
-b_node BTree_SplitRoot(B_Builder * _builder) 
+static b_node 
+BTree_SplitRoot(B_Builder * _builder) 
 {
     // * instanciating a new node.
     
     b_node new_root = { 0 };
     new_root.item_count = 0;
     new_root.children_ptr[0] = _builder -> nodes_qtt;
-
+    
     b_node old_root = _builder -> root;
     update_bnode(_builder -> file_stream, & _builder -> frame, _builder -> nodes_qtt ++, & old_root);
 
@@ -162,8 +162,7 @@ b_node BTree_SplitRoot(B_Builder * _builder)
     // como quem n quer nada
     _builder -> root = new_root;
 
-    printf("post splitroot:\n");
-    PrintFile(_builder->file_stream, _builder->nodes_qtt);
+    PrintFile(_builder -> file_stream, _builder -> nodes_qtt);
 
     return new_root;
 }   
@@ -172,21 +171,35 @@ b_node BTree_SplitRoot(B_Builder * _builder)
 static inline bool 
 _bnode_binarySearch(registry_pointer * _regArray, long length, key_t key) {
     long beg = 0, position = 0, end = (long) (length - 1);
-    while(beg <= end){
+    while (beg <= end) {
         position = ((end - beg) / 2) + beg;
+
+#ifdef TRANSPARENT_COUNTER
+        if ((_regArray[position].key == key) && (++ transparent_counter.comparisons.build))
+            return true;
+        else if ((_regArray[position].key > key) && (++ transparent_counter.comparisons.build))
+            end = position - 1;
+
+#else
         if (_regArray[position].key == key)
             return true;
-        else if(_regArray[position].key > key)
+
+        else if (_regArray[position].key > key)
             end = position - 1;
+#endif
+
         else
             beg = position + 1;
     }
     return false;
 }
 
+
+
 /*  Auxiliary function to inserting into a node assumed to be non-full
     Can be understood as a base-case for all insertions. */
-bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointer * _reg, B_Builder * _builder) {
+static bool 
+BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B_Builder * _builder) {
     /*  Invariants:
             x -> item_count < 2t - 1.
 
@@ -195,6 +208,9 @@ bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointe
             Resolution in searching for the various indexes;
             Binary search over sequential ones.
     */
+   
+
+#if ! INSERT_NON_FULL_ITERATIVE
     // The child node buffer.
     b_node c = { 0 };
     c.item_count = 0;
@@ -210,11 +226,15 @@ bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointe
         }
 
         // Shiffiting the registries that are forward to the position of insertion.
-        for (; i >= 0 && (_reg -> key < x -> reg_ptr[i].key); i --) {
+#ifdef TRANSPARENT_COUNTER
+        for (; i >= 0 && cmp_ls_tc_build(_reg -> key, x -> reg_ptr[i].key); i--)
             x -> reg_ptr[i + 1] = x -> reg_ptr[i];
-        }
+#else
+        for (; i >= 0 && (_reg -> key < x -> reg_ptr[i].key); i --)
+            x -> reg_ptr[i + 1] = x -> reg_ptr[i];
+#endif
         i ++;
-        
+          
         // Adding the registry to the found position.
         x -> reg_ptr[i] = * _reg;
         x -> item_count ++;
@@ -229,10 +249,15 @@ bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointe
     // Traversal case: If the node is not leaf, traverse down the tree.
     } else {
         // TODO: (Analysis) Can it be done with a binary search?
-        
+
         // Searching for the last registry index such that it comes after the specified one.
-        for(; i >= 0 && _reg -> key < x -> reg_ptr[i].key; i --);
+#ifdef TRANSPARENT_COUNTER
+        for (; (i >= 0) && cmp_ls_tc_build(_reg -> key, x -> reg_ptr[i].key); i--);
+#else
+        for (; i >= 0 && _reg->key < x->reg_ptr[i].key; i--);
+#endif
         i ++;
+
 
         // Reading the child node indexed from i from Disk.
         retrieve_bnode(_builder -> file_stream, & _builder -> frame, x -> children_ptr[i], & c);
@@ -240,7 +265,6 @@ bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointe
         if (c.item_count == ((2 * BTREE_MINIMUM_DEGREE) - 1)) {
             
             BTree_SplitChild(x, i, _builder);
-            //bnode_write(x, _XIndex, _BTreeStream -> file_stream);
             update_bnode(_builder -> file_stream, & _builder -> frame, _XIndex, x);
             
             // Redirecting the i pointer in case it was forward-shiftted in SplitChild.
@@ -255,11 +279,78 @@ bool BTree_insertNonFull(b_node * x, const size_t _XIndex, const registry_pointe
         // Recursive step
         BTree_insertNonFull(& c, x -> children_ptr[i], _reg, _builder);
     }
+#else
+    // The child node buffer.
+    b_node c = { 0 };
+    c.item_count = 0;
+    int32_t i = x -> item_count - 1;
+
+    b_node y = * x;
+    uint32_t y_index = _XIndex;
+
+    while (! y.is_leaf)
+    {
+        c = (b_node){ 0 };
+
+        for (i = y.item_count - 1; i >= 0 && _reg -> key < y.reg_ptr[i].key; i--);
+        i ++;
+
+        // Reading the child node indexed from i from Disk.
+        retrieve_bnode(_builder->file_stream, &_builder->frame, y.children_ptr[i], &c);
+
+        if (c.item_count == ((2 * BTREE_MINIMUM_DEGREE) - 1)) {
+            BTree_SplitChild(& y, i, _builder);
+            update_bnode(_builder->file_stream, &_builder->frame, y_index, & y);
+            if (_XIndex == y_index)
+                * x = y;
+            
+            // Redirecting the i pointer in case it was forward-shiftted in SplitChild.
+            // By effect, it then points to the exact 
+            if (_reg->key > y.reg_ptr[i].key)
+                i++;
+
+            // Refreshing the *y*
+            retrieve_bnode(_builder->file_stream, &_builder->frame, y.children_ptr[i], &c);
+        }
+
+        // Recursive step
+        y_index = y.children_ptr[i];
+        y = c;
+
+
+    }
+
+    // Fails the insertion in case the registry is already present on the node.
+    if (_bnode_binarySearch(y.reg_ptr, y.item_count, _reg->key)) {
+        // * For that, a binary search is executed for efficiency.
+        return false;
+    }
+
+    // Shiffiting the registries that are forward to the position of insertion.
+    for (i = y.item_count - 1; i >= 0 && (_reg->key < y.reg_ptr[i].key); i--) {
+        y.reg_ptr[i + 1] = y.reg_ptr[i];
+    }
+    i++;
+
+    // Adding the registry to the found position.
+    y.reg_ptr[i] = *_reg;
+    y.item_count++;
+
+    // Updating the leaf-node on the tree structure.
+    update_bnode(_builder->file_stream, &_builder->frame, y_index, & y);
+    if (y_index == _XIndex)
+        *x = y;
+
+#endif
+
     return true;
 }
 
+
+
 /*  (...) */
-bool BTree_insert(const registry_pointer * _reg, B_Builder * _builder)
+static bool 
+BTree_insert(const registry_pointer * _reg, B_Builder * _builder)
 {
     /*  If the root has (2t - 1) items, it means that the node is full and needs to be splitted.
         (BTREE_MINIMUM_DEGREE = t) */
@@ -356,54 +447,54 @@ bool _SearchPage(const registry_pointer * _RegistryPointer, FILE * _Stream, regi
 #define GOTOVERSION false
 
 
-/* Sopa de macaco. */
-bool BTree_Search(key_t key, FILE * _InputStream, FILE * _OutputStream, frame_t * _Frame, registry_t * target)
+/*  Sopa de macaco. */
+bool BTree_Search(key_t key, REG_STREAM * _RegStream, B_STREAM * _BStream, frame_t * _Frame, registry_t * target)
 {
-    b_node node_buffer;
-    size_t index = 0, i = 0;
+    // Tracks the tree node we're at.
+    b_node node_buffer = { 0 };
+    size_t 
+        index = 0,  // Tracks the index to the next node.
+        i = 0;      // Tracks the index to the pointer to the next node.
     
-#if GOTOVERSION
-_BTREESEARCH:
-    bnode_read(& node_buffer, index, _BTreeStream -> file_stream);
-    
-    for (i = 0; i < node_buffer.item_count; i ++) {
-        if (node_buffer.reg_ptr[i].key > key)
-            goto _BTREESEARCHEXHAUSTION;
-
-        else if (node_buffer.reg_ptr[i].key == key) 
-            return _SearchPage(& node_buffer.reg_ptr[i], _InputStream, target);
-    }
-    
-    if (node_buffer.is_leaf)
-        goto _BTREESEARCHEXHAUSTION;
-    
-    index = node_buffer.children_ptr[i];
-    goto _BTREESEARCH;
-_BTREESEARCHEXHAUSTION:
-
-#else
+    /*  Iterates until a response to the search is given.
+        Since 'index' is initialized with 0, at first the 
+        root node will be pasted into the node-buffer. */
     while (true) 
     {   
-        retrieve_bnode(_OutputStream, _Frame, index, & node_buffer);
-    
-        printf("index: %u\n", (unsigned int) index);
-        PrintBNode(& node_buffer);
+        retrieve_bnode(_BStream, _Frame, index, & node_buffer);
+        
+        // printf("index: %u\n", (unsigned int) index);
+        // PrintBNode(& node_buffer);
         
         for (i = 0; i < node_buffer.item_count; i ++) {
-            if (node_buffer.reg_ptr[i].key == key)  {
-                return _SearchPage(& node_buffer.reg_ptr[i], _InputStream, target);
-            }
-            
+
+#if TRANSPARENT_COUNTER
+            if (cmp_eq_tc_search(node_buffer.reg_ptr[i].key, key))
+#else
+            if (node_buffer.reg_ptr[i].key == key)
+#endif
+                return _SearchPage(& node_buffer.reg_ptr[i], _RegStream, target);
+
+            /*  Since the registries are sorted in a b - node,
+                there's no point continuing the search once we have 
+                identified that from that point onwards the keys are 
+                strictly bigger. */
+#if TRANSPARENT_COUNTER
+            else if (cmp_bg_tc_search(node_buffer.reg_ptr[i].key, key))
+#else
             else if (node_buffer.reg_ptr[i].key > key)
+#endif
                 break;
         }
         
+        /*  In case the registry wasn't found, then we continue searching 
+            down the tree. We won't go deeper if the current node is
+            already a leaf, in which case the last search was the last
+            in the whole process, overall implying in failure. */
         if (node_buffer.is_leaf)
             break;
-
         index = node_buffer.children_ptr[i];
     }
-#endif
 
     return false;
 }

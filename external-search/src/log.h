@@ -1,13 +1,17 @@
+// <log.h>
+
+
 #ifndef _LOG_HEADER_
 #define _LOG_HEADER_
 
-// * Temporary debugging
-// ---------------------
 
 #define ANSI_ESCAPE_CODE    true
 #include "ansi_esc.h"
 #include <stdarg.h>
 
+
+// Debugging
+// ---------
 
 #define _Blue()     aec_fg_rgb(75, 135, 225)
 #define _Red()      aec_fg_rgb(225, 75, 75)
@@ -31,6 +35,11 @@ void _DebugPrint(const char * _FunctionName, size_t _Color, const char * _Format
 
 // The DebugPrint but without the message.
 #define DebugFuncMark()                 DebugPrint(NULL, NULL); fputc('\n', stderr);
+
+
+
+void countTab(void);
+void uncountTab(void);
 
 
 #endif

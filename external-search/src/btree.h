@@ -5,13 +5,7 @@
 #include "paging.h"
 
 
-// * Interface
-typedef struct {
-    b_node root;
-} BTree;
-
-
-
+#define INSERT_NON_FULL_ITERATIVE   false
 
 
 /*  Splits a full node y into two in the B-Tree, y being x's child by the specified index 
@@ -31,6 +25,15 @@ bool BTree_Build(REG_STREAM *, B_STREAM *);
 
 /*  */
 bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream, frame_t * _Frame, registry_t * target);
+
+
+/*  (...) */
+typedef struct {
+    B_STREAM * file_stream;
+    uint32_t nodes_qtt;
+    frame_t frame;
+    b_node root;
+} B_Builder;
 
 #endif // _BTREE_HEADER_
 

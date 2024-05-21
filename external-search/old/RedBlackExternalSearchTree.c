@@ -183,7 +183,7 @@ bool insertion(FILE* _treeFile, registry_t _entry, int _registersAtFile){
 
 // Generates the file of the binary search tree + calls the balance function
 bool fileGenerator(char* _dataFileName, int _registersQuant, int* _ExternalFileName){     
-    FILE *dataFile, *treeFile;
+    FILE * dataFile, *treeFile;
 
     // Open/crete files and prevent errors
     if ((dataFile = fopen(_dataFileName, "rb")) == NULL){
@@ -321,7 +321,7 @@ void RedBlackTreeBalance(FILE* _treeFile, int _Xline){
     Node MainNode, MainFather, MainGrandpa, MainUncle;
     
     // Start Main Node 
-    fseek(_treeFile, MainNode.line * sizeof(Node), SEEK_SET);
+    fseek(_treeFile, _Xline * sizeof(Node), SEEK_SET);
     fread(&MainNode, sizeof(Node), 1, _treeFile);
     if(MainNode.father != -1){
         fseek(_treeFile, MainNode.father * sizeof(Node), SEEK_SET);
@@ -479,12 +479,15 @@ void RedBlackTreeBalance(FILE* _treeFile, int _Xline){
 
 /// Main function
 bool ExternalSearchTree(search_result* _resultInfo ,char* _dataFileName, int _registersQuant, int _targetKey){ 
+    
+    /*
     char* ExternalFileName = "ExternalTree";
     // Delete file if it exists
     if(fileExists(ExternalFileName))
         remove(ExternalFileName);
+    */
 
-    if(!fileGenerator(_dataFileName, _registersQuant, ExternalFileName)){
+    if(! fileGenerator(_dataFileName, _registersQuant, ExternalFileName)){
         printf("External Search Tree failed. Creation...\n Ending execution...\n");     
         return false;
     }

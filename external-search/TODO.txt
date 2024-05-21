@@ -1,0 +1,16 @@
+
+
+Smaller stuff
+
+	. Erase some older codes.
+	. Transfer some defitions from <paging.h> to the other headers.
+	. 
+
+
+Bigger stuff
+
+	. Integrate the ebst.
+	. Ensure system will works accross the target plataforms.
+	. Betetr logging system.
+	. Abstracting very similar implementations into one thing.
+
