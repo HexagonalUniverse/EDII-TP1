@@ -122,7 +122,9 @@ bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Return
     transparent_counter.ebst.read++;
 #endif
 
+#if DEBUG_READ_EBSTNODE 
     DebugPrintG("Reading index <%u>\n", (unsigned int) _NodeIndex);
+#endif
 
     fseek(_Stream, ebstnode_pos(_NodeIndex), SEEK_SET);
     return fread(_ReturnNode, sizeof(ebst_node), 1, _Stream) > 0;
@@ -134,7 +136,9 @@ bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * 
     transparent_counter.ebst.write ++;
 #endif
     
+#if DEBUG_WRITE_EBSTNODE
     DebugPrintG("Writing index <%u>\n", (unsigned int) _NodeIndex);
+#endif
 
     fseek(_Stream, ebstnode_pos(_NodeIndex), SEEK_SET);
     return fwrite(_WriteNode, sizeof(ebst_node), 1, _Stream) > 0;

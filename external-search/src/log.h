@@ -37,9 +37,15 @@ void _DebugPrint(const char * _FunctionName, size_t _Color, const char * _Format
 #define DebugFuncMark()                 DebugPrint(NULL, NULL); fputc('\n', stderr);
 
 
+void _startDebug(void);
+void _endDebug(void);
+#define endDebug()          _endDebug()
+#define startDebug()        _startDebug()
 
-void countTab(void);
-void uncountTab(void);
 
+// Debug directives
+
+#define DEBUG_READ_EBSTNODE     false
+#define DEBUG_WRITE_EBSTNODE    false
 
 #endif

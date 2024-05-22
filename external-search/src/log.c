@@ -1,22 +1,21 @@
 #include "log.h"
 
-static unsigned int tabs = 0;
 
+static int tabs = 0;
 
-inline void
-countTab(void) {
-    tabs++;
-}
+// -> _raiseDebugLevel.
+inline void _startDebug(void)   { tabs ++; }
+inline void _endDebug(void)     { if (tabs > 0) tabs --; }
 
-inline void
-uncountTab(void) {
-    if (tabs > 0)
-        tabs --;
-}
 
 inline void
 _DebugPrint(const char * _FunctionName, size_t _Color, const char * _FormatMsg, ...)
 {
+    static int __tabs = 0;
+    if (__tabs != tabs) {
+        putchar('\n');
+        __tabs = tabs;
+    }
 
     // Initializing the variadic arguments list;
     va_list arguments;
@@ -31,14 +30,17 @@ _DebugPrint(const char * _FunctionName, size_t _Color, const char * _FormatMsg, 
         _Yellow();
     } else if (_Color == 2) {
         _Red();
-    } else if(_Color == 3) {
+    } else if (_Color == 3) {
 		_Green();
 	}
 
-
-    for (unsigned int i = 0; i < tabs; i++)
+    // tabbing
+    for (int i = 0; i < tabs; i++) {
+        putchar('.');
         putchar('\t');
+    }
 
+    // marking the function
     fprintf(stderr, "[%s] ", _FunctionName);
     aec_reset();
 	
