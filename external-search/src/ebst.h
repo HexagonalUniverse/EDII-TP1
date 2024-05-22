@@ -17,7 +17,7 @@ typedef struct {
 
 	frame_t frame;
 
-} EBST_Builder;
+} ERBT_Builder;
 
 
 #define EBST_NULL_INDEX		(-1)

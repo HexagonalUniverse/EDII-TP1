@@ -129,25 +129,65 @@ bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_node * _
 // EBST
 // --------------
 
+
+// * Represents a internal pointer in the ebst.
+typedef int32_t ebst_ptr;
+
+/*  In the ebst_ptr context, represents a null, invalid index. */
+#define EBST_NULL_INDEX     (-1)    
+
+
+/*  A node of a external binary search tree.
+    Structurally holds a registry-pointer and two
+    directional internal pointers. */
 typedef struct {
+    // The registry information the node holds.
     registry_pointer reg_ptr;
 
-    int32_t left, right;   // children ptr*
-
-    int32_t father;
-    int32_t line;
-
-    bool color;
+    // Node's branching, children pointers.
+    ebst_ptr left, right;
 } ebst_node;
 
 
-/*  */
-bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _ReturnNode);
+/*  A node of a external red-black tree.
+    Structurally a ebst-node, additionally containing
+    a pointer to its father and its color;
+
+*/
+typedef struct {
+    /*  The ebst-node itself, of whats erbt-node 
+        is a abstraction on top. */
+    ebst_node;
+    
+    // Tracks self position in file. Used on the balancing.
+    // TODO: * pendent substitution, for what it is redundant.
+    ebst_ptr line;
+
+    bool color : 1;         // Determines which color is the node - either red or black.
+    ebst_ptr father : 31;   // A pointer to the node's father.
+} erbt_node;
+
 
 /*  */
-bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode);
+bool read_ebrtnode(EBST_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode);
 
-#define ebstnode_pos(_Index)    (sizeof(ebst_node) * _Index)
+/*  */
+bool write_ebrtnode(EBST_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode);
+
+#define ebstnode_pos(_Index)    (sizeof(erbt_node) * _Index)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // The frame
 // ---------

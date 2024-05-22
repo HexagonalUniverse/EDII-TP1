@@ -16,7 +16,7 @@ typedef struct {
 	// Specifies an inner reference on the 
 	// ebst ds file for the root directinal child.
 	int left, right;
-} ebst_node;
+} erbt_node;
 
 
 #define midpoint(l, r)			(l + ((r - l) >> 1))

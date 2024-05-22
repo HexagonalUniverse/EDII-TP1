@@ -32,7 +32,7 @@ seekReadRegistry(FILE * __InputStream, size_t pos, registry_t * _ReturnRegistry)
 // Returns if the output-stream is ok after operating in it.
 // Wrapper around fwrite for the node.
 static finline bool
-writeNode(FILE* __OutputStream, ebst_node * _Node) 
+writeNode(FILE* __OutputStream, erbt_node * _Node) 
 {
 	fwrite(_Node, sizeof(ebst_node), 1, __OutputStream);
 	return (ferror(__OutputStream) == 0);
@@ -232,7 +232,7 @@ search_response ebst_search(const int _key, FILE * __ebstStream, registry_t * __
 		true
 	) {
 		fseek(__ebstStream, pos, SEEK_SET);
-		fread(& node_buffer, sizeof(ebst_node), 1, __ebstStream);
+		fread(& node_buffer, sizeof(erbt_node), 1, __ebstStream);
 		
 		if (_key == node_buffer.root_item.key) {
 			* __Return = node_buffer.root_item;

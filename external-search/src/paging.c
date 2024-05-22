@@ -117,7 +117,7 @@ inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_n
 
 
 /*  */
-bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _ReturnNode) {
+bool read_ebrtnode(EBST_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode) {
 #ifdef TRANSPARENT_COUNTER
     transparent_counter.ebst.read++;
 #endif
@@ -127,11 +127,11 @@ bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Return
 #endif
 
     fseek(_Stream, ebstnode_pos(_NodeIndex), SEEK_SET);
-    return fread(_ReturnNode, sizeof(ebst_node), 1, _Stream) > 0;
+    return fread(_ReturnNode, sizeof(erbt_node), 1, _Stream) > 0;
 }
 
 /*  */
-bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode) {
+bool write_ebrtnode(EBST_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode) {
 #ifdef TRANSPARENT_COUNTER
     transparent_counter.ebst.write ++;
 #endif
@@ -141,7 +141,7 @@ bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * 
 #endif
 
     fseek(_Stream, ebstnode_pos(_NodeIndex), SEEK_SET);
-    return fwrite(_WriteNode, sizeof(ebst_node), 1, _Stream) > 0;
+    return fwrite(_WriteNode, sizeof(erbt_node), 1, _Stream) > 0;
 }
 
 
