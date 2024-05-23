@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "paging.h": "c"
+        "paging.h": "c",
+        "stdio.h": "c"
     }
 }

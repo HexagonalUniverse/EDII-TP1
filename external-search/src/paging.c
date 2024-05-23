@@ -117,30 +117,33 @@ inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_n
 
 
 /*  */
-bool read_ebrtnode(EBST_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode) {
+bool read_erbtnode(EBST_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode) {
 #ifdef TRANSPARENT_COUNTER
     transparent_counter.ebst.read++;
 #endif
 
-#if DEBUG_READ_EBSTNODE 
-    DebugPrintG("Reading index <%u>\n", (unsigned int) _NodeIndex);
-#endif
+    fseek(_Stream, erbtnode_pos(_NodeIndex), SEEK_SET);
+    bool succ = fread(_ReturnNode, sizeof(erbt_node), 1, _Stream) > 0;
 
-    fseek(_Stream, ebstnode_pos(_NodeIndex), SEEK_SET);
-    return fread(_ReturnNode, sizeof(erbt_node), 1, _Stream) > 0;
+#if DEBUG_READ_EBSTNODE 
+    DebugPrintG("Reading index <%u>, key: %d\n", 
+        (unsigned int) _NodeIndex, _ReturnNode ->reg_ptr.key);
+#endif
+    return succ;
 }
 
 /*  */
-bool write_ebrtnode(EBST_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode) {
+bool write_erbtnode(EBST_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode) {
 #ifdef TRANSPARENT_COUNTER
     transparent_counter.ebst.write ++;
 #endif
     
 #if DEBUG_WRITE_EBSTNODE
-    DebugPrintG("Writing index <%u>\n", (unsigned int) _NodeIndex);
+    DebugPrintG("Writing index <%u>, key: %d\n", (unsigned int) _NodeIndex,
+        _WriteNode->reg_ptr.key);
 #endif
 
-    fseek(_Stream, ebstnode_pos(_NodeIndex), SEEK_SET);
+    fseek(_Stream, erbtnode_pos(_NodeIndex), SEEK_SET);
     return fwrite(_WriteNode, sizeof(erbt_node), 1, _Stream) > 0;
 }
 
@@ -385,15 +388,15 @@ searchIndexPageInFrame(const frame_t * _Frame, const uint32_t _Index, uint32_t *
 }
 
 
-
-inline bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Index, uint32_t * _ReturnIndex){
+/*  */
+inline bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Index, uint32_t * _ReturnIndex) {
     uint32_t frame_index = 0;
     if (searchIndexPageInFrame(_Frame, _Index, & frame_index)) {
         * _ReturnIndex = frame_index;
         return true;
     }
 
-    if(!addPage_regpage(_Index, _Frame, _Stream)){
+    if(! addPage_regpage(_Index, _Frame, _Stream)) {
         printf("\t>addpage");
         return false;
     }
@@ -401,9 +404,6 @@ inline bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Ind
     * _ReturnIndex = _Frame -> last;
     return true;
 }
-
-
-
 
 /*  */
 inline bool retrieve_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _Index, b_node * _ReturnNode)

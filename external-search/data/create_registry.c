@@ -64,14 +64,45 @@ void createKey(registry_t *_reg) {
     }
 }
 
+
+
+static void 
+__AEIOU(int argc, char ** argsv) {
+#define _TEMPORARY_FILENAME     "../temp/destruidor.bin"
+
+    registry_t buffer = { 0 };
+    FILE * reg_file = fopen(_TEMPORARY_FILENAME, "w+b");
+    if (reg_file == NULL)
+        return;
+
+    for (int i = 1; i < argc; i ++) {
+        buffer.data_1 = rand() % LONG_MAX;
+        createRandStr(buffer.data_2, RD2_SIZE);
+        createRandStr(buffer.data_3, RD3_SIZE);
+
+        buffer.key = atoi(argsv[i]);
+        printf("> key: %d\n", buffer.key);
+        fwrite(& buffer, sizeof(registry_t), 1, reg_file);
+    }
+
+    fclose(reg_file);
+}
+
+
 // S = O(N), T = O(N).
-int main() {
+int main(int argc, char ** argsv) {
     srand(time(NULL));
+    if (argc > 1) {
+        __AEIOU(argc, argsv);
+        return 0;
+    }
+
     registry_t *reg = calloc(NUM_REG, sizeof(registry_t));
 
     createKey(reg);
     createData(reg);
 
+    // todo: to verify correct opening...
     FILE *arq = fopen("reg.bin", "wb");
     fwrite(reg, sizeof(registry_t), NUM_REG, arq);
     fclose(arq);

@@ -120,6 +120,8 @@ typedef enum {
 	_SE_MAKEFRAME,
 	_SE_INDEXTABLE,
 	_SE_BBUILD,
+	_SE_ERBTBUILD,
+	_SE_EBSTMRTBUILD,
 	_SE_BSTARBUILD
 
 } SEARCH_RESPONSE;
@@ -140,9 +142,12 @@ typedef FILE	BSTAR_STREAM;
 /*	A stream representing the ebst data-structure. */
 typedef FILE	EBST_STREAM;
 
+/*	A stream representing the erbt data-structure. */
+typedef FILE	ERBT_STREAM;
+
 
 // The default registries filename.
-#define INPUT_DATAFILENAME			"temp/10.bin"
+#define INPUT_DATAFILENAME			"temp/u-100.bin"
 // #define INPUT_DATAFILENAME			"temp/input-data.bin"
 
 
@@ -154,9 +159,11 @@ typedef FILE	EBST_STREAM;
 
 // The default binary tree data-structure filename.
 #define OUTPUT_EBST_FILENAME        "temp/data.ebst"
+#define OUTPUT_ERBT_FILENAME		"temp/data.erbt"
 
 // TODO: (Ponder)
 #define OUTPUT_ISS_FILENAME         "temp/data.iss"
+
 
 
 

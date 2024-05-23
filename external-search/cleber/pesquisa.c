@@ -127,36 +127,88 @@ _ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Sit
 
 /*  */
 static SEARCH_RESPONSE
-__EBS(const key_t _Key, search_result * result, const char * _InputFilename, const char * _OutputFilename)
+__EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t _Qtt,
+    const char * _InputFilename, const char * _EBSTFilename, const char * _ERBTFilename)
 {
     // Time-measure variables.
-    // struct timeval start_time, end_time;
+    struct timeval start_time, end_time;
     
-    // Opening both input and output file-streams 
+    // Opening both input and output file-streams
     // for the construction.
 
     REG_STREAM * input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
     if (input_stream == NULL)
         return _SE_REGDATAFILE;
     
-    EBST_STREAM * output_stream = (EBST_STREAM *) fopen(_OutputFilename, "w+b");
-    if (output_stream == NULL) {
-        fclose(input_stream);
-        return _SE_EBST_FILE;
+    FILE * output_stream = NULL;
+    
+
+    frame_t frame = { 0 };
+    if (!makeFrame(&frame, sizeof(regpage_t)))
+        return _SE_MAKEFRAME;
+    
+    /*  If the input registries file is disordered, then
+        the external red-black tree is built. */
+    if ((_Situation == DISORDERED) || (_Situation == DESCENDING_ORDER)) {
+        output_stream = fopen(_ERBTFilename, "w+b");
+        if (output_stream == NULL) {
+            fclose(input_stream);
+            return _SE_EBST_FILE;
+        }
+
+        gettimeofday(&start_time, NULL);
+        if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream)) {
+            fclose(input_stream); fclose(output_stream);
+            return _SE_ERBTBUILD;
+        }
+
+        gettimeofday(&end_time, NULL);
+        result->measures.construction_time = time_diff_sec(start_time, end_time);
+
+        printRedBlackTree(output_stream);
+
+    /*  If it is ordered in ascending order, then the EBST 
+        is built by MRT. */
+    } else {    // _Situation == ASCENDING_ORDER
+        output_stream = fopen(_EBSTFilename, "w+b");
+        if (output_stream == NULL) {    
+            fclose(input_stream);
+            return _SE_EBST_FILE;
+        }
+
+        printf("before building\n"); fflush(stdout);
+        gettimeofday(& start_time, NULL);
+        if (! EBST_MRT_Build(input_stream, (EBST_STREAM *) output_stream, & frame, _Situation == ASCENDING_ORDER, _Qtt)) {
+            fclose(input_stream); fclose(output_stream);
+            return _SE_EBSTMRTBUILD;
+        }
+        gettimeofday(& end_time, NULL);
+        result -> measures.construction_time = time_diff_sec(start_time, end_time);
+
+        printf(">>> ebst built\n"); fflush(stdout);
+
+        fclose(output_stream);
+        output_stream = fopen(_EBSTFilename, "rb");
+        if (output_stream == NULL) {
+            fclose(input_stream);
+            return _SE_EBST_FILE;
+        }
+
+        gettimeofday(& start_time, NULL);
+            result -> success = EBST_Search((EBST_STREAM *) output_stream, input_stream, _Key, & result -> target);
+        gettimeofday(& end_time, NULL);
+
+        result -> measures.time_span = time_diff_sec(start_time, end_time);
+
     }
 
-
-    if (! EBST_Build(input_stream, output_stream)) {
-        
+    freeFrame(frame);
+    fclose(input_stream); fclose(output_stream);
+    
+    if (result->success) {
+        return SEARCH_SUCCESS;
     }
 
-    printRedBlackTree(output_stream);
-
-
-    fclose(input_stream);
-    fclose(output_stream);
-
-    printf("key: %d, result: <%p>\n", _Key, result);
     return SEARCH_FAILURE;
 }
 
@@ -373,7 +425,7 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
 
     } else if (method == EXTERNAL_BINARY_SEARCH) {
         printf("[%s]: EBS\n", __func__);
-        search_response = __EBS(key, result, INPUT_DATAFILENAME, OUTPUT_EBST_FILENAME);
+        search_response = __EBST(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_EBST_FILENAME, OUTPUT_ERBT_FILENAME);
     }
     
     else if (method == BTREE_SEARCH) {
