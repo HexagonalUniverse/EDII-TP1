@@ -83,13 +83,21 @@ void FinalizeLogging(void);
 
 // Debugging
 // ---------
-// 
+
 // Debugging directives
 
 #define DEBUG_PAGE_READING                  true
 #define DEBUG_PAGE_WRITING                  true
 #define DEBUG_REG_INDEX_IN_BUILD            true
 #define DEBUG_STREAM_AFTER_INSERTION        true
+#define DEBUG_FRAME_PAGE_MANAGEMENT         true    // update and retrieving
+#define DEBUG_FRAME_REFRESH                 true
+
+
+
+
+
+bool __debug_true_inline_printf(const char * _FormatMsg, ...);
 
 void __debug_func_in(const char * _FunctionName);
 void __debug_func_out(const char * _FunctionName);

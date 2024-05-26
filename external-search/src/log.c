@@ -94,7 +94,6 @@ bool InitializeLogging(void)
 {
 #if STDERR_DEBUG_LOGGING
     debug_stream = stderr;
-    printf("STDERR KRL!\n");
 #else
     debug_stream = fopen(debug_filename, "w");
     if (debug_stream == NULL)
@@ -110,6 +109,21 @@ void FinalizeLogging(void)
     fclose(debug_stream);
 #endif
 }
+
+
+
+
+
+inline bool __debug_true_inline_printf(const char * _FormatMsg, ...)
+{
+    va_list arguments;
+    va_start(arguments, _FormatMsg);
+    vfprintf(stdout, _FormatMsg, arguments);
+    va_end(arguments);
+    return true;
+}
+
+
 
 
 

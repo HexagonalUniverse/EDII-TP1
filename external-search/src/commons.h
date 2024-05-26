@@ -60,6 +60,10 @@ extern struct __transparent_counter_t {
 		uint64_t write;
 	} ebst;
 
+	struct {
+		uint64_t read;
+		uint64_t write;
+	} erbt;
 
 	struct {
 		uint64_t read;
@@ -79,15 +83,24 @@ extern struct __transparent_counter_t {
 } transparent_counter;
 
 
-#define cmp_eq_tc_build(key1, key2)	((key1 == key2) && (++ transparent_counter.comparisons.build))
-#define cmp_bg_tc_build(key1, key2)	((key1 > key2) && (++ transparent_counter.comparisons.build))
-#define cmp_ls_tc_build(key1, key2)	((key1 < key2) && (++ transparent_counter.comparisons.build))
 
-#define cmp_eq_tc_search(key1, key2) ((key1 == key2) && (++ transparent_counter.comparisons.search))
-#define cmp_bg_tc_search(key1, key2) ((key1 > key2) && (++ transparent_counter.comparisons.search))
-#define cmp_ls_tc_search(key1, key2) ((key1 < key2) && (++ transparent_counter.comparisons.search))
+#define cmp_eq_build(key1, key2)	((key1 == key2)	&& (++ transparent_counter.comparisons.build) && __debug_true_inline_printf("comparacao igual na contrução\n"))
+#define cmp_bg_build(key1, key2)	((key1 > key2) && (++ transparent_counter.comparisons.build))
+#define cmp_ls_build(key1, key2)	((key1 < key2) && (++ transparent_counter.comparisons.build))
 
+#define cmp_eq_search(key1, key2) ((key1 == key2) && (++ transparent_counter.comparisons.search))
+#define cmp_bg_search(key1, key2) ((key1 > key2) && (++ transparent_counter.comparisons.search))
+#define cmp_ls_search(key1, key2) ((key1 < key2) && (++ transparent_counter.comparisons.search))
 
+#else
+
+#define cmp_eq_build(key1, key2)	(key1 == key2)
+#define cmp_bg_build(key1, key2)	(key1 > key2)
+#define cmp_ls_build(key1, key2)	(key1 < key2)
+
+#define cmp_eq_search(key1, key2)	(key1 == key2)
+#define cmp_bg_search(key1, key2)	(key1 > key2)
+#define cmp_ls_search(key1, key2)	(key1 < key2)
 #endif
 
 

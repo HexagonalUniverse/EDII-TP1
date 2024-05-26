@@ -37,8 +37,8 @@ typedef FILE	ERBT_STREAM;
 
 
 // The default registries filename.
-// #define INPUT_DATAFILENAME			"temp/u-100.bin"
-#define INPUT_DATAFILENAME			"temp/input-data.bin"
+#define INPUT_DATAFILENAME			"temp/u-100.bin"
+// #define INPUT_DATAFILENAME			"temp/input-data.bin"
 
 // The default b-tree data-structure filename.
 #define OUTPUT_BTREE_FILENAME	    "temp/data.btree"

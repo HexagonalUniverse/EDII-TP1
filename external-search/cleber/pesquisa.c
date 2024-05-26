@@ -9,8 +9,7 @@
 struct __transparent_counter_t transparent_counter = { 0 };
 
 
-/*  Displays the counter in the "transparent-counter 
-*/
+/*  Displays the counter in the "transparent-counter". */
 static void
 PrintCounter(void)
 {
@@ -27,6 +26,14 @@ PrintCounter(void)
         transparent_counter.bs.read,
         transparent_counter.bs.write);
     
+    printf("\tebst:\n\t\t| read = %" PRIu64 "\n\t\t| write = %" PRIu64 "\n",
+        transparent_counter.ebst.read,
+        transparent_counter.ebst.write);
+
+    printf("\terbt:\n\t\t| read = %" PRIu64 "\n\t\t| write = %" PRIu64 "\n",
+        transparent_counter.erbt.read,
+        transparent_counter.erbt.write);
+
     printf("\tcomparisons:\n\t\t| search = %" PRIu64 "\n\t\t| build = %" PRIu64 "\n",
         transparent_counter.comparisons.search,
         transparent_counter.comparisons.build);
