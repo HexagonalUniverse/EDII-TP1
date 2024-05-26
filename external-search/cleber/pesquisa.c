@@ -2,12 +2,15 @@
 
 #include "external-search.h"
 #include <sys/time.h>   // For <gettimeofday>.
+#include <string.h>     // for strcmp
 
 
 #ifdef TRANSPARENT_COUNTER
 struct __transparent_counter_t transparent_counter = { 0 };
 
 
+/*  Displays the counter in the "transparent-counter 
+*/
 static void
 PrintCounter(void)
 {
@@ -81,49 +84,6 @@ PrintSearchResults(search_result * _Sr)
     }
 }
 
-/*  Parses the arguments for the main-program. 
-    Returns by ref. the method, situation and the key. */
-static bool
-_ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Situation, key_t * _Key, uint64_t * _Qtt)
-{
-    // Validation of the searching format "./'searchfile.exe' <method> <quantity> <situation> <key> <-P>"
-    if (! in_range(5, 6, argc)) {
-        fprintf(stderr, "Error: incorrect number of arguments: given %d, expected 5.", argc);
-        return false;
-    }
-    
-    // Getting the method number from terminal
-    * _Method = atoi(argsv[1]);
-    
-    // Validating the method number
-    if (! in_range(0, 3, * _Method)) {
-        fprintf(stderr, "[%s] method\n", __func__);
-        return false;
-    }
-        
-    // Getting the situation of the file from terminal
-    * _Situation = atoi(argsv[3]);
-    
-    // Validating the situation number
-    if (! in_range(1, 3, * _Situation)) {
-        fprintf(stderr, "[%s] situation\n", __func__);
-        return false;
-    }
-    
-    int64_t x = atoi(argsv[2]);
-    if (x < 0) {
-        printf("asd\n");
-        return false;
-    }
-    * _Qtt = x;
-
-
-    // Getting the wanted key from terminal
-    * _Key = atoi(argsv[4]);
-
-
-    return true;
-}
 
 /*  */
 static SEARCH_RESPONSE
@@ -144,7 +104,7 @@ __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
     
 
     frame_t frame = { 0 };
-    if (!makeFrame(&frame, sizeof(regpage_t)))
+    if (! frame_make(& frame, sizeof(regpage_t), REG_PAGE))
         return _SE_MAKEFRAME;
     
     /*  If the input registries file is disordered, then
@@ -264,7 +224,7 @@ __BTREE(const key_t _Key, search_result * result,
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
     frame_t frame = { 0 };
-    if (! makeFrame(& frame, sizeof(b_node))) {
+    if (!  frame_make(& frame, sizeof(b_node), B_PAGE)) {
         fclose(input_stream);
         fclose(output_stream);
         return _SE_MAKEFRAME;
@@ -339,7 +299,7 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
     frame_t frame = { 0 }; 
-    if (! makeFrame(& frame, sizeof(bstar_node))) {
+    if (!  frame_make(& frame, sizeof(bstar_node), BSTAR_PAGE)) {
         fclose(input_stream);
         fclose(output_stream);
         return _SE_MAKEFRAME;
@@ -390,7 +350,7 @@ __ISS(const key_t _Key, search_result * result, const SITUATION situation, const
 
     result -> measures.construction_time = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
 
-    frame_t frame = { 0 }; makeFrame(& frame, sizeof(regpage_t));
+    frame_t frame = { 0 };  frame_make(& frame, sizeof(regpage_t), REG_PAGE);
 
     gettimeofday(& start_time, NULL);
         bool search_response = indexedSequencialSearch(_Key, input_stream, & index_table, & frame, result, (situation == ASCENDING_ORDER) ? true : false);
@@ -419,25 +379,19 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
     SEARCH_RESPONSE search_response = SEARCH_FAILURE;
 
     
-    if (method == INDEXED_SEQUENTIAL_SEARCH) {
-        printf("[%s]: ISS\n", __func__);
+    if (method == INDEXED_SEQUENTIAL_SEARCH)
         search_response = __ISS(key, result, situation, qtt, INPUT_DATAFILENAME);
 
-    } else if (method == EXTERNAL_BINARY_SEARCH) {
-        printf("[%s]: EBS\n", __func__);
+    else if (method == EXTERNAL_BINARY_SEARCH)
         search_response = __EBST(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_EBST_FILENAME, OUTPUT_ERBT_FILENAME);
-    }
     
-    else if (method == BTREE_SEARCH) {
-        printf("[%s]: BTREE\n", __func__);
+    else if (method == BTREE_SEARCH)
         search_response = __BTREE(key, result, INPUT_DATAFILENAME, OUTPUT_BTREE_FILENAME);
-    }
     
-    else if (method == BSTAR_SEARCH) {
-        printf("[%s]: SBTAR\n", __func__);
+    else if (method == BSTAR_SEARCH)
         search_response = __BSTAR(key, result, INPUT_DATAFILENAME, OUTPUT_BSTAR_FILENAME);
-    }
     
+
     /*  Error representation */
     if ((search_response != SEARCH_SUCCESS) && (search_response != SEARCH_FAILURE))
     {
@@ -453,15 +407,86 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
     return true;
 }
 
+/*  Parses the arguments for the main-program. 
+    Returns by ref. the method, situation and the key. */
+static bool
+_ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Situation, key_t * _Key, uint64_t * _Qtt, bool * _Help)
+{
+    if ((argc == 2) && (! strcmp(argsv[1], "-h")))
+    {
+        // TODO: "-h" menu.
+        * _Help = true;
+        return true;
+    }
+
+    // Validation of the searching format "./'searchfile.exe' <method> <quantity> <situation> <key> <-P>"
+    if (! in_range(5, 6, argc)) {
+        _ContextErrorMsgf("parsing error: ", "Incorrect number of arguments: given " _ES_FG_RED() "%d" _AEC_RESET ", expected 5.\n", argc);
+        return false;
+    }
+    
+    if (argc == 6) {
+        if (strcmp("-p", argsv[5])) {
+            _ContextErrorMsgf("parsing error: ", "Expected \"-p\" but received \"" _ES_FG_RED() "%s" _AEC_RESET "\".\n", argsv[5]);
+            printf(">>\t"); _TracebackErrorArg(argc, argsv, 5); putchar('\n');
+            return false;
+        }
+    }
+
+
+    // Getting the method number from terminal
+    * _Method = atoi(argsv[1]);
+    
+    // Validating the method number
+    if (! in_range(0, 3, * _Method)) {
+        _ContextErrorMsgf("parsing error: ", "The specified method is incorrect. Passed " _ES_FG_RED() "%d" _AEC_RESET ", but actually expected"
+            " one in the range 0 to 3, inclusive.\n", * _Method);
+        printf(">>\t"); _TracebackErrorArg(argc, argsv, 1); putchar('\n');
+        return false;
+    }
+    
+    int64_t x = atoll(argsv[2]);
+    if (x < 0) {
+        _ContextErrorMsgf("parsing error: ", "Trouble interpreting the passed quantity. \"%s\" is interpreted as "
+            _ES_FG_RED() "%" PRIi64 _AEC_RESET ".\n", argsv[2], x);
+        printf(">>\t"); _TracebackErrorArg(argc, argsv, 2); putchar('\n');
+        return false;
+    }
+    else if (x > 2147483647LL) {
+        _ContextWarningMsgf("parsing warning: ", "The passed quantity (\"%s\" -> %" PRIi64 ") is way too large.\n",
+            argsv[2], x);
+    }
+    * _Qtt = x;
+
+    // Getting the situation of the file from terminal
+    * _Situation = atoi(argsv[3]);
+    
+    // Validating the situation number
+    if (! in_range(1, 3, * _Situation)) {
+        _ContextErrorMsgf("parsing error: ", "The specified file order situation is incorrect. " 
+            "Passed " _ES_FG_RED() "%d" _AEC_RESET ", but actually expected one in the range 1 to 3, inclusive.\n", * _Situation);
+        printf(">>\t"); _TracebackErrorArg(argc, argsv, 3); putchar('\n');
+        return false;
+    }
+
+    // Getting the wanted key from terminal
+    * _Key = atoi(argsv[4]);
+
+    // TODO: Verify if the parameters are numerals....
+
+    return true;
+}
 
 /* "pesquisa <método> <quantidade> <situação> <chave>" */
 int main(int argc, char ** argsv)
 {
-#ifdef hebert
-    printf("hebert: %u\n", (unsigned int) hebert);
-#else
-    printf("hebert não definito\n");
-#endif
+#if IMPL_LOGGING
+    if (! InitializeLogging())
+    {
+        // se precisar mostrar isso algum dia é triste *-*
+        printf("Failed initializing the logging system.\n");
+    }
+#endif // IMPL_LOGGING
 
 
     SEARCHING_METHOD method = 0;
@@ -469,10 +494,18 @@ int main(int argc, char ** argsv)
     key_t key = 0;
     uint64_t reg_qtt = 0;
     search_result result = { 0 };
-    
-    if (! _ParseArgs(argc, argsv, & method, & situation, & key, & reg_qtt))
+    bool display_help = false;
+
+    if (! _ParseArgs(argc, argsv, & method, & situation, & key, & reg_qtt, & display_help))
         return -1;
     
+    if (display_help)
+    {
+        // TODO: Print help on stdout for "-h"...
+        printf("help yeei\n");
+        return 0;
+    }
+
     if (! _RedirectSearch(method, situation, key, reg_qtt, & result))
     {
         // in case an error happened, propagetes it on output.
@@ -481,8 +514,12 @@ int main(int argc, char ** argsv)
     
     /* Representing the computation. */
     PrintSearchResults(& result);
-
     PrintCounter();
+
+
+#if IMPL_LOGGING
+    FinalizeLogging();
+#endif
 
     return EXIT_SUCCESS;
 }

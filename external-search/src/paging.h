@@ -1,12 +1,14 @@
-// <paging.h>
-// io manipulations
+/*  <src/paging.h>
+    
+    Where the all "pages" and their fundamental IO operations are defined. */
 
 
-#ifndef _PAGING_HEADER_
-#define _PAGING_HEADER_
+#ifndef _ES_PAGING_HEADER_
+#define _ES_PAGING_HEADER_
 
 
-#include "commons.h"
+#include "registry.h"
+#include "log.h"
 
 
 /*  How many itens, at its maximum, holds each page. 
@@ -15,8 +17,46 @@
 
 
 
-// Reg_pages
-// -----
+// Files and streams
+// -----------------
+
+/*	A stream representing the registries file. */
+typedef FILE	REG_STREAM;
+
+/*	A stream representing the b-tree data-structure. */
+typedef FILE	B_STREAM;
+
+/*	A stream representing the b*-tree data-structure. */
+typedef FILE	BSTAR_STREAM;
+
+/*	A stream representing the ebst data-structure. */
+typedef FILE	EBST_STREAM;
+
+/*	A stream representing the erbt data-structure. */
+typedef FILE	ERBT_STREAM;
+
+
+// The default registries filename.
+// #define INPUT_DATAFILENAME			"temp/u-100.bin"
+#define INPUT_DATAFILENAME			"temp/input-data.bin"
+
+// The default b-tree data-structure filename.
+#define OUTPUT_BTREE_FILENAME	    "temp/data.btree"
+
+// The default b*-tree data-structure filename.
+#define OUTPUT_BSTAR_FILENAME       "temp/data.bstar"
+
+// The default binary tree data-structure filename.
+#define OUTPUT_EBST_FILENAME        "temp/data.ebst"
+#define OUTPUT_ERBT_FILENAME		"temp/data.erbt"
+
+// TODO: (Ponder)
+#define OUTPUT_ISS_FILENAME         "temp/data.iss"
+
+
+
+// Regitries page
+// --------------
 
 /*  Registries-page. A page in the registries stream. 
     Structurally: an array of registries. */
@@ -39,24 +79,33 @@ size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _ReturnPa
     its index. Returns the number of registries that had been written. */
 size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage_t * _WritePage);
 
-/*  From a data file-stream and a reference pointer, attempts retrieving the entire
+/*  From a data file-stream and a registry reference pointer, attempts retrieving the entire
     registry data from it. Returns success. */
 bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Reference, registry_t * _ReturnRegistry);
 
 
 
-// Btree
+// B-Tree node
 // -----------
 
-/*  The minimum degree is here defined as:
-        2t = MAX_ITENS_PER_PAGE + 1
-        t = (MAX_ITENS_PER_PAGE + 1) / 2 */
-#define BTREE_MINIMUM_DEGREE    ((ITENS_PER_PAGE + 1) >> 1)
+/*  The minimum degree is here defined as follows:
+    
+    As each page can hold, on its maximum, (2t - 1) itens,
+    the maximum value of t that doesn't exceed that limit is then
+        
+        2t - 1 = ITENS_PER_PAGE =>
+        2t = ITENS_PER_PAGE + 1 =>
+        t = floor{(ITENS_PER_PAGE + 1) / 2}. */
+#define BTREE_MINIMUM_DEGREE        ((ITENS_PER_PAGE + 1) >> 1)
 
-/*  */
-#define BTREE_MINIMUM_DEGREE_m1 (BTREE_MINIMUM_DEGREE - 1)
+/*  Minimum degree minus 1. (t - 1). */
+#define BTREE_MINIMUM_DEGREE_m1     (BTREE_MINIMUM_DEGREE - 1)
 
-/*  A B-Tree node / page. (...)  */
+
+/*  A B-Tree node/page. 
+    Structurally, it contains a counter of how much items does it contains, 
+    an indicator of whether it is a leaf, and arrays for the registry pointers 
+    and the children pointers. */
 typedef struct {
     /* 1 [bytes], aligning by 1. */
     struct {
@@ -85,18 +134,22 @@ bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _WriteNod
 
 
 
-// BStar
-// -----------
+// B*-Tree node
+// ------------
 
-/*  A B-star node / page. (...) */
+/*  A B* node/page. 
+    Structurally, it contains a counter of how much items does it contains,
+    an indicator of whether it is a leaf, and arrays for the keys and the 
+    children pointers, or an array for the registry pointers, dependending
+    upon it being an inner or a leaf node, respectivelly. */
 typedef struct {
     // 1 [byte], 1 [byte] alignment.
     struct {
-        uint8_t item_count : 7;
-        bool    is_leaf : 1;
+        uint8_t item_count  : 7;
+        bool    is_leaf     : 1;
     };
 
-    /*  (...) */
+    /*  Recognized differently if it is an inner or a leaf node. */
     union {
         // 8 * ITENS_PER_PAGE + 4 [bytes], 4 [bytes] alignment.
         struct {
@@ -108,35 +161,40 @@ typedef struct {
         struct {
             registry_pointer reg_ptr[ITENS_PER_PAGE];
         } leaf;
-    };
+    }; // 8 * ITENS_PER_PAGE + 4 [bytes] total, with a waste of 4 [bytes] if it is a leaf.
 
-    // 8 * ITENS_PER_PAGE + 4 + 1 -> 8 * (ITENS_PER_PAGE + 1) [bytes], 4 [bytes] alignment.
-    // 48 [bytes].
+    // 8 * ITENS_PER_PAGE + 4 + 1 => 8 * (ITENS_PER_PAGE + 1) [bytes], 4 [bytes] alignment.
+    // For ITENS_PER_PAGE = 5, occupies then 48 [bytes].
 } bstar_node;
 
-/*  */
+/*  Returns the position at which the node given by the passed index is at the
+    B*-Tree file stream. */
 #define bstarnode_pos(_Index)       (_Index * sizeof(bstar_node))
 
 
-/*  */
+/*  Reads a single b* node on the B* tree data stream, given its index. Returns whether the reading
+    was successful - so the node was read on its entirety. */
 bool read_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, bstar_node * _ReturnNode);
 
-/*  */
+/*  Writes a single b* node on the B* tree data stream, given its index. Returns whether the writing
+    was successful - so the node was written on its entirety. */
 bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_node * _WriteNode);
 
 
 
-// EBST
-// --------------
-
+// EBST & ERBT
+// -----------
 
 // * Represents a internal pointer in the ebst.
 typedef int32_t ebst_ptr;
 
 /*  In the ebst_ptr context, represents a null, invalid index. */
-#define ERBT_NULL_INDEX     (-1)    
-
 #define EBST_NULL_INDEX		(-1)
+
+/*  In the ebst_ptr context, represents a null, invalid index. 
+    (Synonym naming for EBST_NULL_INDEX.) */
+#define ERBT_NULL_INDEX     EBST_NULL_INDEX    
+
 
 /*  A node of a external binary search tree.
     Structurally holds a registry-pointer and two
@@ -152,130 +210,36 @@ typedef struct {
 
 /*  A node of a external red-black tree.
     Structurally a ebst-node, additionally containing
-    a pointer to its father and its color;
-*/
+    a pointer to its father and its color. */
 typedef struct {
     /*  The ebst-node itself, of whats erbt-node 
         is a abstraction on top. */
     ebst_node;
     
 
-    bool color : 1;         // Determines which color is the node - either red or black.
+    bool color      : 1;    // Determines which color is the node - either red or black.
     ebst_ptr father : 31;   // A pointer to the node's father.
-} erbt_node;
-
-
-/*  */
-bool read_erbtnode(EBST_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode);
-
-/*  */
-bool write_erbtnode(EBST_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode);
-
-#define erbtnode_pos(_Index)    (sizeof(erbt_node) * _Index)
+} erbt_node;    // 24 [bytes], 4 of alignment.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-// The frame
-// ---------
-
-// How many page-frames are there to be stored in the pagination-system.
-#define PAGES_PER_FRAME		5					
-
-/*  The frame for the pagination-system, polymorphic in respect to the page type.
-    Structurally, implements a circular queue into which the pages are added and removed. */
 typedef struct {
-    /*  For the sake of the page polymorphism of the frame, the pages array is dynamic.
-        But invariably, it will always allocate <PAGES_PER_FRAME> elements (pages) in it. */
-
-    // A dynamic array of pages of size <PAGES_PER_FRAME>.
-    void * pages;
-
-    // The corresponding indexes for the pages. Array of size <PAGES_PER_FRAME>.
-    uint32_t indexes[PAGES_PER_FRAME];
-
-    // Pointer to the initial position of the circular-queue. Inclusive.
-    uint32_t first;
-    
-    // Pointer to the last position of the circular-queue. Inclusive.
-    uint32_t last;
-
-    // The size of the frame in pages; it is: "how many pages are load into the frame"?
-    uint32_t sized;
-} frame_t;  
-// TODO: (Refactor) -> Frame? For which it can be considered as an ds object.
-
-/*  Increments a pointer in the frame context. It is (x + 1) % PAGES_PER_FRAME. */
-#define incr_frame(x)               mod_incr(x, PAGES_PER_FRAME)
-
-#define NULL_INDEX      0
-
-//
-#define isFrameFull(_Frame)  (_Frame -> sized == PAGES_PER_FRAME)
-
-//
-#define isFrameEmpty(_Frame) (_Frame -> sized == 0)
-
-bool makeFrame(frame_t * _Frame, const size_t _PageSize);
-
-#define freeFrame(_Frame)   free(_Frame.pages);
-
-bool removePage(frame_t *_Frame);
-
-bool addPage_regpage(uint32_t num_page, frame_t *_Frame, REG_STREAM *_Stream);
-bool addPage_b_node(uint32_t num_page, frame_t *_Frame, B_STREAM *_Stream);
-bool addPage_bstar(uint32_t _Index, frame_t * _Frame, BSTAR_STREAM *_Stream);
-
-void show_regpage_frame(const frame_t* _Frame);
-
-void show_bnode_frame(const frame_t *_Frame);
-
-
-
-// builders
-
-
-
-
-
-
-//reg_page
+    ebst_ptr root;
+} ERBT_Header;
+#define erbtnode_pos(_Index)    (sizeof(ERBT_Header) + sizeof(erbt_node) * _Index)
 
 /*  */
-bool retrieve_regpage(REG_STREAM * _Stream, frame_t * _Frame, size_t _Index, uint32_t * _ReturIndex);
-
-
-//bnode
+bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Node);
 
 /*  */
-bool retrieve_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, b_node * _ReturnNode);
+bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode);
 
 /*  */
-bool update_bnode(B_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const b_node * _WriteNode);
-
-
-//bstar
+bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode);
 
 /*  */
-bool retrieve_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, bstar_node * _ReturnNode);
-
-/*  */
-bool update_bstar(BSTAR_STREAM * _Stream, frame_t * _Frame, size_t _NodeIndex, const bstar_node * _WriteNode);
+bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode);
 
 
-//
 
-/*  */
-bool searchIndexPageInFrame(const frame_t * _Frame, const uint32_t _Index, uint32_t * _ReturnFrameIndex);
-
-#endif  //_PAGING_HEADER_
+#endif  // _ES_PAGING_HEADER_

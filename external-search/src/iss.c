@@ -1,3 +1,7 @@
+/*	<src/iss.c>
+
+*/
+
 
 #include "iss.h"
 
@@ -120,7 +124,7 @@ bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream,
 		return false;
     }
 
-	if (! retrieve_regpage(_Stream, _Frame, i - 1, & frame_index)) {
+	if (! frame_retrieve_index(_Stream, _Frame, i - 1, & frame_index)) {
 		printf("iss-oa:err2\n");
 		return false;
 	}

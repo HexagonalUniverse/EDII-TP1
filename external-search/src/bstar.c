@@ -1,4 +1,6 @@
+/*  <src/bstar.c>
 
+*/
 
 #include "bstar.h"
 
@@ -93,7 +95,7 @@ bool BSTree_SplitChild(bstar_node * x, const size_t _Index, BStar_Builder * _bs_
     // y is the full node to be split.
     // b_node y = retrieveBNode(x -> children_ptr[_Index], _bs_builder);
     bstar_node y = { 0 };
-    retrieve_bstar(_bs_builder->file_stream, & _bs_builder -> frame, x -> inner.children_ptr[_Index], & y);
+    frame_retrieve_page(_bs_builder->file_stream, & _bs_builder -> frame, x -> inner.children_ptr[_Index], & y);
 
     const size_t x_within_index = x -> inner.children_ptr[_Index];
 
@@ -102,11 +104,10 @@ bool BSTree_SplitChild(bstar_node * x, const size_t _Index, BStar_Builder * _bs_
     z.is_leaf = y.is_leaf;
 
     z.item_count = BTREE_MINIMUM_DEGREE_m1;
-    if (z.is_leaf)
-        z.item_count ++;
 
     if (z.is_leaf)
     {
+        z.item_count ++;
         for (size_t j = 0; j < BTREE_MINIMUM_DEGREE; j ++)
             z.leaf.reg_ptr[j] = y.leaf.reg_ptr[j + BTREE_MINIMUM_DEGREE_m1];
     }
@@ -147,10 +148,10 @@ bool BSTree_SplitChild(bstar_node * x, const size_t _Index, BStar_Builder * _bs_
     x -> item_count ++;
     
     // Updates the split child,
-    update_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, x_within_index, & y);
+    frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, x_within_index, & y);
     
     // writes the new one.
-    update_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, _bs_builder -> nodes_qtt ++, & z);
+    frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, _bs_builder -> nodes_qtt ++, & z);
     
     // x is not attempted being written here as an effect of issues of indexing it.
     // DiskWrite(x, ,_BTreeStream);
@@ -170,10 +171,10 @@ bstar_node BSTree_SplitRoot(BStar_Builder * _bs_builder)
 
     bstar_node old_root = _bs_builder -> root;
     
-    update_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, _bs_builder -> nodes_qtt ++, & old_root);
+    frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, _bs_builder -> nodes_qtt ++, & old_root);
     BSTree_SplitChild(& new_root, 0, _bs_builder);
     
-    update_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, 0, & new_root);
+    frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, 0, & new_root);
 
     _bs_builder -> root = new_root;
     
@@ -218,25 +219,25 @@ bool BSTree_insertNonFull(bstar_node * x, const size_t _XIndex, const registry_p
         x -> leaf.reg_ptr[i] = * _Reg;
         x -> item_count ++;
 
-        update_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, _XIndex, x);
+        frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, _XIndex, x);
     }
     // Traversal case: inner node.
     else {
         for (; i >= 0 && (_Reg -> key < x -> inner.keys[i]); i --);
         i ++;
         
-        retrieve_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, x -> inner.children_ptr[i], & c);
+        frame_retrieve_page(_bs_builder -> file_stream, & _bs_builder -> frame, x -> inner.children_ptr[i], & c);
         if (c.item_count == (2 * BTREE_MINIMUM_DEGREE - 1)) {
             BSTree_SplitChild(x, i, _bs_builder);
-            update_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, _XIndex, x);
+            frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, _XIndex, x);
 
             if (_Reg -> key > x -> inner.keys[i])
                 i ++;
 
-            retrieve_bstar(_bs_builder -> file_stream, & _bs_builder -> frame, x -> inner.children_ptr[i], & c);
+            frame_retrieve_page(_bs_builder -> file_stream, & _bs_builder -> frame, x -> inner.children_ptr[i], & c);
         }
 
-        DebugPrint("(bfr Recursive Step) i = %u\n", (unsigned int) i);
+        DebugPrintf("(bfr Recursive Step) i = %u\n", (unsigned int) i);
         
         BSTree_insertNonFull(& c, x -> inner.children_ptr[i], _Reg, _bs_builder);
     }
@@ -261,7 +262,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream) {
     bs_builder.root.is_leaf = true;
     bs_builder.nodes_qtt = 1;
 
-    if (! makeFrame(& bs_builder.frame, sizeof(bstar_node)))
+    if (! frame_make(& bs_builder.frame, sizeof(bstar_node), BSTAR_PAGE))
     {
         // bb:err1
         printf("bs:err1\n");
@@ -295,7 +296,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream) {
             reg_buffer.original_pos = reg_index ++;
 
             if (! BSTree_insert(& reg_buffer, & bs_builder)) {
-                printf("\t\t"); DebugPrint("Failure", NULL);
+                printf("\t\t"); DebugPrintf("Failure", NULL);
                 return false;
             }
 
@@ -314,7 +315,7 @@ bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStre
 {
     // Tracks the tree node we're at. Initialized to the root.
     bstar_node node_buffer = { 0 };
-    retrieve_bstar(_BStarStream, _Frame, 0, & node_buffer);
+    frame_retrieve_page(_BStarStream, _Frame, 0, & node_buffer);
     
     // Tracks the index to the pointer to the next node.
     uint8_t i = 0;
@@ -325,7 +326,7 @@ bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStre
         while ((node_buffer.inner.keys[i] <= key) && (i < node_buffer.item_count)) 
             i ++;
         
-        retrieve_bstar(_BStarStream, _Frame, node_buffer.inner.children_ptr[i], & node_buffer);
+        frame_retrieve_page(_BStarStream, _Frame, node_buffer.inner.children_ptr[i], & node_buffer);
     }
 
     /*  Once the target leaf node is found, a binary-search 

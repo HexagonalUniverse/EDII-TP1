@@ -1,11 +1,13 @@
-#ifndef EBST_H
-#define EBST_H
+#ifndef _ES_EBST_HEADER_
+#define _ES_EBST_HEADER_
 
 
-#include "paging.h"
+#include "searching.h"
 
 #define RED 0
 #define BLACK 1
+
+
 
 
 
@@ -14,6 +16,9 @@ typedef struct {
 	
 	//
 	uint32_t registries_written;
+
+
+	ERBT_Header header;
 
 	frame_t frame;
 
@@ -32,4 +37,4 @@ void printRedBlackTree(EBST_STREAM * _Stream);
 bool EBST_MRT_Build(REG_STREAM *, EBST_STREAM *, frame_t *,bool ascending, uint64_t _RegistriesQtt);
 bool EBST_Search(EBST_STREAM * _Stream, REG_STREAM * _InputStream, const key_t _Key, registry_t * _Target);
 
-#endif //EBST_H
+#endif // _ES_EBST_HEADER_

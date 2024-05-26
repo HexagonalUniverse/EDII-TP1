@@ -1,9 +1,9 @@
 
-#ifndef _INDEXED_SEQUENTIAL_SEARCH_HEADER_
-#define _INDEXED_SEQUENTIAL_SEARCH_HEADER_
+#ifndef _ES_ISS_HEADER_
+#define _ES_ISS_HEADER_
 
 
-#include "paging.h"
+#include "searching.h"
 
 
 /*	*/
@@ -20,4 +20,4 @@ bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * 
 
 bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, IndexTable * _Table, frame_t * _Frame, search_result * _Sr, bool is_ascending);
 
-#endif // _INDEXED_SEQUENTIAL_SEARCH_HEADER_
+#endif // _ES_ISS_HEADER_

@@ -1,3 +1,8 @@
+/*  <src/ebst.c>
+
+*/
+
+
 #include "ebst.h"
 #include <assert.h>
 
@@ -61,15 +66,15 @@ _ERBT_insert_root(ERBT_Builder * _builder, const registry_pointer * _Entry) {
         .father = -1,
         .left = -1,
         .right = -1,
-        // .line = 0,
     };
+    
     _builder -> registries_written ++;
     return write_erbtnode(_builder -> file_stream, 0, &new_node);
 }
 
 /*  Inserts a registry in the ERBT data-structure. Returns success. */
 static bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
-    startDebug(); DebugFuncMark();
+    raiseDebug(); DebugFuncMark();
 
     // In case of first entry on the binary search tree (root node).
     if (_builder -> registries_written == 0)
@@ -78,8 +83,8 @@ static bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry
     /*  The new node to be inserted in the tree. */
     erbt_node newNode = ERBT_nodeStarter(_Entry);
 
-    erbt_node currentNode = { 0 };  // The node over focus on the traversal.
-    uint32_t node_index = 0;        // Tracks the index of currentNode.
+    erbt_node currentNode = { 0 };                  // The node over focus on the traversal.
+    uint32_t node_index = _builder -> header.root;  // Tracks the index of currentNode.
     
     /*  Sinalizes whether there was an error
         on the inserting process the traversal to halt.
@@ -156,7 +161,7 @@ static bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry
             break;
         }
     }
-    endDebug();
+    fallDebug();
 
     if (had_failure) {
         /*  TODO: Proper debug here. */
@@ -169,103 +174,146 @@ static bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry
 
 
 
-/// RedBlackTree exclusive Functions
-// Left rotation
-static void
-rotateLeft(ERBT_Builder * _builder, uint32_t _targetLine) {
-    DebugFuncMark();
+/*  Structures a right rotation around the passed pivot in the tree.
+    Manages to update only the branching pointers in the data-structure stream. 
+ 
+    Define X as pivot node and Y as its original left child.
 
-    erbt_node X, Y, tempNode;
+    Invariants of use:
+        | _pivotIndex != EBST_NULL_INDEX;
+        | X has to have a left child.
 
-    // Start X & Y
-    read_erbtnode(_builder -> file_stream, _targetLine, & X);
-    read_erbtnode(_builder -> file_stream, X.right, & Y);
-
-    const ebst_ptr old_x_right = X.right;
+    The six following operations are done in order to guaranteeing the
+    after-rotation properties:
     
-
-    /// Operations
-    // Y-left sub tree becomes X-right sub tree
-    X.right = Y.left;
-    Y.father = X.father;
-
-    Y.left = old_x_right;
-
-    // Fix the relation
-    X.father = _targetLine;
-
-    // Updates X's right son
-    if (X.right != -1) {
-        read_erbtnode(_builder->file_stream, X.right, & tempNode);
-        tempNode.father = old_x_right;
-        write_erbtnode(_builder->file_stream, X.right, & tempNode);
-    }
-
-    // Updates X's left son 
-    if (X.left != -1) {
-        read_erbtnode(_builder->file_stream, X.left, &tempNode);
-        tempNode.father = old_x_right;
-        write_erbtnode(_builder->file_stream, X.left, &tempNode);
-    }
-
-    // Update file
-    write_erbtnode(_builder->file_stream, old_x_right, &X);
-    write_erbtnode(_builder->file_stream, _targetLine, &Y);
-}
-
-// Right rotation
+    1. X's left subtree becomes Y's right one.
+    2. X's father becomes Y's one instead.
+    3. Y will have X as its right child.
+    4. In concordance to (2), Y takes X's child place on X's father.
+    5. In concordance to (3), X adopts Y as its father.
+    6. In concordance to (1), the right subtree of Y will have X as its root. */
 static void
-rotateRight(ERBT_Builder * _builder, uint32_t _targetLine) {
-    DebugFuncMark();
-    // -> gf_index
+rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex) {
+    DebugPrintf("pivot: %d\n", _pivotIndex);
 
-    // x: gf
-    // y: f
+    if (_pivotIndex == EBST_NULL_INDEX)
+    {
+        DebugPrintR("error\n", NULL);
+        // * error
+        return;
+    }
 
-    erbt_node X, Y, tempNode;
 
-    // Start X & Y
-    read_erbtnode(_builder -> file_stream, _targetLine, & X);
+    /*  X: pivot-node; Y: its left child. */
+    erbt_node X, Y;
+    read_erbtnode(_builder -> file_stream, _pivotIndex, & X);
     read_erbtnode(_builder -> file_stream, X.left, & Y);
 
-    const ebst_ptr old_x_left = X.left; // f_index
+    /*  Tracks Y index - as X.left will be updated. */
+    const ebst_ptr old_x_left = X.left;
 
-    // Y-Right sub tree becomes X-Left sub tree
+
+    // 1. Y's right subtree becomes X's left one.
     X.left = Y.right;
-    // Updates Y's father (same as X)
+ 
+    // 2. Y's father becomes the same as X's original one.
     Y.father = X.father;
-    // Changes X and Y position
-    // TemporaryPosition = old_x_left;
 
-    // Y.line = X.line;
-    // X.line = TemporaryPosition;
-    
-    // Puts X above Y
-    Y.right = old_x_left;
-    // Fix the relation
-    X.father = _targetLine;
+    // 3. Y adopts X as its right child.
+    Y.right = _pivotIndex;
 
+    /*  4. Propagating the X-Y substitution as child information 
+        up to X's father. */
+    if (X.father != ERBT_NULL_INDEX) {
+        erbt_node x_father;
+        read_erbtnode(_builder -> file_stream, X.father, & x_father);
 
-    if (X.right != -1) {
-        read_erbtnode(_builder -> file_stream, X.right, & tempNode);
-        tempNode.father = old_x_left;
-        write_erbtnode(_builder -> file_stream, X.right, & tempNode);
+        // X being originally the right-child, resets its pointer to Y's index;
+        if (x_father.right == _pivotIndex)
+            x_father.right = old_x_left;
+        
+        // does so equally X being the left one.
+        else
+            x_father.left = old_x_left;
+
+        write_erbtnode(_builder -> file_stream, X.father, & x_father);
     }
-    // Updates X's left son 
+
+    // 5. In concordance with (.3), X recognizes Y as its father.
+    X.father = old_x_left;
+
+    // 6. Tells the before Y's right subtree that X become its root.
     if (X.left != -1) {
-        read_erbtnode(_builder->file_stream, X.left, &tempNode);
-        tempNode.father = old_x_left;
-        write_erbtnode(_builder->file_stream, X.left, &tempNode);
+        erbt_node y_right_subtree_root;
+        read_erbtnode(_builder -> file_stream, X.left, & y_right_subtree_root);
+        y_right_subtree_root.father = old_x_left;
+        write_erbtnode(_builder -> file_stream, X.left, & y_right_subtree_root);
     }
-    //Update file
-    write_erbtnode(_builder->file_stream, old_x_left, &X);
-    write_erbtnode(_builder->file_stream, _targetLine, &Y);
 
-
-
+    // Updating target and its left child in their respective positions. (Position is preserved)
+    write_erbtnode(_builder -> file_stream, old_x_left, & Y);
+    write_erbtnode(_builder -> file_stream, _pivotIndex, & X);
 }
 
 
+/*  Structures a left rotation aroung the passe pivot in the tree.
+
+*/
+static void
+rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex) {
+    DebugPrintf("pivot: %d\n", _pivotIndex);
+
+    /*  X: pivot-node; Y: its right child. */
+    erbt_node X, Y;
+    read_erbtnode(_builder -> file_stream, _pivotIndex, & X);
+    read_erbtnode(_builder -> file_stream, X.right, & Y);
+
+    /*  Tracks Y index - as X.right will be updated. */
+    const ebst_ptr old_x_right = X.right;
+
+
+    // 1. Y's left subtree becomes X's right one.
+    X.right = Y.left;
+
+    // 2. Y's father becomes the same as X's original one.
+    Y.father = X.father;
+
+    // 3. Y adopts X as its left child.
+    Y.left = _pivotIndex;
+
+    /*  4. Propagating the X-Y substitution as child information
+        up to X's father. */
+    if (X.father != ERBT_NULL_INDEX) {
+        erbt_node x_father;
+        read_erbtnode(_builder -> file_stream, X.father, & x_father);
+
+        // X being originally the right-child, resets its pointer to Y's index;
+        if (x_father.right == _pivotIndex)
+            x_father.right = old_x_right;
+
+        // does so equally X being the left one.
+        else
+            x_father.left = old_x_right;
+
+        write_erbtnode(_builder -> file_stream, X.father, & x_father);
+    }
+
+    // 5. In concordance with (.3), X recognizes Y as its father.
+    X.father = old_x_right;
+
+    // 6. Tells the before Y's left subtree that X become its root.
+    if (X.right != -1) {
+        erbt_node y_left_subtree_root;
+        read_erbtnode(_builder -> file_stream, X.right, & y_left_subtree_root);
+        y_left_subtree_root.father = old_x_right;
+        write_erbtnode(_builder -> file_stream, X.right, & y_left_subtree_root);
+    }
+
+    // Updating target and its left child in their respective positions. (Position is preserved)
+    write_erbtnode(_builder -> file_stream, old_x_right, & Y);
+    write_erbtnode(_builder -> file_stream, _pivotIndex, & X);
+
+}
 
 
 
@@ -276,7 +324,6 @@ struct ERBT_Balancer {
     ebst_ptr node_index, uncle_index;
 };
 
-
 /*  ERBT balance case 1.1 and 2.1: color correction
       BLACK                                  RED
    <-       ->      == Becomes ==>        <-     ->
@@ -285,15 +332,15 @@ RED           RED                   BLACK           BLACK
 inline static void
 _ERBT_Balance_case_change(struct ERBT_Balancer * balancer) {
 
-    startDebug(); DebugFuncMark();
+    raiseDebug(); DebugFuncMark();
     // CASE 1.1 & 2.1: Uncle also is RED
-    balancer -> grandfather_node.color  = RED;
-    balancer -> uncle_node.color        = BLACK;
-    balancer -> father_node.color       = BLACK;
+    balancer -> grandfather_node.color = RED;
+    balancer -> uncle_node.color = BLACK;
+    balancer -> father_node.color = BLACK;
 
     write_erbtnode(balancer -> builder -> file_stream, balancer -> father_node.father, & balancer -> grandfather_node);
     write_erbtnode(balancer -> builder -> file_stream, balancer -> uncle_index, & balancer -> uncle_node);
-    write_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
+    write_erbtnode(balancer-> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
 
     // temp
     printRedBlackTree(balancer -> builder -> file_stream);
@@ -303,67 +350,86 @@ _ERBT_Balance_case_change(struct ERBT_Balancer * balancer) {
     balancer -> node_index = balancer -> father_node.father;
     read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
 
-    endDebug();
+    fallDebug();
 }
 
 /*  ERBT balance case 1.2: Adapts a node-frame for case 1.3.
 */
 inline static void
 _ERBT_Balance_case1_2(struct ERBT_Balancer * balancer) {
-    startDebug(); DebugFuncMark();
+    raiseDebug(); DebugFuncMark();
     // CASE 1.2: Main Node is not at the same side as he's father
-    rotateLeft(balancer -> builder, balancer -> node.father);
-    
-    // Updates the position, bringing the sequence back to Grandpa -> Son -> Father                    
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
+    rotateLeft(balancer->builder, balancer->node.father);
 
-    printRedBlackTree(balancer -> builder -> file_stream);
-    
-    endDebug();
+    // Updates the position, bringing the sequence back to Grandpa -> Son -> Father  
+    /*  For passing to case 1.3, the node will now be that that was originally the father...
+
+    */
+    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->node);
+    read_erbtnode(balancer->builder->file_stream, balancer->node_index, &balancer->father_node);
+
+    balancer->node_index = balancer->node.father; // * not necessary, but this implies in concordance...
+    read_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
+
+    printf("-------------------------------------\n");
+    DebugPrintf("After case 1.2:\n", NULL);
+    printf("node\t:"); PrintEBSTNode(&balancer->node);
+    printf("father:"); PrintEBSTNode(&balancer->father_node);
+    printf("grandfather:"); PrintEBSTNode(&balancer->grandfather_node);
+    printf("\n\n");
+    printRedBlackTree(balancer->builder->file_stream);
+    printf("-------------------------------------\n");
+
+    fallDebug();
 }
 
-/*  CASE 1.3: balancer.node is at the correct side. 
-Grandpa                                                         <- Father ->     
+/*  CASE 1.3: balancer.node is at the correct side.
+Grandpa                                                         <- Father ->
         ->                                              Grandpa              Last Node
-            Father                  
+            Father
                     ->
                         Last Node
 */
 inline static void
 _ERBT_Balance_case1_3(struct ERBT_Balancer * balancer) {
-    startDebug(); DebugFuncMark();
+    raiseDebug(); DebugFuncMark();
 
-    const int32_t old_x_left = balancer -> grandfather_node.left;
+    DebugPrintf("Rotate right for grandfather: %u\n", (unsigned int) balancer->father_node.father);
 
-    rotateRight(balancer -> builder, balancer -> father_node.father);
+    // * Note: the positions doesn't change with the rotation, only the pointer in the stream.
+    rotateRight(balancer->builder, balancer->father_node.father);
 
-    read_erbtnode(balancer->builder->file_stream, old_x_left, &balancer->father_node);
-    read_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
+    /*  At this point, the color between the X and Y (on the rotation context)
+        have to be switched.
+
+        X corresponds to the grandfather, at the step that Y is the father. */
+    DebugPrintf("Various transformations...\n", NULL);
+
+    // Bringing them back to the balancer - main memory.
+    const ebst_ptr grandfather_index = balancer->father_node.father;
+    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
+    read_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
 
     bool father_color = balancer->father_node.color;
     balancer->father_node.color = balancer->grandfather_node.color;
     balancer->grandfather_node.color = father_color;
 
-    write_erbtnode(balancer->builder->file_stream, old_x_left, &balancer->father_node);
-    write_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
+    // Writing them back.
+    write_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
+    write_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
 
-    balancer->node_index = balancer->father_node.father;
-    balancer->node = balancer -> grandfather_node;
-
-    // * em caso os outros não importem
-    // balancer->node = balancer->grandfather_node;
+    // The balancing afterwards continues on current-node's father. So,
+    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->node);
 
     printf("-----------------------------------------\n");
-    printf("%d, %d, %d\n", balancer->node_index, balancer -> node.father, balancer->father_node.father);
-
+    printf("%d, %d, %d\n", balancer->node_index, balancer->node.father, balancer->father_node.father);
     PrintEBSTNode(&balancer->node);
     PrintEBSTNode(&balancer->father_node);
     PrintEBSTNode(&balancer->grandfather_node);
-    printRedBlackTree(balancer->builder -> file_stream);
+    printRedBlackTree(balancer->builder->file_stream);
     printf("-----------------------------------------\n");
 
-    endDebug();
+    fallDebug();
 }
 
 /*  ERBT balance case 2.2: Adapts a node-frame for case 2.3.
@@ -375,71 +441,57 @@ Last Node                                                     Father
 */
 inline static void
 _ERBT_Balance_case2_2(struct ERBT_Balancer * balancer) {
-    startDebug(); DebugFuncMark();
-    
-    rotateRight(balancer -> builder, balancer -> node.father);
+    raiseDebug(); DebugFuncMark();
+
+    rotateRight(balancer->builder, balancer->node.father);
 
     // Updates the node-information, after the rotation, into the balancer - bringing it to main-memory.
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
+    // read_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
+    //read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
 
-    endDebug();
+    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->node);
+    read_erbtnode(balancer->builder->file_stream, balancer->node_index, &balancer->father_node);
+
+    balancer->node_index = balancer->node.father; // * not necessary, but this implies in concordance...
+    read_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
+
+    fallDebug();
 }
 
 inline static void
 _ERBT_Balance_case_2_3(struct ERBT_Balancer * balancer) {
-    startDebug(); DebugFuncMark();
-    
+    raiseDebug(); DebugFuncMark();
 
-    const int32_t old_x_right = balancer -> grandfather_node.right;
+    DebugPrintf("Rotate left for grandfather: %u\n", (unsigned int) balancer->father_node.father);
 
-    rotateLeft(balancer -> builder, balancer -> father_node.father);
+    rotateLeft(balancer->builder, balancer->father_node.father);
 
-    read_erbtnode(balancer->builder->file_stream, old_x_right, &balancer->father_node);
-    read_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
+    // Bringing them back to the balancer - main memory.
+    const ebst_ptr grandfather_index = balancer->father_node.father;
+    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
+    read_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
 
     bool father_color = balancer->father_node.color;
     balancer->father_node.color = balancer->grandfather_node.color;
     balancer->grandfather_node.color = father_color;
 
-    write_erbtnode(balancer->builder->file_stream, old_x_right, &balancer->father_node);
-    write_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
+    // Writing them back.
+    write_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
+    write_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
 
-    balancer->node_index = balancer->father_node.father;
-    balancer->node = balancer -> grandfather_node;
+    // The balancing afterwards continues on current-node's father. So,
+    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->node);
 
 
-/*
-    const ebst_ptr old_father_index = balancer -> node.father;
-
-    balancer -> node.father = balancer -> father_node.father;
-    write_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
-
-    rotateLeft(balancer -> builder, balancer -> father_node.father);
-
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> father_node.father, & balancer -> grandfather_node);
-    read_erbtnode(balancer -> builder -> file_stream, old_father_index, & balancer -> father_node);
-
-    bool temp = balancer -> grandfather_node.color;
-    balancer -> grandfather_node.color = balancer -> father_node.color;
-    balancer -> father_node.color = temp;
-
-    write_erbtnode(balancer -> builder -> file_stream, old_father_index, & balancer -> father_node);
-    write_erbtnode(balancer -> builder -> file_stream, balancer -> father_node.father, & balancer -> grandfather_node);
-
-    // balancer -> node.line = balancer -> father_node.father;
-    balancer -> node_index = balancer -> father_node.father;
-
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
-*/
-    endDebug();
+    fallDebug();
 }
 
-/*  Balances the External Red-Black Tree. */
-static void ERBT_Balance(ERBT_Builder * _builder, uint32_t _NodeIndex) {
-    startDebug(); DebugPrint("_XLine: %u\n", (unsigned int) _NodeIndex);
 
-    /*  The balancing process manager. */
+
+
+
+finline static struct ERBT_Balancer
+_initializeBalancer(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
     struct ERBT_Balancer balancer = { 0 };
     balancer.builder = _builder;
     balancer.node_index = _NodeIndex;
@@ -449,35 +501,124 @@ static void ERBT_Balance(ERBT_Builder * _builder, uint32_t _NodeIndex) {
     balancer.father_node = (erbt_node)      { 0 };
     balancer.uncle_node = (erbt_node)       { 0 };
     balancer.grandfather_node = (erbt_node) { 0 };
-
-
-    //balancer.father_node.line = ERBT_NULL_INDEX;
     balancer.father_node.father = ERBT_NULL_INDEX;
-
-    //balancer.grandfather_node.line = ERBT_NULL_INDEX;
     balancer.grandfather_node.father = ERBT_NULL_INDEX;
 
-    //balancer.uncle_node.line = ERBT_NULL_INDEX;
+    return balancer;
+}
 
-    // Start Main Node 
-    read_erbtnode(_builder -> file_stream, balancer.node_index, & balancer.node);
+inline static bool
+updateBalacer(struct ERBT_Balancer * _Balancer)
+{
+    if (_Balancer -> node.father != ERBT_NULL_INDEX) {
+        if (! read_erbtnode(_Balancer-> builder -> file_stream, _Balancer->node.father, &_Balancer->father_node))
+            return false;
 
-    // Set / update Nodes
-    if (balancer.node.father != ERBT_NULL_INDEX) {
-        read_erbtnode(_builder -> file_stream, balancer.node.father, & balancer.father_node);
-
-        // Start Gradpa if exists
-        if (balancer.father_node.father != ERBT_NULL_INDEX) {
-            read_erbtnode(_builder -> file_stream, balancer.father_node.father, & balancer.grandfather_node);
+        if (_Balancer -> father_node.father != ERBT_NULL_INDEX) {
+            if (! read_erbtnode(_Balancer->builder->file_stream, _Balancer->father_node.father, &_Balancer->grandfather_node))
+                return false;
+        }
+        
+        else {
+            _Balancer -> father_node.father = ERBT_NULL_INDEX;
+            _Balancer -> grandfather_node = (erbt_node){ 0 };
         }
     }
+    else {
+        _Balancer -> father_node = (erbt_node){ 0 };
+        _Balancer -> grandfather_node = (erbt_node){ 0 };
+
+        _Balancer -> father_node.father = ERBT_NULL_INDEX;
+    }
+
+    return true;
+}
+
+/*
+//Performs ebrt balance in the left context
+finline static void 
+ERBT_BalanceLeft(struct ERBT_Balancer * balancer)
+{
+    raiseDebug(); DebugFuncMark();
+
+    // main uncle
+    if ((balancer -> father_node.father != ERBT_NULL_INDEX) && (balancer -> grandfather_node.right != ERBT_NULL_INDEX)) {
+        read_erbtnode(balancer -> builder -> file_stream, balancer -> grandfather_node.right, & balancer -> uncle_node);
+        balancer -> uncle_index = balancer -> grandfather_node.right;
+
+    }
+    else {
+        balancer -> uncle_node = (erbt_node) { 0 };
+        balancer -> uncle_node.father = ERBT_NULL_INDEX;
+
+        balancer -> uncle_index = ERBT_NULL_INDEX;
+    }
+
+    // CASE 1.1 Uncle is RED
+    if ((balancer -> uncle_index != ERBT_NULL_INDEX) && (balancer -> uncle_node.color == RED))
+        _ERBT_Balance_case_change(balancer);
+
+    else {
+        // CASE 1.2: Main Node is not at the same side as he's father
+        if (balancer -> node_index == balancer -> father_node.right)
+            _ERBT_Balance_case1_2(balancer);
+
+        // CASE 1.3: Main Node is at the correct side
+        _ERBT_Balance_case1_3(balancer);
+    }
+
+    fallDebug();
+}
+
+//Performs ebrt balance in the right context
+finline static void 
+ERBT_BalanceRight(struct ERBT_Balancer * balancer)
+{
+    raiseDebug(); DebugFuncMark();
     
-    DebugPrintY("Before while...\n", NULL);
+    // Set balancer.uncle_node
+    if ((balancer -> father_node.father != ERBT_NULL_INDEX) && (balancer -> grandfather_node.left != ERBT_NULL_INDEX)) {
+        read_erbtnode(balancer -> builder -> file_stream, balancer -> grandfather_node.left, & balancer -> uncle_node);
+        balancer -> uncle_index = balancer -> grandfather_node.left;
+
+    }
+    else {
+        balancer -> uncle_node = (erbt_node){ 0 };
+        balancer -> uncle_node.father = ERBT_NULL_INDEX;
+
+        balancer -> uncle_index = ERBT_NULL_INDEX;
+    }
+    // CASE 2.1 Uncle is RED
+    if ((balancer -> uncle_index != ERBT_NULL_INDEX) && (balancer -> uncle_node.color == RED)) {
+        _ERBT_Balance_case_change(balancer);
+
+    }
+    else {
+        // CASE 2.2: Main Node is not at the same side as he's father
+        if (balancer -> node_index == balancer -> father_node.left)
+            _ERBT_Balance_case2_2(balancer);
+
+        // CASE 2.3: Main Node is at the correct side
+        _ERBT_Balance_case_2_3(balancer);
+    }
+
+    fallDebug();
+}
+*/
+
+/*  Balances the External Red-Black Tree. */
+static void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
+    raiseDebug(); DebugPrintf("_XLine: %u\n", (unsigned int) _NodeIndex);
+
+    /*  The balancing process manager. */
+    struct ERBT_Balancer balancer = _initializeBalancer(_builder, _NodeIndex);
+    
+    read_erbtnode(balancer.builder->file_stream, balancer.node_index, &balancer.node);
+    updateBalacer(& balancer);
 
     // If: the balancer.node is root or balancer.node is Black or Father is Black, the balancing ends
     /* (...) */
-    while ((balancer.node_index != 0) && (balancer.node.color == RED) && (balancer.father_node.color == RED))
-    {
+    while ((balancer.node_index != 0) && (balancer.father_node.color == RED) && (balancer.father_node.father != -1)) {
         DebugPrintY("Inside the while loop...\n\t", NULL);
 
         // In case the father node is at left,
@@ -486,12 +627,12 @@ static void ERBT_Balance(ERBT_Builder * _builder, uint32_t _NodeIndex) {
 
             // Set main uncle
             if ((balancer.father_node.father != ERBT_NULL_INDEX) && (balancer.grandfather_node.right != ERBT_NULL_INDEX)) {
-                read_erbtnode(_builder -> file_stream, balancer.grandfather_node.right, & balancer.uncle_node);
+                read_erbtnode(_builder->file_stream, balancer.grandfather_node.right, &balancer.uncle_node);
                 balancer.uncle_index = balancer.grandfather_node.right;
 
             }
             else {
-                balancer.uncle_node = (erbt_node) { 0 };
+                balancer.uncle_node = (erbt_node){ 0 };
                 // balancer.uncle_node.line = ERBT_NULL_INDEX;
                 balancer.uncle_node.father = ERBT_NULL_INDEX;
 
@@ -500,29 +641,30 @@ static void ERBT_Balance(ERBT_Builder * _builder, uint32_t _NodeIndex) {
 
             // CASE 1.1 Uncle is RED
             if ((balancer.uncle_index != ERBT_NULL_INDEX) && (balancer.uncle_node.color == RED))
-                _ERBT_Balance_case_change(& balancer);
+                _ERBT_Balance_case_change(&balancer);
 
             else {
                 // CASE 1.2: Main Node is not at the same side as he's father
                 if (balancer.node_index == balancer.father_node.right)
-                    _ERBT_Balance_case1_2(& balancer);
-                
+                    _ERBT_Balance_case1_2(&balancer);
+
                 // CASE 1.3: Main Node is at the correct side
-                _ERBT_Balance_case1_3(& balancer);
+                _ERBT_Balance_case1_3(&balancer);
             }
-        
-        // In case the father node is at the right,
-        } else {
+
+            // In case the father node is at the right,
+        }
+        else {
             DebugPrintY("father is right...\n", NULL);
 
             // Set balancer.uncle_node
             if ((balancer.father_node.father != ERBT_NULL_INDEX) && (balancer.grandfather_node.left != ERBT_NULL_INDEX)) {
-                read_erbtnode(_builder -> file_stream, balancer.grandfather_node.left, & balancer.uncle_node);
+                read_erbtnode(_builder->file_stream, balancer.grandfather_node.left, &balancer.uncle_node);
                 balancer.uncle_index = balancer.grandfather_node.left;
 
             }
             else {
-                balancer.uncle_node = (erbt_node) { 0 };
+                balancer.uncle_node = (erbt_node){ 0 };
                 // balancer.uncle_node.line = ERBT_NULL_INDEX;
                 balancer.uncle_node.father = ERBT_NULL_INDEX;
 
@@ -530,46 +672,43 @@ static void ERBT_Balance(ERBT_Builder * _builder, uint32_t _NodeIndex) {
             }
             // CASE 2.1 Uncle is RED
             if ((balancer.uncle_index != ERBT_NULL_INDEX) && (balancer.uncle_node.color == RED)) {
-                _ERBT_Balance_case_change(& balancer);
+                _ERBT_Balance_case_change(&balancer);
 
-            } else {
+            }
+            else {
                 // CASE 2.2: Main Node is not at the same side as he's father
                 if (balancer.node_index == balancer.father_node.left)
-                    _ERBT_Balance_case2_2(& balancer);
+                    _ERBT_Balance_case2_2(&balancer);
 
                 // CASE 2.3: Main Node is at the correct side
-                _ERBT_Balance_case_2_3(& balancer);
+                _ERBT_Balance_case_2_3(&balancer);
 
             }
         }
 
         // Set/update Nodes
         if (balancer.node.father != ERBT_NULL_INDEX) {
-            read_erbtnode(_builder -> file_stream, balancer.node.father, & balancer.father_node);
+            read_erbtnode(_builder->file_stream, balancer.node.father, &balancer.father_node);
 
             if (balancer.father_node.father != ERBT_NULL_INDEX) {
-                read_erbtnode(_builder -> file_stream, balancer.father_node.father, & balancer.grandfather_node);
+                read_erbtnode(_builder->file_stream, balancer.father_node.father, &balancer.grandfather_node);
             }
             else {
                 balancer.father_node.father = ERBT_NULL_INDEX;
-                balancer.grandfather_node = (erbt_node) { 0 };
+                balancer.grandfather_node = (erbt_node){ 0 };
             }
         }
         else {
-            balancer.father_node = (erbt_node) { 0 };
-            balancer.grandfather_node = (erbt_node) { 0 };
+            balancer.father_node = (erbt_node){ 0 };
+            balancer.grandfather_node = (erbt_node){ 0 };
 
             balancer.father_node.father = ERBT_NULL_INDEX;
         }
+
+        updateBalacer(& balancer);
     }
 
-    // Make sure that the root is BLACK
-    erbt_node root;
-    read_erbtnode(_builder -> file_stream, 0, & root);
-    root.color = BLACK;
-    write_erbtnode(_builder -> file_stream, 0, & root);
-
-    endDebug();
+    fallDebug();
 }
 
 
@@ -589,14 +728,18 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
     // The handler in the data-structure assembling process.
     ERBT_Builder builder = { 0 };       
 
-
-    if (! makeFrame(& builder.frame, sizeof(erbt_node)))
+    if (! frame_make(& builder.frame, sizeof(erbt_node), ERBT_PAGE))
         return false;
     /*  If it is was not possible to make the frame the whole building process fails.
         Otherwise what it is left to initialize on the builder is properly done. */
     builder.file_stream = _OutputStream;
     builder.registries_written = 0;
 
+    /*  (...) */
+    if (! fwrite(& builder.header, sizeof(ERBT_Header), 1, _OutputStream)) {
+        return false;
+    }
+    
     // Counters that tracks the reading progress of the input-stream.
     uint32_t regs_read = 0, currentPage = 0;
 
@@ -619,14 +762,18 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
                 insert_failure = false;
                 break;
             }
+            DebugPrintf("After inserting:\n", NULL);
+            printRedBlackTree(builder.file_stream);
+
             ERBT_Balance(& builder, builder.registries_written - 1);
 
+            DebugPrintf("After balacing:\n", NULL);
             printRedBlackTree(builder.file_stream);
 
             reg_ptr.original_pos ++;
         }
 
-        if (currentPage > 3) {
+        if (currentPage > 7) {
             break;
         }
 
@@ -707,19 +854,7 @@ static bool mrtStackPop(MRT_Stack * _Stack, struct mrt_stack_item * _ReturnItem)
     return true;
 }
 
-finline static bool
-write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode)
-{
-    fseek(_Stream, sizeof(ebst_node) * _NodeIndex, SEEK_SET);
-    return fwrite(_WriteNode, sizeof(ebst_node), 1, _Stream) > 0;
-}
 
-finline static bool
-read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Node)
-{
-    fseek(_Stream, sizeof(ebst_node) * _NodeIndex, SEEK_SET);
-    return fread(_Node, sizeof(ebst_node), 1, _Stream) > 0;
-}
 
 bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, frame_t * _Frame, bool ascending, uint64_t _RegistriesQtt)
 {
@@ -769,16 +904,14 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, fram
 
         // seekReadRegistry(middle, & buffer_node.root_item)
         
-        retrieve_regpage(_InputStream, _Frame, middle / ITENS_PER_PAGE, & page_pointer);
+        frame_retrieve_index(_InputStream, _Frame, middle / ITENS_PER_PAGE, & page_pointer);
+
         buffer_node.reg_ptr.original_pos = middle;
-        buffer_node.reg_ptr.key = ((regpage_t *) _Frame->pages)[page_pointer].reg[middle % ITENS_PER_PAGE].key;
+        buffer_node.reg_ptr.key = ((regpage_t *) _Frame -> pages)[page_pointer].reg[middle % ITENS_PER_PAGE].key;
+
+        // DebugPrintR("buffer-node: (%d, %d) <pos:%d, key:%d>\n", buffer_node.left, buffer_node.right, buffer_node.reg_ptr.original_pos, buffer_node.reg_ptr.key);
 
         write_ebstnode(_OutputStream, iterator, & buffer_node);
-
-
-        if (iterator > 2) {
-            break;
-        }
 
         iterator ++;
     }
