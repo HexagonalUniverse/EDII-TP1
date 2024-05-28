@@ -2,8 +2,8 @@
 # ==============================
 
 
-# Directories
-# -----------
+# Directories & Files
+# -------------------
 
 dir_drivers	:= cleber/
 dir_src		:= src/
@@ -14,31 +14,29 @@ dir_obj		:= $(dir_bin)obj/
 dir_exe		:= $(dir_bin)exe/
 
 
-# Files
-# -----
+source_files			:= $(wildcard $(dir_src)*.c) 
+header_files			:= $(wildcard $(dir_hdr)*.h)
 
-source_files	:= $(wildcard $(dir_src)*.c) 
-header_files	:= $(wildcard $(dir_hdr)*.h)
+__SOURCE_FILENAMES		:= $(subst $(dir_src),,$(source_files))
+__OBJECT_FILENAMES		:= $(subst .c,.o,$(__SOURCE_FILENAMES)) 
+object_files			:= $(foreach object,$(__OBJECT_FILENAMES),$(dir_obj)$(object))
 
-__SOURCE_FILENAMES	:= $(subst $(dir_src),,$(source_files))
-__OBJECT_FILENAMES	:= $(subst .c,.o,$(__SOURCE_FILENAMES)) 
-object_files		:= $(foreach object,$(__OBJECT_FILENAMES),$(dir_obj)$(object))
-
-driver_srcs			:= $(wildcard $(dir_drivers)*.c)
+driver_srcs				:= $(wildcard $(dir_drivers)*.c)
 
 __DRIVERSRC_FILENAMES	:= $(subst $(dir_drivers),,$(driver_srcs))
 __DRIVEREXE_FILENAMES	:= $(subst .c,.exe,$(__DRIVERSRC_FILENAMES))
 target_executables		:= $(foreach executables,$(__DRIVEREXE_FILENAMES),$(dir_exe)$(executables))
 
-target_libname	:= external-search.lib
-target_lib		:= $(dir_lib)$(target_libname)
+target_libname			:= external-search.lib
+target_lib				:= $(dir_lib)$(target_libname)
+
 
 
 # Building		<make build>
-# --------------------------
+#				<make build-transparent>
+# --------------------------------------
 
-
-
+# Building the path...
 ifeq ($(OS),Windows_NT)
 define MAKEDIR =
 	if not exist "$(@D)" mkdir "$(@D)"
@@ -57,10 +55,17 @@ __transparent_directive		:= -D TRANSPARENT_COUNTER=true
 OPTIONAL_COMPILE_DIRECTIVES	:= 
 
 
+DEBUG_MODE 	?= 0
+
+ifeq ($(DEBUG_MODE),1)
+	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true
+endif
+
+
 build:
 build: $(target_executables)
 	@echo tudo legal.
-	
+
 
 build-transparent: OPTIONAL_COMPILE_DIRECTIVES += $(__transparent_directive)
 build-transparent: $(target_executables)
@@ -86,6 +91,7 @@ $(dir_obj)%.o: $(dir_src)%.c
 	@echo STDLIB.H: Assembled $@.
 
 
+
 # Cleaning		<make clean>
 # --------------------------
 
@@ -108,8 +114,22 @@ clean:
 	rmdir "$(dir_obj)"
 	
 
+
+# (* Temporary)
+# Running 		<make run>
+# ------------------------
+
 run:
 	./bin/exe/pesquisa.exe 1 1000 2 60
+
+
+
+# Testing		<make assert>
+# ---------------------------
+
+
+
+
 
 .PHONY: build
 .PHONY: clean

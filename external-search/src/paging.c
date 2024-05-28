@@ -16,10 +16,13 @@ inline size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _R
     transparent_counter.reg.read ++;
 #endif
 
+#if IMPL_LOGGING && DEBUG_PAGE_READING
+    DebugPrintf("Reading: <%u>\n",
+        (unsigned int) _Index);
+#endif
+
     // Setting the file pointer to the beggining of the indexed page on the file.
     fseek(_Stream, regpage_pos(_Index), SEEK_SET);
-
-    //
     return fread(_ReturnPage -> reg, sizeof(registry_t), ITENS_PER_PAGE, _Stream);
 }
 
@@ -30,10 +33,13 @@ inline size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage
     transparent_counter.reg.write ++;
 #endif
     
+#if IMPL_LOGGING && DEBUG_PAGE_WRITING
+    DebugPrintf("Writing: <%u>\n",
+        (unsigned int) _Index);
+#endif
+
     // Setting the file pointer to the beggining of the indexed page on the file.
     fseek(_Stream, regpage_pos(_Index), SEEK_SET);
-
-    //
     return fwrite(_Page -> reg, sizeof(registry_t), ITENS_PER_PAGE, _Stream);
 }
 
@@ -57,9 +63,8 @@ inline bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Refe
 }
 
 
-
 // BTree
-// --------
+// -----
 
 /*  Reads a single b-node on the BTree data stream, given its index. Returns whether the reading
     was successful - so the node was read on its entirety. */
@@ -68,7 +73,11 @@ inline bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNo
     transparent_counter.b.read ++;
 #endif
     
-    // DebugPrintf("index: %u\n", _Index);
+#if IMPL_LOGGING && DEBUG_PAGE_READING
+    DebugPrintf("Reading: <%u>\n",
+        (unsigned int) _NodeIndex);
+#endif
+
     fseek(_Stream, bnode_pos(_NodeIndex), SEEK_SET);
     return fread(_ReturnNode, sizeof(b_node), 1, _Stream) > 0;
 }
@@ -78,6 +87,11 @@ inline bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNo
 inline bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _WriteNode) {
 #ifdef TRANSPARENT_COUNTER
     transparent_counter.b.write ++;
+#endif
+
+#if IMPL_LOGGING && DEBUG_PAGE_WRITING
+    DebugPrintf("Writing: <%u>\n",
+        (unsigned int) _NodeIndex);
 #endif
     
     // DebugPrintf("[%s] %u\n", _Index);

@@ -28,10 +28,12 @@ static void
 _PrintChildren(const size_t * children, const size_t qtd) 
 {
     fputc('<', debug_stream);
-    for (size_t i = 0; i < qtd - 1; i++) {
+    const size_t qtd_m1 = qtd - 1;
+
+    for (size_t i = 0; i < qtd_m1; i++) {
         fprintf(debug_stream, "%u, ", (unsigned int) children[i]);
     }
-    fprintf(debug_stream, " %u>", (unsigned int) children[qtd - 1]);
+    fprintf(debug_stream, " %u>", (unsigned int) children[qtd_m1]);
 }
 
 static void
@@ -49,10 +51,8 @@ PrintBNode(const b_node * _Node)
     fprintf(debug_stream, "]\n");
 }
 
-
-
 static void
-PrintBStream(B_STREAM * _OutputStream, size_t _HowManyPages)
+PrintBStream(B_STREAM * _OutputStream, const size_t _HowManyPages)
 {
     printDebugSpacing();
     for (size_t i = 0; i < 10; i++)
@@ -392,6 +392,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
 
     // The handler in the B-tree building process.
     B_Builder b_builder = { 0 };
+    b_builder.nodes_qtt = 0;
     b_builder.file_stream = _OutputStream;
     b_builder.root.is_leaf = true;
     b_builder.nodes_qtt = 1;

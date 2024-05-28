@@ -213,9 +213,15 @@ typedef struct {
     a pointer to its father and its color. */
 typedef struct {
     /*  The ebst-node itself, of whats erbt-node 
-        is a abstraction on top. */
-    ebst_node;
-    
+        is a abstraction on top.
+        
+        * Note: declaring it freely like so does the intended
+        on windows OS as it seems, but the behavior is that of unrecognition on others.
+        Because of that, the proprieties of ebst_node are expanded followingly. */
+    // ebst_node;
+    registry_pointer reg_ptr;
+    ebst_ptr left, right;
+
 
     bool color      : 1;    // Determines which color is the node - either red or black.
     ebst_ptr father : 31;   // A pointer to the node's father.

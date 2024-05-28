@@ -53,7 +53,7 @@ void _TracebackErrorArg(int argc, char ** argsv, int problematic_argument);
 
 
 /*  TODO: To set it as an option in makefile construction. */
-#define IMPL_LOGGING              true
+// #define IMPL_LOGGING              true
 
 
 #ifdef IMPL_LOGGING
@@ -75,7 +75,7 @@ void FinalizeLogging(void);
 #define STD_DEBUG_LOG_OUTPUT  "temp/_last_debug.log"
 
 #ifndef STDERR_DEBUG_LOGGING
-#define STDERR_DEBUG_LOGGING      false
+#define STDERR_DEBUG_LOGGING      true
 #endif // STDERR_DEBUG_LOGGING
 
 

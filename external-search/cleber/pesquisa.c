@@ -429,6 +429,8 @@ _ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Sit
     // Validation of the searching format "./'searchfile.exe' <method> <quantity> <situation> <key> <-P>"
     if (! in_range(5, 6, argc)) {
         _ContextErrorMsgf("parsing error: ", "Incorrect number of arguments: given " _ES_FG_RED() "%d" _AEC_RESET ", expected 5.\n", argc);
+        printf(">>\t"); _TracebackErrorArg(argc, argsv, 1); putchar('\n');
+        fflush(stdout);
         return false;
     }
     
@@ -492,6 +494,7 @@ int main(int argc, char ** argsv)
     {
         // se precisar mostrar isso algum dia é triste *-*
         printf("Failed initializing the logging system.\n");
+        return -3;
     }
 #endif // IMPL_LOGGING
 
@@ -503,18 +506,32 @@ int main(int argc, char ** argsv)
     search_result result = { 0 };
     bool display_help = false;
 
-    if (! _ParseArgs(argc, argsv, & method, & situation, & key, & reg_qtt, & display_help))
+    if (! _ParseArgs(argc, argsv, &method, &situation, &key, &reg_qtt, &display_help))
+    {
+#if IMPL_LOGGING
+        FinalizeLogging();
+#endif
+
         return -1;
+    }
     
     if (display_help)
     {
-        // TODO: Print help on stdout for "-h"...
+
+        // sp Print help on stdout for "-h"...
         printf("help yeei\n");
+
+#if IMPL_LOGGING
+        FinalizeLogging();
+#endif
         return 0;
     }
 
     if (! _RedirectSearch(method, situation, key, reg_qtt, & result))
     {
+#if IMPL_LOGGING
+        FinalizeLogging();
+#endif
         // in case an error happened, propagetes it on output.
         return -2;
     }

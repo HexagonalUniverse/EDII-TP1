@@ -8,6 +8,82 @@
 #include <string.h> // for memcpy
 
 
+
+#if IMPL_LOGGING && 0
+#ifndef ANSI_ESCAPE_CODE
+    #define ANSI_ESCAPE_CODE true
+#endif
+#include "ansi_esc.h"
+
+
+static void
+__print_frame_indexes(const frame_t * _Frame)
+{
+    /*
+    DebugPrintf("Frame size: %u, first: %u, last: %u\n", 
+        (unsigned int) _Frame -> size, (unsigned int) _Frame -> first,
+        (unsigned int) _Frame -> last);
+    */
+
+    putchar('<');
+    aec_fg_rgb(225, 100, 100);
+    bool inside = false;
+
+    for (size_t i = 0; i < PAGES_PER_FRAME; i++) {
+        if (! inside) {
+            if ((_Frame -> last < _Frame -> first) || 
+                ((_Frame -> last >= _Frame -> first) && (i == _Frame -> first))) {
+                aec_fg_rgb(100, 100, 225);
+                inside = true;
+            }
+        } 
+        else {
+            if (
+                ((_Frame -> last < _Frame -> first) && (i == _Frame -> first)) ||
+                ((_Frame->last >= _Frame -> first) && (i > _Frame -> last))
+                ) {
+                aec_fg_rgb(225, 100, 100);
+                inside = false;
+            }
+        }
+        printf("%02u ", (unsigned int) _Frame -> indexes[i]);
+
+
+    }
+    aec_reset();
+    printf(">\n ");
+
+    for (size_t i = 0; i < PAGES_PER_FRAME; i++)
+    {
+        if (_Frame -> first == i) {
+            putchar('f');
+            break;
+        }
+        else
+        {
+            putchar(' ');
+        }
+        printf("  ");
+    }
+    printf("\n ");
+    for (size_t i = 0; i < PAGES_PER_FRAME; i++) {
+        if (_Frame -> last == i) {
+            putchar('l');
+            break;
+        }
+        else 
+        {
+            putchar(' ');
+        }
+        printf("  ");
+    }
+
+    putchar('\n');
+    fflush(stdout);
+}
+#endif
+
+
 inline bool
 frame_make(frame_t * _Frame, const size_t _PageSize, page_type _Type) {
     frame_t frame = {
@@ -25,17 +101,32 @@ frame_make(frame_t * _Frame, const size_t _PageSize, page_type _Type) {
 }
 
 inline bool
-frame_search_index(const frame_t * _Frame, const uint32_t _Index, uint32_t * _ReturnFrameIndex)
+frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t * _ReturnFrameIndex)
 {
+#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+    DebugPrintR("searching for page index: %u\n", (unsigned int) _PageIndex);
+#endif
+
     if (isFrameEmpty(_Frame))
         return false;
+    
+    for (uint32_t i = _Frame -> first;; i = incr_frame(i)) {
+        if (_PageIndex == _Frame -> indexes[i]) {
 
-    for (uint32_t i = _Frame -> first; i <= _Frame -> last; i = (i + 1) % PAGES_PER_FRAME) {
-        if (_Index == _Frame -> indexes[i]) {
-            *_ReturnFrameIndex = i;
+#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+            DebugPrintR("found at #%u\n", (unsigned int) i);
+#endif
+
+            * _ReturnFrameIndex = i;
             return true;
         }
+        if (i == _Frame -> last)
+            break;
     }
+#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+    DebugPrintR("not found\n", NULL);
+#endif
+
     return false;
 }
 
@@ -129,6 +220,7 @@ bool frame_add(uint32_t _PageIndex, frame_t * _Frame, FILE * _Stream)
     _Frame -> indexes[_Frame -> last] = _PageIndex;
     _Frame -> size ++;
 
+    // __print_frame_indexes(_Frame);
     return true;
 }
 
@@ -161,6 +253,10 @@ frame_add_directly(uint32_t _PageIndex, const void * _WritePage, frame_t * _Fram
 
     _Frame -> indexes[_Frame -> last] = _PageIndex;
     _Frame -> size ++;
+
+#if IMPL_LOGGING
+    // __print_frame_indexes(_Frame);
+#endif
 
     return true;
 }
@@ -212,6 +308,10 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
     _Frame -> indexes[_Frame -> last] = index_buffer;
     memcpy(_frame_page_ptr(_Frame, _Frame -> last), page_buffer, _Frame -> page_size);
     free(page_buffer);
+
+#if IMPL_LOGGING && DEBUG_FRAME_REFRESH
+    // __print_frame_indexes(_Frame);
+#endif
 
     return true;
 }
@@ -294,6 +394,11 @@ inline bool frame_retrieve_index(FILE * _Stream, frame_t * _Frame, uint32_t _Pag
 */
 static finline bool
 _universal_write_page(FILE * _Stream, uint32_t _PageIndex, const void * _WriteNode, page_type _Type) {
+#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+    DebugPrintf("Writing page: <%u>, type: %d)\n",
+        (unsigned int) _PageIndex, _Type);
+#endif
+    
     switch (_Type) {
     case REG_PAGE:
         return write_regpage((REG_STREAM *) _Stream, _PageIndex, (regpage_t *) _WriteNode) > 0;
@@ -323,13 +428,16 @@ inline bool frame_update_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIn
     // If the _WritePage (given by _PageIndex) is in the frame, updates then the frame also.
     if (frame_search_index(_Frame, _PageIndex, & frame_index)) {
 
+#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintR("found; frame_index: %u\n", (unsigned int) frame_index);
+#endif
+
         memcpy(_frame_page_ptr(_Frame, frame_index), _WritePage, _Frame -> page_size);
 
         if (! _frame_refresh(_Frame, frame_index)) 
             return false;
 
     }
-    // TODO: Pendent. To add the page in case...
     else {
         if (! frame_add_directly(_PageIndex, _WritePage, _Frame)) {
 #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
