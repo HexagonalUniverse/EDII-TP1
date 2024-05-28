@@ -498,7 +498,6 @@ int main(int argc, char ** argsv)
     }
 #endif // IMPL_LOGGING
 
-
     SEARCHING_METHOD method = 0;
     SITUATION situation = 0;
     key_t key = 0;
