@@ -33,11 +33,13 @@ To generate the target executables run
 
 
 To activate the comparisons counter, build them setting *TRANSPARENT=1*.
-To activate the debug mode, build them setting *DEBUG=1*. In case of activating both:
+To activate the debug mode, build them setting *DEBUG=1*. To activate it and set it to *stderr*, set *DEBUG=2*. In case of activating both:
 > make build TRANSPARENT=1 DEBUG=1
 
 
-### Automated testing
+### * Automated testing
+
+(Not yet implemented) 
 
 For asserting all automated tests, run
 > make test

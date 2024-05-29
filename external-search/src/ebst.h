@@ -29,7 +29,6 @@ typedef struct {
 
 // Generates the file of the binary search tree + calls the balance function
 bool ERBT_Build(REG_STREAM *, ERBT_STREAM *);
-void printRedBlackTree(EBST_STREAM * _Stream);
 
 
 #define midpoint(l, r)			(l + ((r - l) >> 1))

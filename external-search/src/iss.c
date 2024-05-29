@@ -47,7 +47,8 @@ bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * 
 	uint64_t i = 0;
     for (; i < length; i ++)
     {
-		fread(& page_buffer, sizeof(regpage_t), 1, _Stream);
+		if (! fread(& page_buffer, sizeof(regpage_t), 1, _Stream))
+			break;
         _ReturnTable -> keys[i] = regpage_key(page_buffer);
     }
 	_ReturnTable -> length = length;
@@ -96,22 +97,26 @@ _regpage_binarySearch(regpage_t * _regPageArray, key_t key, uint32_t * _ReturnIn
     return false;
 }
 
-
-void printIndexTable(IndexTable * _Table){
+#if IMPL_LOGGING
+static void 
+printIndexTable(IndexTable * _Table){
 	printf("INDEX TABLE:\n");
 	for (uint32_t i = 0;i < _Table -> length; i++){
 		printf("|\t%u\n", (unsigned int) _Table->keys[i]);
 	}
 	printf("\n");
 }
+#endif
 
 
 /*  */
 bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, 
     IndexTable * _Table, frame_t * _Frame, search_result * _Sr, bool is_ascending)
 {
-	DebugFuncMark();
+#if IMPL_LOGGING
 	printIndexTable(_Table);
+#endif
+
 	uint32_t i = 0, target_index = 0, frame_index = 0;
 	    
 	if (is_ascending)

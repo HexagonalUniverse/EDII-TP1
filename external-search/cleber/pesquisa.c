@@ -82,7 +82,7 @@ PrintSearchResults(search_result * _Sr)
 
     if (_Sr->success) {
         printf("\t> The registry:\n");
-        printf("\t\t| data1 = %" PRIi64 "\n", (long long int) _Sr->target.data_1);
+        printf("\t\t| data1 = %ld\n", (long int) _Sr->target.data_1);
         printf("\t\t| data2 = %.4s\n", _Sr->target.data_2);
         printf("\t\t| data3 = %.4s\n", _Sr->target.data_3);
     }
@@ -111,7 +111,7 @@ __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
     
 
     frame_t frame = { 0 };
-    if (! frame_make(& frame, sizeof(regpage_t), REG_PAGE))
+    if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE))
         return _SE_MAKEFRAME;
     
     /*  If the input registries file is disordered, then
@@ -130,9 +130,7 @@ __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
         }
 
         gettimeofday(&end_time, NULL);
-        result->measures.construction_time = time_diff_sec(start_time, end_time);
-
-        printRedBlackTree(output_stream);
+        result -> measures.construction_time = time_diff_sec(start_time, end_time);
 
     /*  If it is ordered in ascending order, then the EBST 
         is built by MRT. */
@@ -169,7 +167,7 @@ __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
 
     }
 
-    freeFrame(frame);
+    freeFrame(& frame);
     fclose(input_stream); fclose(output_stream);
     
     if (result->success) {
@@ -231,7 +229,7 @@ __BTREE(const key_t _Key, search_result * result,
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
     frame_t frame = { 0 };
-    if (!  frame_make(& frame, sizeof(b_node), B_PAGE)) {
+    if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
         fclose(input_stream);
         fclose(output_stream);
         return _SE_MAKEFRAME;
@@ -245,7 +243,7 @@ __BTREE(const key_t _Key, search_result * result,
     // Interpreting the time the search took in [seconds].
     result -> measures.time_span = time_diff_sec(start_time, end_time);
 
-    freeFrame(frame);
+    freeFrame(& frame);
 
     fclose(input_stream);
     fclose(output_stream);
@@ -306,7 +304,7 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
     frame_t frame = { 0 }; 
-    if (!  frame_make(& frame, sizeof(bstar_node), BSTAR_PAGE)) {
+    if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
         fclose(input_stream);
         fclose(output_stream);
         return _SE_MAKEFRAME;
@@ -322,7 +320,7 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
 
     fclose(input_stream);
     fclose(output_stream);
-    freeFrame(frame);
+    freeFrame(& frame);
 
 
     if (! search_response)
@@ -357,7 +355,7 @@ __ISS(const key_t _Key, search_result * result, const SITUATION situation, const
 
     result -> measures.construction_time = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
 
-    frame_t frame = { 0 };  frame_make(& frame, sizeof(regpage_t), REG_PAGE);
+    frame_t frame = { 0 };  frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE);
 
     gettimeofday(& start_time, NULL);
         bool search_response = indexedSequencialSearch(_Key, input_stream, & index_table, & frame, result, (situation == ASCENDING_ORDER) ? true : false);
@@ -367,7 +365,7 @@ __ISS(const key_t _Key, search_result * result, const SITUATION situation, const
     
     deallocateIndexTable(&index_table);
     fclose(input_stream);
-    freeFrame(frame);
+    freeFrame(& frame);
 
     if (! search_response) {
         printf("Key not found!\n");

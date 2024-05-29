@@ -46,13 +46,14 @@ typedef struct {
     // A dynamic array of pages of size <PAGES_PER_FRAME>.
     void * pages;
 
-    // * page info vv
+    // * page information vv
         uint32_t page_size;
         page_type type;
     // ^^
 
     // The corresponding indexes for the pages. Array of size <PAGES_PER_FRAME>.
-    uint32_t indexes[PAGES_PER_FRAME];
+    // uint32_t indexes[PAGES_PER_FRAME];
+    uint32_t * indexes;
 
     // Pointer to the initial position of the circular-queue. Inclusive.
     uint32_t first;
@@ -62,16 +63,17 @@ typedef struct {
 
     // The size of the frame in pages; it is: "how many pages are load into the frame"?
     uint32_t size;
+    uint32_t max_size;
 } frame_t;
 // TODO: (Refactor) -> Frame? For which it can be considered as an ds object.
 
 /*  Increments a pointer in the frame context. It is (x + 1) % PAGES_PER_FRAME. */
-#define incr_frame(x)               mod_incr(x, PAGES_PER_FRAME)
+#define incr_frame(x)               mod_incr(x, _Frame -> max_size)
 
 #define FRAME_NULL_INDEX      0
 
 // Tells whether the frame (by ref.) is full.
-#define isFrameFull(_FramePtr)  (_FramePtr -> size == PAGES_PER_FRAME)
+#define isFrameFull(_FramePtr)  (_FramePtr -> size == _FramePtr -> max_size)
 
 // Tells whether the frame (by ref.) is empty.
 #define isFrameEmpty(_FramePtr) (_FramePtr -> size == 0)
@@ -79,10 +81,10 @@ typedef struct {
 
 /*  The frame data-structure constructor.
     Allocates the frame by reference. Returns success. */
-bool frame_make(frame_t * _Frame, const size_t _PageSize, page_type _Type);
+bool frame_make(frame_t * _Frame, const size_t _FrameSize, const size_t _PageSize, page_type _Type);
 
 /*  Deconstructs (deallocates) the frame. */
-#define freeFrame(_Frame)   free(_Frame.pages);
+void freeFrame(frame_t * _Frame);
 
 /*  Attempts finding the frame-index at which a given page index is. 
     Returns whether it could find it. */

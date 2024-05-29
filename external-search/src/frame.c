@@ -85,19 +85,38 @@ __print_frame_indexes(const frame_t * _Frame)
 
 
 inline bool
-frame_make(frame_t * _Frame, const size_t _PageSize, page_type _Type) {
+frame_make(frame_t * _Frame, const size_t _FrameSize, const size_t _PageSize, page_type _Type) {
     frame_t frame = {
         .page_size =_PageSize,
         .type =     _Type,
         .first =    FRAME_NULL_INDEX,
         .last =     FRAME_NULL_INDEX,
         .size =     0,
-        .pages =    0
+        .pages =    0,
+        .max_size = _FrameSize
     };
     * _Frame = frame;
-    _Frame ->  pages = calloc(PAGES_PER_FRAME, _PageSize);
+    _Frame ->  pages = calloc(_FrameSize, _PageSize);
+    if (_Frame -> pages == NULL)
+        return false;
 
-    return _Frame -> pages != NULL;
+    _Frame -> indexes = (uint32_t *) calloc(_FrameSize, sizeof(uint32_t));
+    if (_Frame -> indexes == NULL) {
+        free(_Frame -> pages);
+        return false;
+    }
+
+    return true;
+}
+
+inline void 
+freeFrame(frame_t * _Frame)
+{
+    if (_Frame -> indexes != NULL)
+        free(_Frame -> indexes);
+
+    if (_Frame -> pages != NULL)
+        free(_Frame -> pages);
 }
 
 inline bool
@@ -143,7 +162,7 @@ bool frame_remove(frame_t * _Frame) {
 
     else {
         // Otherwise an circular increment into the first pointed position of the queue is made.
-        _Frame -> first = (_Frame -> first + 1) % PAGES_PER_FRAME;
+        _Frame -> first = incr_frame(_Frame -> first);
     }
     _Frame -> size --;
 
@@ -292,9 +311,11 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
 
     for (uint32_t i = _FrameIndex, j; i < _Frame -> last; i = j) {
         j = incr_frame(i);  // j = (i + 1) mod |Frame|.
-
+        
+#if IMPL_LOGGIGN && DEBUG_FRAME_REFRESH
         DebugPrintf("Frame[%u] <- Frame[%u] (index %u)\n",
             i, j, _Frame -> indexes[j]);
+#endif
 
         _Frame -> indexes[i] = _Frame -> indexes[j];
         memcpy(_frame_page_ptr(_Frame, i), _frame_page_ptr(_Frame, j), _Frame -> page_size);
@@ -364,7 +385,9 @@ inline bool frame_retrieve_index(FILE * _Stream, frame_t * _Frame, uint32_t _Pag
 
     uint32_t frame_index = 0;
     if (frame_search_index(_Frame, _PageIndex, & frame_index)) {
+#if IMPL_LOGGIGN && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintf("(1) frame-index: %u\n", (unsigned int) frame_index);
+#endif
 
         // It is refreshed and then, what initially was in frame_index goes to last.
         if (! _frame_refresh(_Frame, frame_index))
@@ -481,7 +504,7 @@ _PrintRegistries(const registry_pointer * reg_ptr, const size_t qtd)
 }
 
 static void
-_PrintChildren(const size_t * children, const size_t qtd)
+_PrintChildren(const uint32_t * children, const size_t qtd)
 {
     putchar('<');
     for (size_t i = 0; i < qtd - 1; i++) {

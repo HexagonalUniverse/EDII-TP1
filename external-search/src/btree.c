@@ -1,13 +1,13 @@
 /* <src/btree.c>
-
+    
+    B
 */
 
 
 #include "btree.h"
 
 
-
-
+#if IMPL_LOGGING
 static void
 _PrintRegistries(const registry_pointer * reg_ptr, const size_t qtd)
 {
@@ -25,7 +25,7 @@ _PrintRegistries(const registry_pointer * reg_ptr, const size_t qtd)
 }
 
 static void
-_PrintChildren(const size_t * children, const size_t qtd) 
+_PrintChildren(const uint32_t * children, const size_t qtd) 
 {
     fputc('<', debug_stream);
     const size_t qtd_m1 = qtd - 1;
@@ -58,6 +58,7 @@ PrintBStream(B_STREAM * _OutputStream, const size_t _HowManyPages)
     for (size_t i = 0; i < 10; i++)
         fputc('-', debug_stream);
     fprintf(debug_stream, "B-stream:\n");
+
     fseek(_OutputStream, 0, SEEK_SET);
     
     b_node buffer = { 0 };
@@ -65,7 +66,8 @@ PrintBStream(B_STREAM * _OutputStream, const size_t _HowManyPages)
     {
         printDebugSpacing();
         fprintf(debug_stream, "| %u", (unsigned int) i);
-        fread(& buffer, sizeof(b_node), 1, _OutputStream);
+        if (!fread(&buffer, sizeof(b_node), 1, _OutputStream))
+            break;
         PrintBNode(& buffer);
     }
     printDebugSpacing();
@@ -73,6 +75,7 @@ PrintBStream(B_STREAM * _OutputStream, const size_t _HowManyPages)
         fputc('-', debug_stream);
     fprintf(debug_stream, "\n\n");
 }
+#endif
 
 
 // B-Tree Methods
@@ -189,7 +192,7 @@ BTree_SplitRoot(B_Builder * _builder)
     Used on the build-process, on the "is-leaf" case of insert-non-full. */
 static inline bool 
 _bnode_binarySearch(registry_pointer * _regArray, long length, key_t key) {
-    long beg = 0, position = 0, end = (long) (length - 1);
+    long beg = 0, position = 0, end = length - 1;
     while (beg <= end) {
         position = ((end - beg) / 2) + beg;
 
@@ -222,10 +225,8 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
 
     // The child node buffer.
     b_node c = { 0 };
-    c.item_count = 0;
-     
     int32_t i = x -> item_count - 1;
-
+    
     // Base-case: reached a leaf node.
     if (x -> is_leaf) {
         // Fails the insertion in case the registry is already present on the node.
@@ -251,9 +252,9 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
         // Updating the leaf-node on the tree structure.
         frame_update_page(_builder -> file_stream, & _builder -> frame, _XIndex, x);
 
+#if IMPL_LOGGING
         DebugPrintf("after base-case <x=%u>:\n", (unsigned int) _XIndex);
-        PrintBNode(x);
-
+#endif
     
     // Traversal case: If the node is not leaf, traverse down the tree.
     } else {
@@ -392,12 +393,11 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
 
     // The handler in the B-tree building process.
     B_Builder b_builder = { 0 };
-    b_builder.nodes_qtt = 0;
     b_builder.file_stream = _OutputStream;
     b_builder.root.is_leaf = true;
     b_builder.nodes_qtt = 1;
 
-    if (! frame_make(& b_builder.frame, sizeof(b_node), B_PAGE))
+    if (! frame_make(& b_builder.frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE))
     {
 #if IMPL_LOGGING
         DebugPrintf("bb:err1\n", NULL);
@@ -448,7 +448,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
     // Termination of the building process.
     // * the only dynamic part pending de-allocation being the frame.
 
-    freeFrame(b_builder.frame);
+    freeFrame(& b_builder.frame);
 
 #if IMPL_LOGGING
     if (insert_failure)

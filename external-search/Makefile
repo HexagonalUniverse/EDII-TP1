@@ -1,6 +1,6 @@
 # Makefile at <external-search/>
 # ==============================
-# Last update: 28/5/24.
+# Last update: 29/5/24.
 
 
 # Directories
@@ -16,6 +16,7 @@ dir_exe		:= $(dir_bin)exe/
 dir_tests	:= tests/
 dir_tests_src	:= $(dir_tests)src/
 dir_tests_data	:= $(dir_tests)template/
+dir_tests_output	:= $(dir_tests)output/
 
 # Source files
 # ------------
@@ -47,12 +48,43 @@ target_lib				:= $(dir_lib)$(target_libname)
 
 test_src_files			:= $(wildcard $(dir_tests_src)*.c)
 __TEST_SOURCE_FILENAMES	:= $(subst $(dir_tests_src),,$(test_src_files))
+__TEST_FILENAMES		:= $(subst .c,,$(__TEST_SOURCE_FILENAMES))
 __TEST_EXE_FILENAMES	:= $(subst .c,.exe,$(__TEST_SOURCE_FILENAMES))
 test_exe_files			:= $(foreach testsource,$(__TEST_EXE_FILENAMES),$(dir_tests)$(testsource))
 
 
 # Building		make build <FLAGS>
 # --------------------------------
+
+EXE_COMPILE_DIRECTIVES		:= -Wall -Wextra -O3 -I"$(dir_hdr)" -L"$(dir_lib)" -l:"$(target_libname)"
+OBJ_COMPILE_DIRECTIVES		:= -Wall -Wextra -O3 -I"$(dir_hdr)"
+
+__transparent_directive		:= -D TRANSPARENT_COUNTER=true
+OPTIONAL_COMPILE_DIRECTIVES	:= 
+
+# Directives
+DEBUG			?= 0
+TRANSPARENT		?= 0
+
+__build_msg		:=
+
+ifeq ($(DEBUG),1)
+	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true
+	__build_msg += debugado
+else ifeq ($(DEBUG),2)
+	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true -D STDERR_DEBUG_LOGGING=true
+	__build_msg += debugado2	
+endif
+
+ifeq ($(TRANSPARENT),1)
+	OPTIONAL_COMPILE_DIRECTIVES += -D TRANSPARENT_COUNTER=true
+	__build_msg += transparente
+endif
+
+ifeq ($(__build_msg),)
+	__build_msg = normal
+endif
+
 
 # Building the path...
 ifeq ($(OS),Windows_NT)
@@ -65,29 +97,10 @@ define MAKEDIR
 endef
 endif
 
-
-EXE_COMPILE_DIRECTIVES		:= -Wall -Wextra -O2 -I"$(dir_hdr)" -L"$(dir_lib)" -l:"$(target_libname)"
-OBJ_COMPILE_DIRECTIVES		:= -Wall -Wextra -O2 -I"$(dir_hdr)"
-
-__transparent_directive		:= -D TRANSPARENT_COUNTER=true
-OPTIONAL_COMPILE_DIRECTIVES	:= 
-
-
-DEBUG_MODE 	?= 0
-
-ifeq ($(DEBUG_MODE),1)
-	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true
-endif
-
-
-build:
+#${__build_msg:%=%.o}
+# build:
 build: $(target_executables)
-	@echo tudo legal.
-
-
-build-transparent: OPTIONAL_COMPILE_DIRECTIVES += $(__transparent_directive)
-build-transparent: $(target_executables)
-	@echo tudo transparente.
+	@echo tudo $(__build_msg).
 
 
 # Compiling the drivers.
@@ -109,27 +122,53 @@ $(dir_obj)%.o: $(dir_src)%.c $(header_files)
 	@echo ES-LIB: Assembled $@.
 
 
+# Re-building		make rebuild <FLAGS>
+# --------------------------------------
+
+rebuild: clean build
+	@echo System rebuilt.
+
 
 # Cleaning		make clean
 # ------------------------
 
 # In case of windows, "rmdir /s /q" deletes
 # all subdirectories and files of it (and finally the original directory)
-# without asking for confirmation.
+# without asking for confirmation. The equivallent in unix systems
+# will be -r and -f, respectively.
 
+# Deletes automatically the path specified by the 
+# firstmost dependency.
 ifeq ($(OS),Windows_NT)
-    CMD_remove_file = rmdir /s /q
+    CMD_remove = if exist "$<" rmdir /s /q "$<"
 else
-    CMD_remove_file = rm -r
+    CMD_remove = rm -rf "$<"
 endif
 
 # The path up to where the makefile is on the system.
 # It is for guaranteeing the deletion will occur correctly.
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
-# TODO: Delete temporary stuff...
-clean:
-	$(CMD_remove_file) "$(ROOT_DIR)$(dir_obj)"
+# By the way CMD_remove works, every cleaning part, 
+# is separately resolved.
+clean: __clean_obj __clean_out
+	@echo All clean.
+
+# The object files, byproduct of the library construction.
+__clean_obj: $(dir_obj)
+	$(CMD_remove)
+
+# The response of the tests.
+__clean_out: $(dir_tests_output)
+	$(CMD_remove) 
+
+
+# * Each dependency of its respective cleaning part need
+# not be analyzed. Their purpose is to become sort of a
+# "parameter" for CMD_remove, so they're hereby ignored...
+$(dir_obj):
+$(dir_tests_output):
+
 
 
 # (* Temporary)
@@ -140,14 +179,27 @@ run:
 	./bin/exe/pesquisa.exe 1 1000 2 60
 
 
+
 # Testing		make test
 # -----------------------
 
 TEST_EXE_COMPILE_DIRECTIVES	:= -Wall -Wextra -O2 -I"$(dir_hdr)" -L"$(dir_lib)" -l:"$(target_libname)"
 
+test_data_out_files		:= $(wildcard $(dir_tests_data)*.out)
+__TEST_OUTFILENAMES		:= $(subst $(dir_tests_data),,$(test_data_out_files))			
+						   
+__RESPONSE_OUTPUT_FILES	:= $(foreach object,$(__TEST_OUTFILENAMES),$(dir_tests_output)$(object))
+
+
+# In order, tries resolving the dependencies.
+# So it will first build the tests executables, generate each response (and compare 
+# them with the expected along the way), and then clean those.
 # * After resolving each test successfully, the following block will be get into.
-test: test_1
+test: __test_build $(__RESPONSE_OUTPUT_FILES) __clean_out
 	@echo ES: All tests passed.
+	@echo $(__TEST_OUTFILENAMES)
+	@echo $(__RESPONSE_OUTPUT_FILES)
+	@echo $(dir_tests_output)
 
 __test_build: $(test_exe_files) $(target_lib)
 	@echo ES: Tests built.
@@ -157,10 +209,19 @@ $(dir_tests)%.exe: $(dir_tests_src)%.c
 	gcc -o $@ $< $(OPTIONAL_COMPILE_DIRECTIVES) $(TEST_EXE_COMPILE_DIRECTIVES)
 
 
-# Running the tests.
-test_1: __test_build
-	@echo TEST 1
 
+
+#$(dir_tests_data)%.in __test_build
+$(dir_tests_output)%.out:
+	@$(MAKEDIR)
+	@echo "$(firstword $(subst _, ,$*)) ($(lastword $(subst _, ,$*)))"
+	$(ROOT_DIR)$(dir_tests)$(firstword $(subst _, ,$*)).exe < $(dir_tests_data)$*.in > $@
+	@diff $(dir_tests_data)$*.out $@
+	@echo "."
+
+
+# $(ROOT_DIR)$(dir_tests)$(firstword $(subst _, ,$*)).exe $$(Get-Content $(dir_tests_data)$*.in) > $@
+# diff (Get-Content $(dir_tests_data)$*.out) (Get-Content $@))
 
 .PHONY: build clean test
-.PHONY: __test_build test_1
+.PHONY: __test_build __clean_obj __clean_out

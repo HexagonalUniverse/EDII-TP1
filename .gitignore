@@ -1,6 +1,5 @@
-# temp
-/ebst/.vs/
-/ebst/.vscode/
+/external-search/.vs/
+/external-search/.vscode/
 /Temporary/
 
 
@@ -18,7 +17,7 @@
 *.lib
 *.a
 
-# Shared objects (inc. Windows DLLs)
+# Shared objects
 *.dll
 *.so
 
@@ -26,6 +25,11 @@
 # *.exe
 
 # Logging files
-*.out
 *.log
 
+
+# Specific built data-structures files
+*.btree
+*.bstar
+*.ebst
+*.erbt

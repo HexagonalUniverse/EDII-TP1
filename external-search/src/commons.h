@@ -83,8 +83,7 @@ extern struct __transparent_counter_t {
 } transparent_counter;
 
 
-
-#define cmp_eq_build(key1, key2)	((key1 == key2)	&& (++ transparent_counter.comparisons.build) && __debug_true_inline_printf("comparacao igual na contrução\n"))
+#define cmp_eq_build(key1, key2)	((key1 == key2)	&& (++ transparent_counter.comparisons.build))
 #define cmp_bg_build(key1, key2)	((key1 > key2) && (++ transparent_counter.comparisons.build))
 #define cmp_ls_build(key1, key2)	((key1 < key2) && (++ transparent_counter.comparisons.build))
 
