@@ -7,4 +7,7 @@
 #define TEST_DATA_FILESIZE		1000
 
 
+#define TEST_ERBT_FILENAME		"tests/output/last-instance.erbt"
+
+
 #endif // _ES_TESTS_HEADER_

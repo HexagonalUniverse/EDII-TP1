@@ -13,7 +13,6 @@
 #include <stdbool.h>
 
 
-
 // Standard Colors
 // ---------------
 
@@ -52,7 +51,8 @@ void _TracebackErrorArg(int argc, char ** argsv, int problematic_argument);
 // #define IMPL_LOGGING              true
 
 
-#ifdef IMPL_LOGGING
+#if IMPL_LOGGING
+#include <inttypes.h>
 
 // Initialization and finalization
 // -------------------------------
@@ -78,7 +78,7 @@ void FinalizeLogging(void);
 
 // Debugging directives
 
-#define DEBUG_PAGE_READING                  true
+#define DEBUG_PAGE_READING                  false
 #define DEBUG_PAGE_WRITING                  true
 #define DEBUG_REG_INDEX_IN_BUILD            true
 #define DEBUG_STREAM_AFTER_INSERTION        true
@@ -105,8 +105,11 @@ extern FILE * debug_stream;
 
 // below old
 
-void _DebugPrintf(const char * _FunctionName, size_t _Color, const char * _FormatMsg, ...);
+void _DebugPrintf(const char * _FunctionName, uint8_t _Color, const char * _FormatMsg, ...);
+void _DebugPrint(const char * _FunctionName, uint8_t _Color, const char * _Msg);
 
+
+#define DebugPrint(_FormatMsg)          _DebugPrint(__func__, 0, _FormatMsg)
 
 /*  Debugs a function execution, on stderr, with a format message. 
     In that sense, it's used as printf inside a function context. */

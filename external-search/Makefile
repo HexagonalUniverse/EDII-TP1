@@ -175,8 +175,8 @@ $(dir_tests_output):
 # Running 		make run
 # ----------------------
 
-run:
-	./bin/exe/pesquisa.exe 1 1000 2 60
+run-rbt:
+	./bin/exe/pesquisa.exe 1 100 3 15
 
 
 
@@ -216,7 +216,7 @@ $(dir_tests_output)%.out:
 	@$(MAKEDIR)
 	@echo "$(firstword $(subst _, ,$*)) ($(lastword $(subst _, ,$*)))"
 	$(ROOT_DIR)$(dir_tests)$(firstword $(subst _, ,$*)).exe < $(dir_tests_data)$*.in > $@
-	@diff $(dir_tests_data)$*.out $@
+	diff -c $(dir_tests_data)$*.out $@
 	@echo "."
 
 

@@ -162,20 +162,24 @@ inline void __debug_func_out(const char * _FunctionName)
 }
 
 
-
-
-
-inline void
-_DebugPrintf(const char * _FunctionName, size_t _Color, const char * _FormatMsg, ...)
+static void 
+__debugprint_inner_db_level(void)
 {
     static int __db_level = 0;
     if (db_level > __db_level)
         __db_level = db_level;
 
     while (__db_level != db_level) {
-        __db_level --;
+        __db_level--;
         fputc('\n', debug_stream);
     }
+}
+
+
+inline void
+_DebugPrintf(const char * _FunctionName, uint8_t _Color, const char * _FormatMsg, ...)
+{
+    __debugprint_inner_db_level();
 
     // Initializing the variadic arguments list;
     va_list arguments;
@@ -209,15 +213,31 @@ _DebugPrintf(const char * _FunctionName, size_t _Color, const char * _FormatMsg,
     va_end(arguments);
 }
 
+inline void
+_DebugPrint(const char * _FunctionName, uint8_t _Color, const char * _Msg)
+{
+    __debugprint_inner_db_level();
 
+    if (_Color == 0) {
+        es_fg_blue();
+    }
+    else if (_Color == 1) {
+        es_fg_yellow();
+    }
+    else if (_Color == 2) {
+        es_fg_red();
+    }
+    else if (_Color == 3) {
+        es_fg_green();
+    }
+    
+    __printDebugSpacing();
+    fprintf(debug_stream, "[%s] ", _FunctionName);
+    aec_reset();
 
-
-
-
-
-
-
-
+    fputs(_Msg, debug_stream);
+    fflush(debug_stream);
+}
 
 
 #endif // IMPL_LOGGING

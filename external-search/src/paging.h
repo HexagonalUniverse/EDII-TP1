@@ -230,8 +230,10 @@ typedef struct {
 
 
 typedef struct {
-    ebst_ptr root;
+    ebst_ptr root_ptr;
 } ERBT_Header;
+
+#define erbt_header_pos()       0
 #define erbtnode_pos(_Index)    (sizeof(ERBT_Header) + sizeof(erbt_node) * _Index)
 
 /*  */

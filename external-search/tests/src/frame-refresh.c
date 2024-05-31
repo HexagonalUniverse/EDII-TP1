@@ -61,7 +61,7 @@ static int __Test_FrameRefresh(void)
 				(int) ((regpage_t *) frame.pages)[j].reg[0].key
 			);
 		}
-		printf("%u:%d, ",
+		printf("%u:%d>\n",
 			(unsigned int) frame.indexes[max_size_m1],
 			(int) ((regpage_t *) frame.pages)[max_size_m1].reg[0].key
 		);

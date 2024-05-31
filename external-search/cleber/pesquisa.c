@@ -41,8 +41,6 @@ PrintCounter(void)
 #endif
 
 
-
-// klahsbdhkoas
 finline static double 
 time_diff_sec(struct timeval start_time, struct timeval end_time) {
     return ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
@@ -109,7 +107,6 @@ __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
     
     FILE * output_stream = NULL;
     
-
     frame_t frame = { 0 };
     if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE))
         return _SE_MAKEFRAME;

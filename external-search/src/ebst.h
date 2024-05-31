@@ -26,10 +26,10 @@ typedef struct {
 
 
 
-
 // Generates the file of the binary search tree + calls the balance function
 bool ERBT_Build(REG_STREAM *, ERBT_STREAM *);
-
+bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry);
+void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex);
 
 #define midpoint(l, r)			(l + ((r - l) >> 1))
 #define rightSubfileSize(l, r)	((r - l) - ((r - l) >> 1))
