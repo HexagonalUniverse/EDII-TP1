@@ -125,9 +125,23 @@ __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
             fclose(input_stream); fclose(output_stream);
             return _SE_ERBTBUILD;
         }
-
         gettimeofday(&end_time, NULL);
         result -> measures.construction_time = time_diff_sec(start_time, end_time);
+
+        fclose(output_stream);
+        output_stream = fopen(_ERBTFilename, "rb");
+        if (output_stream == NULL) {
+            fclose(input_stream);
+            return _SE_EBST_FILE;
+        }
+
+        gettimeofday(& start_time, NULL);
+            result -> success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, _Key, & result -> target);
+        gettimeofday(& end_time, NULL);
+
+        printf("ERBT SEARCH DEU CERTO? %d\n", result->success);
+
+        result->measures.time_span = time_diff_sec(start_time, end_time);
 
     /*  If it is ordered in ascending order, then the EBST 
         is built by MRT. */

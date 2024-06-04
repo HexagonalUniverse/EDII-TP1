@@ -1,6 +1,6 @@
 # Makefile at <external-search/>
 # ==============================
-# Last update: 29/5/24.
+# Last update: 04/6/24. Test-system.
 
 
 # Directories
@@ -16,7 +16,7 @@ dir_exe		:= $(dir_bin)exe/
 dir_tests	:= tests/
 dir_tests_src	:= $(dir_tests)src/
 dir_tests_data	:= $(dir_tests)template/
-dir_tests_output	:= $(dir_tests)output/
+dir_tests_cache	:= $(dir_tests)cache/
 
 # Source files
 # ------------
@@ -66,24 +66,36 @@ OPTIONAL_COMPILE_DIRECTIVES	:=
 DEBUG			?= 0
 TRANSPARENT		?= 0
 
-__build_msg		:=
 
 ifeq ($(DEBUG),1)
 	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true
-	__build_msg += debugado
 else ifeq ($(DEBUG),2)
 	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true -D STDERR_DEBUG_LOGGING=true
-	__build_msg += debugado2	
 endif
 
+
+# __build_msg...
 ifeq ($(TRANSPARENT),1)
 	OPTIONAL_COMPILE_DIRECTIVES += -D TRANSPARENT_COUNTER=true
-	__build_msg += transparente
+	
+	ifdef __build_msg
+		__build_msg += e transparente
+	else
+		__build_msg = transparente
+	endif
 endif
 
-ifeq ($(__build_msg),)
-	__build_msg = normal
+
+ifneq ($(DEBUG),0)
+	ifdef __build_msg
+		__build_msg += e debugado$(DEBUG)
+	else
+		__build_msg = debugado$(DEBUG)
+	endif
 endif
+
+
+__build_msg ?= normal
 
 
 # Building the path...
@@ -106,7 +118,7 @@ build: $(target_executables)
 # Compiling the drivers.
 $(dir_exe)%.exe: $(dir_drivers)%.c $(target_lib)
 	@$(MAKEDIR)
-	gcc -o $@ $< $(OPTIONAL_COMPILE_DIRECTIVES) $(EXE_COMPILE_DIRECTIVES)
+	@gcc -o $@ $< $(OPTIONAL_COMPILE_DIRECTIVES) $(EXE_COMPILE_DIRECTIVES)
 	@echo ES-LIB: Compiled $<.
 
 # Joining in the library.
@@ -118,7 +130,7 @@ $(target_lib): $(object_files)
 # Assembling each object file.
 $(dir_obj)%.o: $(dir_src)%.c $(header_files)
 	@$(MAKEDIR)
-	gcc -c $< -o $@ $(OPTIONAL_COMPILE_DIRECTIVES) $(OBJ_COMPILE_DIRECTIVES)
+	@gcc -c $< -o $@ $(OPTIONAL_COMPILE_DIRECTIVES) $(OBJ_COMPILE_DIRECTIVES)
 	@echo ES-LIB: Assembled $@.
 
 
@@ -126,7 +138,7 @@ $(dir_obj)%.o: $(dir_src)%.c $(header_files)
 # --------------------------------------
 
 rebuild: clean build
-	@echo System rebuilt.
+#@echo System rebuilt.
 
 
 # Cleaning		make clean
@@ -151,32 +163,24 @@ ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 # By the way CMD_remove works, every cleaning part, 
 # is separately resolved.
-clean: __clean_obj __clean_out
+clean: __clean_obj __clean_test
 	@echo All clean.
+
 
 # The object files, byproduct of the library construction.
 __clean_obj: $(dir_obj)
-	$(CMD_remove)
+	@$(CMD_remove)
 
-# The response of the tests.
-__clean_out: $(dir_tests_output)
-	$(CMD_remove) 
+# The temporary data of the tests.
+__clean_test: $(dir_tests_cache)
+	@$(CMD_remove) 
 
 
 # * Each dependency of its respective cleaning part need
 # not be analyzed. Their purpose is to become sort of a
 # "parameter" for CMD_remove, so they're hereby ignored...
 $(dir_obj):
-$(dir_tests_output):
-
-
-
-# (* Temporary)
-# Running 		make run
-# ----------------------
-
-run-rbt:
-	./bin/exe/pesquisa.exe 1 100 3 15
+$(dir_tests_cache):
 
 
 
@@ -184,44 +188,46 @@ run-rbt:
 # -----------------------
 
 TEST_EXE_COMPILE_DIRECTIVES	:= -Wall -Wextra -O2 -I"$(dir_hdr)" -L"$(dir_lib)" -l:"$(target_libname)"
+test_data_files			:= $(wildcard $(dir_tests_data)*.6t)
 
-test_data_out_files		:= $(wildcard $(dir_tests_data)*.out)
-__TEST_OUTFILENAMES		:= $(subst $(dir_tests_data),,$(test_data_out_files))			
-						   
-__RESPONSE_OUTPUT_FILES	:= $(foreach object,$(__TEST_OUTFILENAMES),$(dir_tests_output)$(object))
+# Boilerplate for guaranteeing the creation of the tests cache folder.
+__test_cache_nothing := $(dir_tests_cache)__nothing
+
+
+ifeq ($(OS),Windows_NT)
+	PYTHON = python
+else
+	PYTHON = python3
+endif
 
 
 # In order, tries resolving the dependencies.
 # So it will first build the tests executables, generate each response (and compare 
 # them with the expected along the way), and then clean those.
 # * After resolving each test successfully, the following block will be get into.
-test: __test_build $(__RESPONSE_OUTPUT_FILES) __clean_out
+test: __build_test __run_test __clean_test
 	@echo ES: All tests passed.
-	@echo $(__TEST_OUTFILENAMES)
-	@echo $(__RESPONSE_OUTPUT_FILES)
-	@echo $(dir_tests_output)
 
-__test_build: $(test_exe_files) $(target_lib)
+
+# Building the test executables.
+__build_test: $(test_exe_files) __test_cache_build
 	@echo ES: Tests built.
 
-$(dir_tests)%.exe: $(dir_tests_src)%.c
+$(dir_tests)%.exe: $(dir_tests_src)%.c $(target_lib)
 	@$(MAKEDIR)
-	gcc -o $@ $< $(OPTIONAL_COMPILE_DIRECTIVES) $(TEST_EXE_COMPILE_DIRECTIVES)
+	@gcc -o $@ $< $(OPTIONAL_COMPILE_DIRECTIVES) $(TEST_EXE_COMPILE_DIRECTIVES)
 
+__run_test:
+	@$(PYTHON) tests/o_6t.py $(test_data_files)
+	
 
-
-
-#$(dir_tests_data)%.in __test_build
-$(dir_tests_output)%.out:
+# Creating the tests cache path. 
+__test_cache_build: $(__test_cache_nothing)
+$(__test_cache_nothing):
 	@$(MAKEDIR)
-	@echo "$(firstword $(subst _, ,$*)) ($(lastword $(subst _, ,$*)))"
-	$(ROOT_DIR)$(dir_tests)$(firstword $(subst _, ,$*)).exe < $(dir_tests_data)$*.in > $@
-	diff -c $(dir_tests_data)$*.out $@
-	@echo "."
 
 
-# $(ROOT_DIR)$(dir_tests)$(firstword $(subst _, ,$*)).exe $$(Get-Content $(dir_tests_data)$*.in) > $@
-# diff (Get-Content $(dir_tests_data)$*.out) (Get-Content $@))
-
-.PHONY: build clean test
-.PHONY: __test_build __clean_obj __clean_out
+.PHONY: build rebuild clean
+.PHONY: __clean_obj
+.PHONY: test __run_test __build_test __clean_test
+.PHONY: __test_cache_build

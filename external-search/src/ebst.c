@@ -68,6 +68,14 @@ void printRedBlackTree(ERBT_STREAM * _Stream) {
     DebugPrintf("#%u printing:\n", (unsigned int) printing_times);
     // fprintf(RBT_PRINTING_STREAM, "#%u:\n", (unsigned int) printing_times);
 
+    ERBT_Header header = { 0 };
+    if (!ERBT_readHeader(_Stream, &header)) {
+        return;
+    }
+    printDebugSpacing(); 
+    fprintf(debug_stream, "root at %u\n", header.root_ptr);
+
+
     erbt_node buffer_node = { 0 };
     uint32_t i = 0;
 
@@ -149,7 +157,6 @@ _ERBT_insert_root(ERBT_Builder * _builder, const registry_pointer * _Entry) {
     return write_erbtnode(_builder -> file_stream, _builder -> header.root_ptr, & new_node);
 }
 
-/*  Inserts a registry in the ERBT data-structure. Returns success. */
 bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
     #if IMPL_LOGGING
         raiseDebug(); 
@@ -186,7 +193,7 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
         had_failure = false;
 
         // Check the left first.
-        if (newNode.reg_ptr.key < currentNode.reg_ptr.key) {
+        if (cmp_ls_build(_Entry -> key, currentNode.reg_ptr.key)) {
 
             /*  Checks whether the current node has a left child. */
             if (currentNode.left == EBST_NULL_INDEX) {
@@ -213,7 +220,7 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
             node_index = currentNode.left;
           
         // Check then the right.
-        } else if (newNode.reg_ptr.key > currentNode.reg_ptr.key) {
+        } else if (cmp_bg_build(_Entry -> key, currentNode.reg_ptr.key)) {
               
             /*  Checks whether the current node has a right child. */
             if (currentNode.right == EBST_NULL_INDEX) {
@@ -634,6 +641,9 @@ _ERBT_Balance_case1_3(struct ERBT_Balancer * balancer) {
     balancer -> node_index = grandfather_index;
     // balancer->father_ndoe = erbt_node{ 0 };
 
+#if IMPL_LOGGING
+    fallDebug();
+#endif
 }
 
 /*  TODO: better docs. ERBT balance case 2.2: Adapts a node-frame for case 2.3. */
@@ -846,7 +856,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
         return false;
 #endif
 
-#endif
+#endif // IMPL_LOGGING
 
     // Where pages from _InputStream are lied down.
     regpage_t page_buffer = { 0 };      
@@ -940,6 +950,31 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
 }
 
 
+bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, const key_t _Key, registry_t * _Target)
+{
+    ERBT_Header header = { 0 };
+    if (! ERBT_readHeader(_Stream, & header))
+        return false;
+
+    ebst_ptr node_index = header.root_ptr;
+    erbt_node current_node = { 0 };
+
+    while ((node_index != ERBT_NULL_INDEX) && read_erbtnode(_Stream, node_index, & current_node))
+    {
+        if (cmp_eq_search(_Key, current_node.reg_ptr.key))
+            return search_registry(_InputStream, & current_node.reg_ptr, _Target);
+
+        else if (cmp_ls_search(_Key, current_node.reg_ptr.key))
+            node_index = current_node.left;
+
+        // _Key > current_node.reg_ptr.key.
+        else
+            node_index = current_node.right;
+    }
+    return false;
+}
+
+
 /*  EBST by MRT
     ===========
 
@@ -1011,7 +1046,6 @@ static bool mrtStackPop(MRT_Stack * _Stack, struct mrt_stack_item * _ReturnItem)
 }
 
 
-
 bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, frame_t * _Frame, bool ascending, uint64_t _RegistriesQtt)
 {
     // * for instance.
@@ -1077,39 +1111,20 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, fram
 
 bool EBST_Search(EBST_STREAM * _Stream, REG_STREAM * _InputStream, const key_t _Key, registry_t * _Target)
 {
+    ebst_ptr node_index = 0;
+    ebst_node current_node;
 
-    int pos = 0;
-    ebst_node node_buffer;
-
-    while (pos >= 0)
+    while ((node_index != EBST_NULL_INDEX) && read_ebstnode(_Stream, node_index, &current_node))
     { 
-        read_ebstnode(_Stream, pos, & node_buffer);
-        printf(">>> ebstnode %d: [(%d, %d), <%u, %d>]\n", pos,
-            node_buffer.left, node_buffer.right, 
-            node_buffer.reg_ptr.original_pos, node_buffer.reg_ptr.key);
-
-
-        if (_Key == node_buffer.reg_ptr.key)
-        {
-            printf(">>> eq\n");
-            return search_registry(_InputStream, & node_buffer.reg_ptr, _Target);
-        }
-        else if (_Key < node_buffer.reg_ptr.key)
-        {
-            // end of search
-            if (node_buffer.left == EBST_NULL_INDEX)
-                break;
-
-            pos = node_buffer.left;
-        }
-        else {
-            if (node_buffer.right == EBST_NULL_INDEX)
-                break;
-
-            pos = node_buffer.right;
-        }
-
-
+        if (cmp_eq_search(_Key, current_node.reg_ptr.key))
+            return search_registry(_InputStream, & current_node.reg_ptr, _Target);
+       
+        else if (cmp_ls_search(_Key, current_node.reg_ptr.key))
+            node_index = current_node.left;
+        
+        // _Key > current_node.reg_ptr.key
+        else
+            node_index = current_node.right;
     }
     return false;
 }
