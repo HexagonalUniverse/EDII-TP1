@@ -94,15 +94,14 @@ inline bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _W
         (unsigned int) _NodeIndex);
 #endif
     
-    // DebugPrintf("[%s] %u\n", _Index);
     fseek(_Stream, bnode_pos(_NodeIndex), SEEK_SET);
     return fwrite(_WriteNode, sizeof(b_node), 1, _Stream) > 0;
 }
 
 
 
-// BStar
-// -------
+// B*
+// --
 
 /*  Reads a single b-node on the BTree data stream, given its index. Returns whether the reading
     was successful - so the node was read on its entirety. */
@@ -128,9 +127,8 @@ inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_n
 
 
 
-// EBST
-// ----
-
+// EBST & ERBT
+// -----------
 
 /*  */
 bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode) {

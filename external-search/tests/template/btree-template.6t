@@ -1,0 +1,144 @@
+
+ANDRADE É VIADO PAU NO CÚ DE QUEM TÁ SENTADO!
+
+
+
+PROGRAM: ../../bin/exe/josue.exe
+
+IN:
+:::
+67
+57
+78
+6
+38
+16
+8
+62
+18
+61
+80
+90
+60
+46
+99
+39
+49
+87
+89
+83
+95
+22
+1
+30
+23
+93
+28
+70
+32
+59
+65
+85
+29
+91
+9
+10
+35
+41
+68
+13
+63
+42
+45
+48
+3
+98
+96
+4
+100
+71
+58
+54
+79
+20
+11
+88
+86
+27
+74
+31
+94
+19
+55
+24
+52
+40
+44
+34
+92
+64
+56
+75
+43
+2
+66
+77
+72
+73
+76
+33
+69
+47
+26
+50
+84
+14
+36
+7
+17
+5
+82
+15
+37
+12
+81
+97
+51
+53
+21
+25
+:::
+
+OUT:
+#
+[q: 4, leaf: 0, registries key: <23, 39, 57, 80>, children: <7, 16, 27, 8,  17>]
+[q: 2, leaf: 1, registries key: <1, 2>]
+[q: 3, leaf: 1, registries key: <58, 59, 60>]
+[q: 3, leaf: 1, registries key: <68, 69, 70>]
+[q: 2, leaf: 1, registries key: <17, 18>]
+[q: 5, leaf: 1, registries key: <88, 89, 90, 91, 92>]
+[q: 5, leaf: 1, registries key: <40, 41, 42, 43, 44>]
+[q: 5, leaf: 0, registries key: <3, 8, 11, 16, 19>, children: <1, 23, 13, 24, 4,  29>]
+[q: 4, leaf: 0, registries key: <61, 67, 71, 77>, children: <2, 14, 3, 18,  22>]
+[q: 4, leaf: 1, registries key: <24, 25, 26, 27>]
+[q: 4, leaf: 1, registries key: <94, 95, 96, 97>]
+[q: 3, leaf: 1, registries key: <32, 35, 38>]
+[q: 3, leaf: 1, registries key: <81, 82, 83>]
+[q: 2, leaf: 1, registries key: <9, 10>]
+[q: 5, leaf: 1, registries key: <62, 63, 64, 65, 66>]
+[q: 3, leaf: 1, registries key: <46, 47, 48>]
+[q: 2, leaf: 0, registries key: <28, 33>, children: <9, 21,  25>]
+[q: 4, leaf: 0, registries key: <84, 87, 93, 98>, children: <12, 26, 5, 10,  19>]
+[q: 5, leaf: 1, registries key: <72, 73, 74, 75, 76>]
+[q: 2, leaf: 1, registries key: <99, 100>]
+[q: 4, leaf: 1, registries key: <50, 51, 52, 53>]
+[q: 2, leaf: 1, registries key: <29, 31>]
+[q: 2, leaf: 1, registries key: <78, 79>]
+[q: 4, leaf: 1, registries key: <4, 5, 6, 7>]
+[q: 4, leaf: 1, registries key: <12, 13, 14, 15>]
+[q: 3, leaf: 1, registries key: <34, 36, 37>]
+[q: 2, leaf: 1, registries key: <85, 86>]
+[q: 3, leaf: 0, registries key: <45, 49, 54>, children: <6, 15, 20,  28>]
+[q: 2, leaf: 1, registries key: <55, 56>]
+[q: 3, leaf: 1, registries key: <20, 21, 22>]
+#

@@ -18,6 +18,7 @@ bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream
 
 
 
+
 /*  (...) */
 typedef struct {
     B_STREAM * file_stream;
@@ -25,6 +26,9 @@ typedef struct {
     frame_t frame;
     b_node root;
 } B_Builder;
+
+/*  */
+bool BTree_insert(const registry_pointer * _reg, B_Builder * _builder);
 
 #endif // _ES_BTREE_HEADER_
 

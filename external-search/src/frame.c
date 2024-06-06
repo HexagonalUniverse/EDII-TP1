@@ -153,6 +153,8 @@ bool frame_remove(frame_t * _Frame) {
     if (isFrameEmpty(_Frame))
         return false;
 
+    _Frame -> indexes[_Frame -> first] = 0;
+
     /*  Once the frame will no longer hold any element after the remotion, 
         the pointers are reset to FRAME_NULL_INDEX. */
     if (_Frame -> last == _Frame -> first) {
@@ -309,7 +311,7 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
 
     uint32_t index_buffer = _Frame -> indexes[_FrameIndex];
 
-    for (uint32_t i = _FrameIndex, j; i < _Frame -> last; i = j) {
+    for (uint32_t i = _FrameIndex, j;; i = j) {
         j = incr_frame(i);  // j = (i + 1) mod |Frame|.
         
 #if IMPL_LOGGIGN && DEBUG_FRAME_REFRESH
@@ -319,6 +321,9 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
 
         _Frame -> indexes[i] = _Frame -> indexes[j];
         memcpy(_frame_page_ptr(_Frame, i), _frame_page_ptr(_Frame, j), _Frame -> page_size);
+
+        if (j == _Frame -> last)
+            break;
     }
 
 #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
@@ -351,8 +356,8 @@ bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, 
         page_ptr = _frame_page_ptr(_Frame, frame_index);
         if (page_ptr == NULL)
             return false;
-
         memcpy(_ReturnPage, page_ptr, _Frame -> page_size);
+
         return _frame_refresh(_Frame, frame_index);
     }
     if (! frame_add(_PageIndex, _Frame, _Stream)) {

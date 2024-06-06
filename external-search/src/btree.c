@@ -319,7 +319,7 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
             // By effect, it then points to the exact position at which the next node is pointed at
             // by y.
             if (cmp_bg_build(_reg -> key, y.reg_ptr[i].key))
-                    i ++;
+                i ++;
             
             // Refreshing the *y*
             frame_retrieve_page(_builder -> file_stream, & _builder -> frame, y.children_ptr[i], & c);
@@ -328,8 +328,6 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
         // Recursive step
         y_index = y.children_ptr[i];
         y = c;
-
-
     }
 
     // Fails the insertion in case the registry is already present on the node.
@@ -361,7 +359,7 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
     return true;
 }
 
-static bool
+bool
 BTree_insert(const registry_pointer * _reg, B_Builder * _builder)
 {
 #if IMPL_LOGGING
@@ -370,7 +368,7 @@ BTree_insert(const registry_pointer * _reg, B_Builder * _builder)
 
     /*  If the root has (2t - 1) items, it means that the node is full and needs to be splitted.
         (BTREE_MINIMUM_DEGREE = t) */
-    if (_builder -> root.item_count == 2 * BTREE_MINIMUM_DEGREE - 1) {
+    if (_builder -> root.item_count == (2 * BTREE_MINIMUM_DEGREE - 1)) {
         // Splits the current root (on _builder) and assigns the new root to the builder.
         // As the new root is surely not full, after splitted, the insertion by this case can be done.
         BTree_SplitRoot(_builder);
@@ -439,7 +437,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
                 break;
             }
 
-#if IMPL_LOGGING && DEBUG_STREAM_AFTER_INSERTION
+#if IMPL_LOGGING
             PrintBStream(b_builder.file_stream, b_builder.nodes_qtt);
 #endif
         }
