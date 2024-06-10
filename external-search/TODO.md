@@ -37,8 +37,7 @@ Critical things to attent.
 	* [ ] B tree.
 	* [ ] B+ tree.
 	* [ ] EBST and ERBT.
-* [ ] Improve and finish-up the registry data-generation scheme. 
-	
+	* [ ] Improve and finish-up the registry data-generation scheme. 
 
 ### Revision
 Things that urges being revised.

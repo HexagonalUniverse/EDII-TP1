@@ -83,7 +83,7 @@ PrintBStream(B_STREAM * _OutputStream, const size_t _HowManyPages)
 #endif // IMPL_LOGGING
 
 
-// B-tree Methods
+// B tree methods
 // --------------
 
 /*  Splits a full node y into two in the B-tree, y being x's child by the specified index 
@@ -471,11 +471,12 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
 
     freeFrame(& b_builder.frame);
 
-#if IMPL_LOGGING
-    if (insert_failure)
-        DebugPrintf("bb:err2\n", NULL);
-    fallDebug();
-#endif
+    #if IMPL_LOGGING
+        if (insert_failure)
+            DebugPrintf("bb:err2\n", NULL);
+
+        fallDebug();
+    #endif
     return ! insert_failure;
 }
 

@@ -15,7 +15,7 @@ static void
 _PrintRegistries(const registry_pointer * reg_ptr, const size_t qtd)
 {
     fputc('<', andrd_stream);
-    if (!qtd)
+    if (! qtd)
     {
         fputc('>', andrd_stream);
         return;
