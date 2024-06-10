@@ -50,7 +50,7 @@ time_diff_sec(struct timeval start_time, struct timeval end_time) {
 }
 
 
-/*  Indentifier for each of the searching methods. */
+/*  Identifier for each of the searching methods. */
 typedef enum
 {
     INDEXED_SEQUENTIAL_SEARCH,
@@ -67,16 +67,18 @@ typedef enum
     DISORDERED
 } SITUATION;
 
-# if 0
+
+/*  Tracks all input parameters to the application. */
 struct application_parameters {
-    SEARCHING_METHOD method = 0;    // Specifies the searching method.
-    SITUATION situation = 0;        // (...)
-    key_t key = 0;                  // (...)
-    uint64_t reg_qtt = 0;           // (...)
-    search_result result = { 0 };   // (...)
-    bool display_help = false;      // (...)
+    // * By design, every parameter should be initialized with a null value.
+
+    SEARCHING_METHOD method;    // Specifies the searching method.
+    SITUATION situation;        // (...)
+    key_t key;                  // (...)
+    uint64_t reg_qtt;           // (...)
+    search_result result;       // (...)
+    bool display_help;          // (...)
 };
-#endif
 
 
 
@@ -107,8 +109,7 @@ PrintSearchResults(search_result * _Sr)
 
 /*  */
 static SEARCH_RESPONSE 
-__ERBT(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t _Qtt,
-    const char * _InputFilename, const char * _ERBTFilename)
+__ERBT(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _ERBTFilename)
 {
     /*
     REG_STREAM * input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
@@ -148,87 +149,78 @@ __ERBT(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t 
     return SEARCH_FAILURE;
 }
 
-/*  */
+/*  The EBST (by MRT) search-engine. */
 static SEARCH_RESPONSE
-__EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t _Qtt,
-    const char * _InputFilename, const char * _EBSTFilename)
+__EBST(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _EBSTFilename)
 {
     // Time-measure variables.
     struct timeval start_time, end_time;
-    
-    // Initialization: Opening both input and output file-streams
-    // and constructing the frame.
-    REG_STREAM * input_stream;                  // (...)
-    EBST_STREAM * output_stream;                // (...)
-    frame_t frame = { 0 };                      // (...)
+
+    EBST_STREAM * output_stream = NULL;     // File over which the external data-structure will be constructed at.
+    frame_t frame = { 0 };                  // Registries frame used in the MRT build.
 
     {   // Initialization.
-        input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
-        if (input_stream == NULL)
-            return _SE_REGDATAFILE;
 
         output_stream = (EBST_STREAM *) fopen(_EBSTFilename, "w+b");
-        if (output_stream == NULL) {
-            fclose(input_stream);
+        if (output_stream == NULL)
             return _SE_EBST_FILE;
-        }
 
         if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
-            fclose(input_stream);
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
     }
 
-    gettimeofday(& start_time, NULL);
-    if (! EBST_MRT_Build(input_stream, (EBST_STREAM *) output_stream, & frame, _Situation == ASCENDING_ORDER, _Qtt)) {
-        fclose(input_stream); fclose(output_stream);
-        return _SE_EBSTMRTBUILD;
+    {   // Building the data-structure.
+
+        gettimeofday(& start_time, NULL);
+        if (! EBST_MRT_Build(input_stream, output_stream, & frame, parameters->situation == ASCENDING_ORDER, parameters->reg_qtt)) {
+            fclose(output_stream);
+            freeFrame(& frame);
+
+            return _SE_EBSTMRTBUILD;
+        }
+        gettimeofday(& end_time, NULL);
+
+        // Registering the construction time.
+        result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
-    gettimeofday(& end_time, NULL);
-    result -> measures.construction_time = time_diff_sec(start_time, end_time);
-
-    fclose(output_stream);
-    output_stream = fopen(_EBSTFilename, "rb");
-    if (output_stream == NULL) {
-        fclose(input_stream);
-        return _SE_EBST_FILE;
-    }
-
-    gettimeofday(& start_time, NULL);
-        result -> success = EBST_Search((EBST_STREAM *) output_stream, input_stream, _Key, & result -> target);
-    gettimeofday(& end_time, NULL);
-
-    result -> measures.time_span = time_diff_sec(start_time, end_time);
-
 
     freeFrame(& frame);
-    fclose(input_stream); fclose(output_stream);
-    
-    if (result->success) {
-        return SEARCH_SUCCESS;
+
+    // Re-opening the data-structure file in read-mode.
+    fclose(output_stream);
+    output_stream = fopen(_EBSTFilename, "rb");
+    if (output_stream == NULL)
+        return _SE_EBST_FILE;
+
+    {   // Searching for the key.
+     
+        gettimeofday(& start_time, NULL);
+        result -> success = EBST_Search((EBST_STREAM *) output_stream, input_stream, parameters -> key, & result -> target);
+        gettimeofday(& end_time, NULL);
+
+        // Registering the searching time.
+        result -> measures.time_span = time_diff_sec(start_time, end_time);
     }
 
-    return SEARCH_FAILURE;
+    fclose(output_stream);
+    return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
 /*  B-Tree search engine. Applies the B-Tree construction and 
     search for the given filenames. In case of success, the registry 
     is written into the <target> in the result. */
 static SEARCH_RESPONSE
-__BTREE(const key_t _Key, search_result * result, 
-    const char * _InputFilename, const char * _OutputFilename) 
+__BTREE(const struct application_parameters * parameters, search_result * result,
+    REG_STREAM * input_stream, const char * _OutputFilename) 
 {   
     // Time-measure variables.
 	struct timeval start_time, end_time;
     
-    // Opening both input and output file-streams 
+    // Opening the output file-stream
     // for the construction.
 
-    REG_STREAM * input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
-    if (input_stream == NULL)
-        return _SE_REGDATAFILE;
-    
     B_STREAM * output_stream = (B_STREAM *) fopen(_OutputFilename, "w+b");
     if (output_stream == NULL) {
         fclose(input_stream);
@@ -256,7 +248,6 @@ __BTREE(const key_t _Key, search_result * result,
     fclose(output_stream);
     output_stream = (B_STREAM *) fopen(_OutputFilename, "rb");
     if (output_stream == NULL) {
-        fclose(input_stream);
         return _SE_BFILE;
     }
     
@@ -265,14 +256,13 @@ __BTREE(const key_t _Key, search_result * result,
         important and its advantage is not used. */
     frame_t frame = { 0 };
     if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
-        fclose(input_stream);
         fclose(output_stream);
         return _SE_MAKEFRAME;
     }
     
     // Measuring the time in between the search.
     gettimeofday(& start_time, NULL);
-        bool search_response = BTree_Search(_Key, input_stream, output_stream, & frame, & result -> target);
+        bool search_response = BTree_Search(parameters -> key, input_stream, output_stream, & frame, & result -> target);
     gettimeofday(& end_time, NULL);
 
     // Interpreting the time the search took in [seconds].
@@ -280,7 +270,6 @@ __BTREE(const key_t _Key, search_result * result,
 
     freeFrame(& frame);
 
-    fclose(input_stream);
     fclose(output_stream);
 
     if (! search_response)
@@ -293,21 +282,16 @@ __BTREE(const key_t _Key, search_result * result,
 
 /*  The B*Tree search-engine. */
 static SEARCH_RESPONSE
-__BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, const char * _OutputFilename)
+__BSTAR(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _OutputFilename)
 {
     // Time-measure variables.
 	struct timeval start_time, end_time;
     
-    // Opening both input and output file-streams 
+    // Opening output file-stream
     // for the construction.
-
-    REG_STREAM * input_stream = fopen(_InputFilename, "rb");
-    if (input_stream == NULL)
-        return _SE_REGDATAFILE;
     
     BSTAR_STREAM * output_stream = fopen(_OutputFilename, "w+b");
     if (output_stream == NULL) {
-        fclose(input_stream);
         return _SE_BSTARFILE;
     }
 
@@ -316,7 +300,6 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
     
     if (! BSTree_Build(input_stream, output_stream))
     {
-        fclose(input_stream);
         fclose(output_stream);
         return _SE_BSTARBUILD;
     }
@@ -331,7 +314,6 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
     fclose(output_stream);
     output_stream = fopen(_OutputFilename, "rb");
     if (output_stream == NULL) {
-        fclose(input_stream);
         return _SE_BSTARFILE;
     }
     
@@ -340,14 +322,13 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
         important and its advantage is not used. */
     frame_t frame = { 0 }; 
     if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
-        fclose(input_stream);
         fclose(output_stream);
         return _SE_MAKEFRAME;
     }
     
     // Measuring the time in between the search.
     gettimeofday(& start_time, NULL);
-        bool search_response = BSTree_Search(_Key, input_stream, output_stream, & frame, & result -> target);
+        bool search_response = BSTree_Search(parameters -> key, input_stream, output_stream, & frame, & result -> target);
     gettimeofday(& end_time, NULL);
 
     // Interpreting the time the search took in [seconds].
@@ -368,23 +349,18 @@ __BSTAR(const key_t _Key, search_result * result, const char * _InputFilename, c
 
 /*  The "Indexed Sequential Search" search-engine. */
 static SEARCH_RESPONSE
-__ISS(const key_t _Key, search_result * result, const SITUATION situation, const uint64_t reg_qtt,
-    const char * _InputFilename)
+__ISS(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream)
 {
     // As ISS only works when there are order, a validation is done for the disordered case.
-    if (situation == DISORDERED)
+    if (parameters -> situation == DISORDERED)
         return _SE_UNORDERED_ISS;
 
     struct timeval start_time, end_time;
     
-    FILE * input_stream = fopen(_InputFilename, "rb");
-    if (input_stream == NULL)
-        return _SE_REGDATAFILE;
-    
     IndexTable index_table = { 0 }; 
 
     gettimeofday(& start_time, NULL);
-    if (! buildIndexTable(& index_table, reg_qtt, input_stream))
+    if (! buildIndexTable(& index_table, parameters -> reg_qtt, input_stream))
         return _SE_INDEXTABLE;
     gettimeofday(& end_time, NULL);
 
@@ -393,7 +369,7 @@ __ISS(const key_t _Key, search_result * result, const SITUATION situation, const
     frame_t frame = { 0 };  frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE);
 
     gettimeofday(& start_time, NULL);
-        bool search_response = indexedSequencialSearch(_Key, input_stream, & index_table, & frame, result, (situation == ASCENDING_ORDER) ? true : false);
+        bool search_response = indexedSequencialSearch(parameters -> key, input_stream, & index_table, & frame, result, (parameters -> situation == ASCENDING_ORDER) ? true : false);
     gettimeofday(& end_time, NULL);
 
     result -> measures.time_span = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
@@ -413,33 +389,59 @@ __ISS(const key_t _Key, search_result * result, const SITUATION situation, const
     The error logging happens here. 
     Returns success in the (data-building) and searching without error occurrences. */
 static bool
-_RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_t qtt, search_result * result)
+_RedirectSearch(const struct application_parameters * parameters, search_result * result)
 {
+    REG_STREAM * input_stream = (REG_STREAM *) fopen(INPUT_DATAFILENAME, "rb");
+    if (input_stream == NULL) {
+        /*
+            erro fudido
+        */
+
+        return false;
+    }
+    
+
     /*  Tracks the search state for error, in case of, or success. */
     SEARCH_RESPONSE search_response = SEARCH_FAILURE;
-
     
-    if (method == INDEXED_SEQUENTIAL_SEARCH)
-        search_response = __ISS(key, result, situation, qtt, INPUT_DATAFILENAME);
+    switch (parameters -> method) {
+    case INDEXED_SEQUENTIAL_SEARCH:
+        search_response = __ISS(parameters, result, input_stream);
+        break;
 
-    else if (method == EXTERNAL_BINARY_SEARCH) {
-        if ((situation == DISORDERED) || (situation == DESCENDING_ORDER))
-            search_response = __ERBT(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_ERBT_FILENAME);
-        else
-            search_response = __EBST(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_EBST_FILENAME);
+    case EXTERNAL_BINARY_SEARCH:
+        /*  For EBS, the decision between a ebst (by mrt) 
+            and erbt is hereby done. */
+        switch (parameters -> situation) {
+        case DISORDERED:
+            search_response = __ERBT(parameters, result, input_stream, OUTPUT_ERBT_FILENAME);
+            break;
+        
+        // Reduced algorithmic complexity is taken in advantage in the ordered case.
+        default:
+            search_response = __EBST(parameters, result, input_stream, OUTPUT_EBST_FILENAME);
+        } break;
 
-    } else if (method == BTREE_SEARCH)
-        search_response = __BTREE(key, result, INPUT_DATAFILENAME, OUTPUT_BTREE_FILENAME);
+    case BTREE_SEARCH:
+        search_response = __BTREE(parameters, result, input_stream, OUTPUT_BTREE_FILENAME);
+        break;
+
+    case BSTAR_SEARCH:
+        search_response = __BSTAR(parameters, result, input_stream, OUTPUT_BSTAR_FILENAME);
+        break;
+
+    default:
+        break;
+    }
     
-    else if (method == BSTAR_SEARCH)
-        search_response = __BSTAR(key, result, INPUT_DATAFILENAME, OUTPUT_BSTAR_FILENAME);
-    
+    fclose(input_stream);
 
-    /*  Error representation */
+
+    /*  Search-engines error representation. */
     if ((search_response != SEARCH_SUCCESS) && (search_response != SEARCH_FAILURE))
     {
         /*
-            TODO: Error debug system.
+            NOT YET IMPLEMENTED.
         */
         printf("erro erro cmrd, %d\n", search_response);
 
@@ -448,6 +450,8 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
 
     result -> success = search_response == SEARCH_SUCCESS;
 
+
+
     // Finished-up execution without errors...
     return true;
 }
@@ -455,12 +459,12 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
 /*  Parses the arguments for the main-program. 
     Returns by ref. the method, situation and the key. */
 static bool
-_ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Situation, key_t * _Key, uint64_t * _Qtt, bool * _Help)
+_ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
 {
     if ((argc == 2) && (! strcmp(argsv[1], "-h")))
     {
         // TODO: "-h" menu.
-        * _Help = true;
+        parameters -> display_help = true;
         return true;
     }
 
@@ -481,12 +485,12 @@ _ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Sit
     }
 
     // Getting the method number from terminal
-    * _Method = atoi(argsv[1]);
+    parameters -> method = atoi(argsv[1]);
     
     // Validating the method number
-    if (! in_range(0, 3, * _Method)) {
+    if (! in_range(0, 3, parameters -> method)) {
         _ContextErrorMsgf("parsing error: ", "The specified method is incorrect. Passed " _ES_FG_RED() "%d" _AEC_RESET ", but actually expected"
-            " one in the range 0 to 3, inclusive.\n", * _Method);
+            " one in the range 0 to 3, inclusive.\n", parameters -> method);
         printf(">>\t"); _TracebackErrorArg(argc, argsv, 1); putchar('\n');
         return false;
     }
@@ -502,28 +506,39 @@ _ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Sit
         _ContextWarningMsgf("parsing warning: ", "The passed quantity (\"%s\" -> %" PRIi64 ") is way too large.\n",
             argsv[2], x);
     }
-    * _Qtt = x;
+    parameters -> reg_qtt = x;
 
     // Getting the situation of the file from terminal
-    * _Situation = atoi(argsv[3]);
+    parameters-> situation = atoi(argsv[3]);
     
     // Validating the situation number
-    if (! in_range(1, 3, * _Situation)) {
+    if (! in_range(1, 3, parameters -> situation)) {
         _ContextErrorMsgf("parsing error: ", "The specified file order situation is incorrect. " 
-            "Passed " _ES_FG_RED() "%d" _AEC_RESET ", but actually expected one in the range 1 to 3, inclusive.\n", * _Situation);
+            "Passed " _ES_FG_RED() "%d" _AEC_RESET ", but actually expected one in the range 1 to 3, inclusive.\n", parameters -> situation);
         printf(">>\t"); _TracebackErrorArg(argc, argsv, 3); putchar('\n');
         return false;
     }
 
     // Getting the wanted key from terminal
-    * _Key = atoi(argsv[4]);
+    parameters -> key = atoi(argsv[4]);
 
     // TODO: Verify if the parameters are numerals....
 
     return true;
 }
 
-/* "pesquisa <método> <quantidade> <situação> <chave>" */
+/*  SPECS.
+    
+    Base calling: 
+        "pesquisa <method> <register-quantity-in-file> <file-order-situation> <searching-key>". 
+
+
+    return-code:
+        0:  successful flux;
+        -1: parsing error;
+        -2: searching error;
+        -3: logging initialization error.
+*/
 int main(int argc, char ** argsv)
 {
 #if IMPL_LOGGING
@@ -535,16 +550,10 @@ int main(int argc, char ** argsv)
     }
 #endif // IMPL_LOGGING
 
-    // Input parameters.
-    SEARCHING_METHOD method = 0;    // Specifies the searching method.
-    SITUATION situation = 0;        // (...)
-    key_t key = 0;                  // (...)
-    uint64_t reg_qtt = 0;           // (...)
-    search_result result = { 0 };   // (...)
-    bool display_help = false;      // (...)
+    /*  Parsing program parameters. */
 
-
-    if (! _ParseArgs(argc, argsv, & method, & situation, & key, & reg_qtt, & display_help))
+    struct application_parameters parameters = { 0 };
+    if (! _ParseArgs(argc, argsv, & parameters))
     {
         #if IMPL_LOGGING
             FinalizeLogging();
@@ -553,10 +562,9 @@ int main(int argc, char ** argsv)
         return -1;
     }
     
-    if (display_help)
+    if (parameters.display_help)
     {
-
-        // sp Print help on stdout for "-h"...
+        // print help on stdout for "-h"...
         printf("help yeei\n");
 
         #if IMPL_LOGGING
@@ -565,7 +573,8 @@ int main(int argc, char ** argsv)
         return 0;
     }
 
-    if (! _RedirectSearch(method, situation, key, reg_qtt, & result))
+    search_result result = { 0 };
+    if (! _RedirectSearch(& parameters, & result))
     {
         #if IMPL_LOGGING
             FinalizeLogging();
@@ -576,7 +585,10 @@ int main(int argc, char ** argsv)
     
     /* Representing the computation. */
     PrintSearchResults(& result);
-    PrintCounter();
+
+    #if TRANSPARENT_COUNTER
+        PrintCounter();
+    #endif
 
 
     #if IMPL_LOGGING
