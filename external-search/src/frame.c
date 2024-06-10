@@ -1,12 +1,10 @@
 /*  <src/frame.c>
     
-    Where the frame data-structure is defined.
-*/
+    Where the frame data-structure is defined. */
 
 
 #include "frame.h"
 #include <string.h> // for memcpy
-
 
 
 #if IMPL_LOGGING && 0
@@ -133,7 +131,7 @@ frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t *
         if (_PageIndex == _Frame -> indexes[i]) {
 
             #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-                        DebugPrintR("found at #%u\n", (unsigned int) i);
+                DebugPrintR("found at #%u\n", (unsigned int) i);
             #endif
 
             * _ReturnFrameIndex = i;
@@ -142,9 +140,10 @@ frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t *
         if (i == _Frame -> last)
             break;
     }
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintR("not found\n", NULL);
-#endif
+
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintR("not found\n", NULL);
+    #endif
 
     return false;
 }
@@ -170,7 +169,6 @@ bool frame_remove(frame_t * _Frame) {
 
     return true;
 }
-
 
 static finline bool
 _frame_last_read_page(uint32_t _PageIndex, frame_t * _Frame, FILE * _Stream) {
@@ -198,13 +196,13 @@ _frame_page_ptr(frame_t * _Frame, uint32_t _FrameIndex)
     case REG_PAGE:
         return & ((regpage_t *) _Frame -> pages)[_FrameIndex];
     case B_PAGE:
-        return &((b_node *) _Frame->pages)[_FrameIndex];
+        return & ((b_node *) _Frame -> pages)[_FrameIndex];
     case BSTAR_PAGE:
-        return &((bstar_node *) _Frame->pages)[_FrameIndex];
+        return & ((bstar_node *) _Frame -> pages)[_FrameIndex];
     case EBST_PAGE:
-        return &((ebst_node *) _Frame->pages)[_FrameIndex];
+        return & ((ebst_node *) _Frame -> pages)[_FrameIndex];
     case ERBT_PAGE:
-        return &((erbt_node *) _Frame->pages)[_FrameIndex];
+        return & ((erbt_node *) _Frame -> pages)[_FrameIndex];
     default:
         break;
     }
@@ -275,14 +273,8 @@ frame_add_directly(uint32_t _PageIndex, const void * _WritePage, frame_t * _Fram
     _Frame -> indexes[_Frame -> last] = _PageIndex;
     _Frame -> size ++;
 
-#if IMPL_LOGGING
-    // __print_frame_indexes(_Frame);
-#endif
-
     return true;
 }
-
-
 
 /*
 
@@ -290,16 +282,16 @@ frame_add_directly(uint32_t _PageIndex, const void * _WritePage, frame_t * _Fram
 static inline bool
 _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
 {
-#if IMPL_LOGGING && DEBUG_FRAME_REFRESH
-    DebugPrintf("frame-index: %u, frame-type: %u, frame-size: %u.\n", 
-        (unsigned int) _FrameIndex, (unsigned int) _Frame -> type, (unsigned int) _Frame -> size);
-    DebugPrintf("page-index: %u.\n", (unsigned int) _Frame -> indexes[_FrameIndex]);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
+        DebugPrintf("frame-index: %u, frame-type: %u, frame-size: %u.\n", 
+            (unsigned int) _FrameIndex, (unsigned int) _Frame -> type, (unsigned int) _Frame -> size);
+        DebugPrintf("page-index: %u.\n", (unsigned int) _Frame -> indexes[_FrameIndex]);
+    #endif
 
     if (_FrameIndex == _Frame -> last) {
-#if IMPL_LOGGING && DEBUG_FRAME_REFRESH
+    #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
         DebugPrintf("Page already in last position.\n", NULL);
-#endif
+    #endif
 
         return true;
     }
@@ -314,10 +306,10 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
     for (uint32_t i = _FrameIndex, j;; i = j) {
         j = incr_frame(i);  // j = (i + 1) mod |Frame|.
         
-#if IMPL_LOGGIGN && DEBUG_FRAME_REFRESH
-        DebugPrintf("Frame[%u] <- Frame[%u] (index %u)\n",
-            i, j, _Frame -> indexes[j]);
-#endif
+        #if IMPL_LOGGIGN && DEBUG_FRAME_REFRESH
+            DebugPrintf("Frame[%u] <- Frame[%u] (index %u)\n",
+                i, j, _Frame -> indexes[j]);
+        #endif
 
         _Frame -> indexes[i] = _Frame -> indexes[j];
         memcpy(_frame_page_ptr(_Frame, i), _frame_page_ptr(_Frame, j), _Frame -> page_size);
@@ -326,27 +318,22 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
             break;
     }
 
-#if IMPL_LOGGING && DEBUG_FRAME_REFRESH
-    DebugPrintf("Frame[%u] <- old Frame[%u] (index %u)\n",
-        _Frame -> last, _FrameIndex, index_buffer);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
+        DebugPrintf("Frame[%u] <- old Frame[%u] (index %u)\n",
+            _Frame -> last, _FrameIndex, index_buffer);
+    #endif
 
     _Frame -> indexes[_Frame -> last] = index_buffer;
     memcpy(_frame_page_ptr(_Frame, _Frame -> last), page_buffer, _Frame -> page_size);
     free(page_buffer);
 
-#if IMPL_LOGGING && DEBUG_FRAME_REFRESH
-    // __print_frame_indexes(_Frame);
-#endif
-
     return true;
 }
 
 bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, void * _ReturnPage) {
-    
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintf("index: %u\n", (unsigned int) _PageIndex);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintf("index: %u\n", (unsigned int) _PageIndex);
+    #endif
 
     uint32_t frame_index = 0;
     void * page_ptr = NULL;
@@ -362,17 +349,17 @@ bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, 
     }
     if (! frame_add(_PageIndex, _Frame, _Stream)) {
 
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-        DebugPrintR("Failed into adding page <%u> to frame.\n", _PageIndex);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+            DebugPrintR("Failed into adding page <%u> to frame.\n", _PageIndex);
+    #endif
 
         return false;
     }
 
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintf("Page added to frame. Frame-index: <%u> (last)\n", 
-        (unsigned int) _Frame -> last);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintf("Page added to frame. Frame-index: <%u> (last)\n", 
+            (unsigned int) _Frame -> last);
+    #endif
 
     // TODO: potencially the following block than be extracted a method:
     page_ptr = _frame_page_ptr(_Frame, _Frame -> last);
@@ -384,15 +371,15 @@ bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, 
 }
 
 inline bool frame_retrieve_index(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, uint32_t * _ReturnIndex) {
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintf("page index: %u\n", (unsigned int) _PageIndex);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintf("page index: %u\n", (unsigned int) _PageIndex);
+    #endif
 
     uint32_t frame_index = 0;
     if (frame_search_index(_Frame, _PageIndex, & frame_index)) {
-#if IMPL_LOGGIGN && DEBUG_FRAME_PAGE_MANAGEMENT
-        DebugPrintf("(1) frame-index: %u\n", (unsigned int) frame_index);
-#endif
+        #if IMPL_LOGGIGN && DEBUG_FRAME_PAGE_MANAGEMENT
+            DebugPrintf("(1) frame-index: %u\n", (unsigned int) frame_index);
+        #endif
 
         // It is refreshed and then, what initially was in frame_index goes to last.
         if (! _frame_refresh(_Frame, frame_index))
@@ -402,16 +389,16 @@ inline bool frame_retrieve_index(FILE * _Stream, frame_t * _Frame, uint32_t _Pag
     }
 
     if (! frame_add(_PageIndex, _Frame, _Stream)) {
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-        DebugPrintR("Failed into adding page <%u> to frame.\n", _PageIndex);
-#endif
+        #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+            DebugPrintR("Failed into adding page <%u> to frame.\n", _PageIndex);
+        #endif
 
         return false;
     }
 
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintf("(2) frame-index: %u\n", (unsigned int) _Frame -> last);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintf("(2) frame-index: %u\n", (unsigned int) _Frame -> last);
+    #endif
 
     * _ReturnIndex = _Frame -> last;
     return true;
@@ -422,10 +409,10 @@ inline bool frame_retrieve_index(FILE * _Stream, frame_t * _Frame, uint32_t _Pag
 */
 static finline bool
 _universal_write_page(FILE * _Stream, uint32_t _PageIndex, const void * _WriteNode, page_type _Type) {
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintf("Writing page: <%u>, type: %d)\n",
-        (unsigned int) _PageIndex, _Type);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintf("Writing page: <%u>, type: %d)\n",
+            (unsigned int) _PageIndex, _Type);
+    #endif
     
     switch (_Type) {
     case REG_PAGE:
@@ -447,18 +434,18 @@ _universal_write_page(FILE * _Stream, uint32_t _PageIndex, const void * _WriteNo
 /*  */
 inline bool frame_update_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, const void * _WritePage)
 {
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintR("index: %u\n", (unsigned int) _PageIndex);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintR("index: %u\n", (unsigned int) _PageIndex);
+    #endif
 
     uint32_t frame_index = 0;
 
     // If the _WritePage (given by _PageIndex) is in the frame, updates then the frame also.
     if (frame_search_index(_Frame, _PageIndex, & frame_index)) {
 
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-        DebugPrintR("found; frame_index: %u\n", (unsigned int) frame_index);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+            DebugPrintR("found; frame_index: %u\n", (unsigned int) frame_index);
+    #endif
 
         memcpy(_frame_page_ptr(_Frame, frame_index), _WritePage, _Frame -> page_size);
 
@@ -468,26 +455,22 @@ inline bool frame_update_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIn
     }
     else {
         if (! frame_add_directly(_PageIndex, _WritePage, _Frame)) {
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-            DebugPrintR("Failed into adding page <%u> to frame.\n", _PageIndex);
-#endif
+            #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+                DebugPrintR("Failed into adding page <%u> to frame.\n", _PageIndex);
+            #endif
 
             return false;
         }
-
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-        DebugPrintf("Page added to frame. Frame-index: <%u> (last)\n",
-            (unsigned int) _Frame -> last);
-#endif
+    
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+            DebugPrintf("Page added to frame. Frame-index: <%u> (last)\n",
+                (unsigned int) _Frame -> last);
+    #endif
     }
 
     // Updating the page in original stream.
     return _universal_write_page(_Stream, _PageIndex, _WritePage, _Frame -> type);
 }
-
-
-
-
 
 
 /* Temporary */
@@ -533,11 +516,6 @@ PrintBNode(const b_node * _Node)
     printf("]\n");
 }
 
-/*  */
-
-
-
-
 void show_regpage_frame(const frame_t * _Frame) { // show the Frame pages
     if (isFrameEmpty(_Frame)) {
         return;
@@ -568,18 +546,15 @@ void show_bnode_frame(const frame_t * _Frame) {
 
     for (uint32_t i = 0; i < PAGES_PER_FRAME; i++) {
         printf("Page %d", i);
-        if (i == _Frame->first) {
+        if (i == _Frame -> first) {
             printf("\t<- first");
         }
-        else if (_Frame->last == i) {
+        else if (_Frame -> last == i) {
             printf("\t<- last");
         }
-        printf("\n%u", _Frame->indexes[i]);
-        PrintBNode(&((b_node *) _Frame->pages)[i]);
+        printf("\n%u", _Frame -> indexes[i]);
+        PrintBNode(&((b_node *) _Frame -> pages)[i]);
     }
     printf("\n\n");
 }
-
-
-
 

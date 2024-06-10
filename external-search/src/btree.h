@@ -19,9 +19,6 @@ bool BTree_Build(REG_STREAM *, B_STREAM *);
 /*  */
 bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream, frame_t * _Frame, registry_t * target);
 
-
-
-
 /*  (...) */
 typedef struct {
     B_STREAM * file_stream;
@@ -30,7 +27,7 @@ typedef struct {
     b_node root;
 } B_Builder;
 
-/*  Attempts inserting an element into the b-tree. 
+/*  Attempts inserting an element into the B tree. 
     Return success; fails in case of either the inserting key already
     existing in the tree or an atomic frame operation had failed.
     Has undefined state in case of failure. */
