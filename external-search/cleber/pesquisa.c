@@ -1,6 +1,9 @@
-// <pesquisa.c>
+/*  <pesquisa.c>
+    
+    Main driver for searching. */
 
-#include "external-search.h"
+
+#include <external-search.h>
 #include <sys/time.h>   // For <gettimeofday>.
 #include <string.h>     // for strcmp
 
@@ -64,6 +67,18 @@ typedef enum
     DISORDERED
 } SITUATION;
 
+# if 0
+struct application_parameters {
+    SEARCHING_METHOD method = 0;    // Specifies the searching method.
+    SITUATION situation = 0;        // (...)
+    key_t key = 0;                  // (...)
+    uint64_t reg_qtt = 0;           // (...)
+    search_result result = { 0 };   // (...)
+    bool display_help = false;      // (...)
+};
+#endif
+
+
 
 /*  */
 static void
@@ -91,92 +106,101 @@ PrintSearchResults(search_result * _Sr)
 
 
 /*  */
+static SEARCH_RESPONSE 
+__ERBT(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t _Qtt,
+    const char * _InputFilename, const char * _ERBTFilename)
+{
+    /*
+    REG_STREAM * input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
+    if (input_stream == NULL)
+        return _SE_REGDATAFILE;
+
+    ERBT_STREAM * output_stream = (ERBT_STREAM *) fopen(_ERBTFilename, "w+b");
+    if (output_stream == NULL) {
+        fclose(input_stream);
+        return _SE_EBST_FILE;
+    }
+
+    gettimeofday(&start_time, NULL);
+    if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream)) {
+        fclose(input_stream); fclose(output_stream);
+        return _SE_ERBTBUILD;
+    }
+    gettimeofday(&end_time, NULL);
+    result->measures.construction_time = time_diff_sec(start_time, end_time);
+
+    fclose(output_stream);
+    output_stream = fopen(_ERBTFilename, "rb");
+    if (output_stream == NULL) {
+        fclose(input_stream);
+        return _SE_EBST_FILE;
+    }
+
+    gettimeofday(& start_time, NULL);
+    result->success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, _Key, & result->target);
+    gettimeofday(& end_time, NULL);
+
+    printf("ERBT SEARCH DEU CERTO? %d\n", result->success);
+
+    result->measures.time_span = time_diff_sec(start_time, end_time);
+    */
+
+    return SEARCH_FAILURE;
+}
+
+/*  */
 static SEARCH_RESPONSE
 __EBST(const key_t _Key, search_result * result, SITUATION _Situation, uint64_t _Qtt,
-    const char * _InputFilename, const char * _EBSTFilename, const char * _ERBTFilename)
+    const char * _InputFilename, const char * _EBSTFilename)
 {
     // Time-measure variables.
     struct timeval start_time, end_time;
     
-    // Opening both input and output file-streams
-    // for the construction.
+    // Initialization: Opening both input and output file-streams
+    // and constructing the frame.
+    REG_STREAM * input_stream;                  // (...)
+    EBST_STREAM * output_stream;                // (...)
+    frame_t frame = { 0 };                      // (...)
 
-    REG_STREAM * input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
-    if (input_stream == NULL)
-        return _SE_REGDATAFILE;
-    
-    FILE * output_stream = NULL;
-    
-    frame_t frame = { 0 };
-    if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE))
-        return _SE_MAKEFRAME;
-    
-    /*  If the input registries file is disordered, then
-        the external red-black tree is built. */
-    if ((_Situation == DISORDERED) || (_Situation == DESCENDING_ORDER)) {
-        output_stream = fopen(_ERBTFilename, "w+b");
+    {   // Initialization.
+        input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
+        if (input_stream == NULL)
+            return _SE_REGDATAFILE;
+
+        output_stream = (EBST_STREAM *) fopen(_EBSTFilename, "w+b");
         if (output_stream == NULL) {
             fclose(input_stream);
             return _SE_EBST_FILE;
         }
 
-        gettimeofday(&start_time, NULL);
-        if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream)) {
-            fclose(input_stream); fclose(output_stream);
-            return _SE_ERBTBUILD;
-        }
-        gettimeofday(&end_time, NULL);
-        result -> measures.construction_time = time_diff_sec(start_time, end_time);
-
-        fclose(output_stream);
-        output_stream = fopen(_ERBTFilename, "rb");
-        if (output_stream == NULL) {
+        if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
             fclose(input_stream);
-            return _SE_EBST_FILE;
+            fclose(output_stream);
+            return _SE_MAKEFRAME;
         }
-
-        gettimeofday(& start_time, NULL);
-            result -> success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, _Key, & result -> target);
-        gettimeofday(& end_time, NULL);
-
-        printf("ERBT SEARCH DEU CERTO? %d\n", result->success);
-
-        result->measures.time_span = time_diff_sec(start_time, end_time);
-
-    /*  If it is ordered in ascending order, then the EBST 
-        is built by MRT. */
-    } else {    // _Situation == ASCENDING_ORDER
-        output_stream = fopen(_EBSTFilename, "w+b");
-        if (output_stream == NULL) {    
-            fclose(input_stream);
-            return _SE_EBST_FILE;
-        }
-
-        printf("before building\n"); fflush(stdout);
-        gettimeofday(& start_time, NULL);
-        if (! EBST_MRT_Build(input_stream, (EBST_STREAM *) output_stream, & frame, _Situation == ASCENDING_ORDER, _Qtt)) {
-            fclose(input_stream); fclose(output_stream);
-            return _SE_EBSTMRTBUILD;
-        }
-        gettimeofday(& end_time, NULL);
-        result -> measures.construction_time = time_diff_sec(start_time, end_time);
-
-        printf(">>> ebst built\n"); fflush(stdout);
-
-        fclose(output_stream);
-        output_stream = fopen(_EBSTFilename, "rb");
-        if (output_stream == NULL) {
-            fclose(input_stream);
-            return _SE_EBST_FILE;
-        }
-
-        gettimeofday(& start_time, NULL);
-            result -> success = EBST_Search((EBST_STREAM *) output_stream, input_stream, _Key, & result -> target);
-        gettimeofday(& end_time, NULL);
-
-        result -> measures.time_span = time_diff_sec(start_time, end_time);
-
     }
+
+    gettimeofday(& start_time, NULL);
+    if (! EBST_MRT_Build(input_stream, (EBST_STREAM *) output_stream, & frame, _Situation == ASCENDING_ORDER, _Qtt)) {
+        fclose(input_stream); fclose(output_stream);
+        return _SE_EBSTMRTBUILD;
+    }
+    gettimeofday(& end_time, NULL);
+    result -> measures.construction_time = time_diff_sec(start_time, end_time);
+
+    fclose(output_stream);
+    output_stream = fopen(_EBSTFilename, "rb");
+    if (output_stream == NULL) {
+        fclose(input_stream);
+        return _SE_EBST_FILE;
+    }
+
+    gettimeofday(& start_time, NULL);
+        result -> success = EBST_Search((EBST_STREAM *) output_stream, input_stream, _Key, & result -> target);
+    gettimeofday(& end_time, NULL);
+
+    result -> measures.time_span = time_diff_sec(start_time, end_time);
+
 
     freeFrame(& frame);
     fclose(input_stream); fclose(output_stream);
@@ -387,7 +411,7 @@ __ISS(const key_t _Key, search_result * result, const SITUATION situation, const
 
 /*  The actual redirector to the search-engines. 
     The error logging happens here. 
-    Returns success in the searching without error occurrences. */
+    Returns success in the (data-building) and searching without error occurrences. */
 static bool
 _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_t qtt, search_result * result)
 {
@@ -398,10 +422,13 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
     if (method == INDEXED_SEQUENTIAL_SEARCH)
         search_response = __ISS(key, result, situation, qtt, INPUT_DATAFILENAME);
 
-    else if (method == EXTERNAL_BINARY_SEARCH)
-        search_response = __EBST(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_EBST_FILENAME, OUTPUT_ERBT_FILENAME);
-    
-    else if (method == BTREE_SEARCH)
+    else if (method == EXTERNAL_BINARY_SEARCH) {
+        if ((situation == DISORDERED) || (situation == DESCENDING_ORDER))
+            search_response = __ERBT(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_ERBT_FILENAME);
+        else
+            search_response = __EBST(key, result, situation, qtt, INPUT_DATAFILENAME, OUTPUT_EBST_FILENAME);
+
+    } else if (method == BTREE_SEARCH)
         search_response = __BTREE(key, result, INPUT_DATAFILENAME, OUTPUT_BTREE_FILENAME);
     
     else if (method == BSTAR_SEARCH)
@@ -420,6 +447,8 @@ _RedirectSearch(SEARCHING_METHOD method, SITUATION situation, key_t key, uint64_
     }
 
     result -> success = search_response == SEARCH_SUCCESS;
+
+    // Finished-up execution without errors...
     return true;
 }
 
@@ -450,7 +479,6 @@ _ParseArgs(int argc, char ** argsv, SEARCHING_METHOD * _Method, SITUATION * _Sit
             return false;
         }
     }
-
 
     // Getting the method number from terminal
     * _Method = atoi(argsv[1]);
@@ -507,18 +535,20 @@ int main(int argc, char ** argsv)
     }
 #endif // IMPL_LOGGING
 
-    SEARCHING_METHOD method = 0;
-    SITUATION situation = 0;
-    key_t key = 0;
-    uint64_t reg_qtt = 0;
-    search_result result = { 0 };
-    bool display_help = false;
+    // Input parameters.
+    SEARCHING_METHOD method = 0;    // Specifies the searching method.
+    SITUATION situation = 0;        // (...)
+    key_t key = 0;                  // (...)
+    uint64_t reg_qtt = 0;           // (...)
+    search_result result = { 0 };   // (...)
+    bool display_help = false;      // (...)
 
-    if (! _ParseArgs(argc, argsv, &method, &situation, &key, &reg_qtt, &display_help))
+
+    if (! _ParseArgs(argc, argsv, & method, & situation, & key, & reg_qtt, & display_help))
     {
-#if IMPL_LOGGING
-        FinalizeLogging();
-#endif
+        #if IMPL_LOGGING
+            FinalizeLogging();
+        #endif
 
         return -1;
     }
@@ -529,17 +559,17 @@ int main(int argc, char ** argsv)
         // sp Print help on stdout for "-h"...
         printf("help yeei\n");
 
-#if IMPL_LOGGING
-        FinalizeLogging();
-#endif
+        #if IMPL_LOGGING
+            FinalizeLogging();
+        #endif
         return 0;
     }
 
     if (! _RedirectSearch(method, situation, key, reg_qtt, & result))
     {
-#if IMPL_LOGGING
-        FinalizeLogging();
-#endif
+        #if IMPL_LOGGING
+            FinalizeLogging();
+        #endif
         // in case an error happened, propagetes it on output.
         return -2;
     }
@@ -549,9 +579,9 @@ int main(int argc, char ** argsv)
     PrintCounter();
 
 
-#if IMPL_LOGGING
-    FinalizeLogging();
-#endif
+    #if IMPL_LOGGING
+        FinalizeLogging();
+    #endif
 
     return EXIT_SUCCESS;
 }

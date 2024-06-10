@@ -1,7 +1,7 @@
 TODOs
 =====
 
-Things yet to do on the project. Last update on 27/5/24.
+Things yet to do on the project. Last update on 10/06/24.
 
 
 
@@ -10,14 +10,14 @@ Smaller stuff
 
 Simpler things, that, besides not being that critical, must have attention.
 
-	. Choose colors for the printing and logging. 
-	. Organize the printing of the application response.
-	. Help directive "-h" display on main exe. call.
-	. Search errors debug and error presentation.
-	. Logging construction optionally specified in makefile building. Search whether it can be accomplished with parameters passed to makefile.
-	. Refactor frame_t to Frame?
-	. Make B / B* trees split-root, split-child safe.
-	. (Analysis) Frame to search_registry?
+* [ ] Organize the printing of the application response.
+* [ ] Help directive "-h" display on main exe. call.
+* [ ]  Search errors debug and error presentation.
+* [X] Logging construction optionally specified in makefile building.
+* [ ] (Ponder) Refactor frame_t to Frame?
+* [ ] Make B / B* trees split-root, split-child safe.
+* [ ] (Analysis) Frame to search_registry?
+* [ ] Choose colors for the printing and logging. 
 
 
 Bigger stuff
@@ -25,15 +25,19 @@ Bigger stuff
 
 Critical things to attent.
 
-	. Ensure system will works accross the target plataforms - it is: linux amd64.
-	. Set properly the external red-black tree.
-		Our integration attempt failed, for say; so it is still pendent.
-	. Make an automated testing system.
+* [ ] Ensure system will works accross the target plataforms - it is: linux amd64.
+* [x] Set properly the external red-black tree.
+* [ ] Integrate the "frame" into the remaining searching methods.
+* [X] Make an automated testing system.
 
 ### Data Analysis
-	. For measuring with that main search executable: separated results report via logging system, for ease in obtaining the data.
-	. Separated executable for execution various consecutive searches for further measures and profiling.
-	. Improve / finish-up the registry data-generation scheme. 
+* [ ] For measuring with that main search executable: separated results report via logging system, for ease in obtaining the data.
+* [ ] Separated executable for execution various consecutive searches for further measures and profiling.
+	* [ ] ISS.
+	* [ ] B tree.
+	* [ ] B+ tree.
+	* [ ] EBST and ERBT.
+* [ ] Improve and finish-up the registry data-generation scheme. 
 	
 
 ### Revision

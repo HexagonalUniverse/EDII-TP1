@@ -2,6 +2,10 @@
     
     Where the all "pages" and their fundamental IO operations are defined. */
 
+/*  
+
+*/
+
 
 #ifndef _ES_PAGING_HEADER_
 #define _ES_PAGING_HEADER_
@@ -11,6 +15,10 @@
 #include "log.h"
 
 
+/*  TODO: (Implement)
+    Defines the size of a buffer page in the application, in bytes. */
+#define PAGE_BUFFER_SIZE
+
 /*  How many itens, at its maximum, holds each page. 
     Observe that it is the same for the different types of pages. */
 #define ITENS_PER_PAGE		5					
@@ -19,6 +27,8 @@
 
 // Files and streams
 // -----------------
+
+/*  The type of each type of stream dealt is annotated for hinting arguments. */
 
 /*	A stream representing the registries file. */
 typedef FILE	REG_STREAM;
@@ -55,8 +65,8 @@ typedef FILE	ERBT_STREAM;
 
 
 
-// Regitries page
-// --------------
+// Registries page
+// ---------------
 
 /*  Registries-page. A page in the registries stream. 
     Structurally: an array of registries. */

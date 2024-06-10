@@ -1,4 +1,7 @@
-/*  <src/btree.h> */
+/*  <src/btree.h> 
+    
+    Where declarations for the B-tree search-engine are placed. */
+
 
 #ifndef _ES_BTREE_HEADER_
 #define _ES_BTREE_HEADER_
@@ -27,7 +30,10 @@ typedef struct {
     b_node root;
 } B_Builder;
 
-/*  */
+/*  Attempts inserting an element into the b-tree. 
+    Return success; fails in case of either the inserting key already
+    existing in the tree or an atomic frame operation had failed.
+    Has undefined state in case of failure. */
 bool BTree_insert(const registry_pointer * _reg, B_Builder * _builder);
 
 #endif // _ES_BTREE_HEADER_

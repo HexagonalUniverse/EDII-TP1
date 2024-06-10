@@ -53,12 +53,13 @@ typedef enum {
 	_SE_UNORDERED_ISS,
 
 
-	/*	File errors */
+	/*	File stream errors */
 
 	_SE_REGDATAFILE,
 	_SE_BFILE,
 	_SE_BSTARFILE,
 	_SE_EBST_FILE,
+	_SE_ERBT_FILE,
 
 	/*	Data-structures errors */
 

@@ -1,10 +1,14 @@
 
-ANDRADE É VIADO PAU NO CÚ DE QUEM TÁ SENTADO!
+Testing BTree building from complex sequences.
+
 
 
 
 PROGRAM: ../../bin/exe/josue.exe
 
+
+This one was tedious, but we could manually verify it.
+It's sequence of random registers, from 1 to 100.
 IN:
 :::
 67

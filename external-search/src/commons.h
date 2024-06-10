@@ -1,17 +1,15 @@
 /*	<src/commons.h>
 	
-	Where common, universal definitions are given, and dependencies imported. */
+	Where common, universal definitions are given, and dependencies imported,
+	for the external-search project. */
 
 
 #ifndef _ES_COMMONS_HEADER_
 #define _ES_COMMONS_HEADER_
 
 
-/*	The boolean type is globally used throughout programs. */
-#include <stdbool.h>
-
-/*	For size-specified integer types. */
-#include <inttypes.h>
+#include <stdbool.h>	/*	The boolean type is globally used. */
+#include <inttypes.h>	/*	For size-specified integer types. */
 
 // TODO: Move.
 #include "log.h"
