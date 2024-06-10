@@ -1,32 +1,26 @@
-/external-search/.vs/
-/external-search/.vscode/
 /Temporary/
-
 
 # IDE folders
 /.vs/
 /.vscode/
+/external-search/.vs/
+/external-search/.vscode/
 
 # Research and local annotations
 /Annotations/*
 
-# Object files
-*.o
 
-# Libraries
+# Binaries
+/external-search/bin/*
+*.o
 *.lib
 *.a
-
-# Shared objects
 *.dll
 *.so
+*.exe
 
-# Executables
-# *.exe
-
-# Logging files
+# Logging
 *.log
-
 
 # Specific built data-structures files
 *.btree

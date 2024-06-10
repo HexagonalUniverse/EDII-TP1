@@ -75,9 +75,6 @@ inline void _TracebackErrorArg(int argc, char ** argsv, int problematic_argument
 }
 
 
-
-
-
 #if IMPL_LOGGING
 
 // Logging stream

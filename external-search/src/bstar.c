@@ -187,9 +187,9 @@ BSTree_SplitRoot(BStar_Builder * _bs_builder)
 {
     // TODO: Make this function safe! void -> bool, verify frame update's and split-child.
 
-#if IMPL_LOGGING
-    raiseDebug();
-#endif
+    #if IMPL_LOGGING
+        raiseDebug();
+    #endif
 
     // TODO: Documentation, as in the B...
 
@@ -206,9 +206,9 @@ BSTree_SplitRoot(BStar_Builder * _bs_builder)
 
     _bs_builder -> root = new_root;
 
-#if IMPL_LOGGING
-    fallDebug();
-#endif
+    #if IMPL_LOGGING
+        fallDebug();
+    #endif
 }
 
 

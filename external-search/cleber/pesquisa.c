@@ -68,19 +68,16 @@ typedef enum
 } SITUATION;
 
 
+
 /*  Tracks all input parameters to the application. */
 struct application_parameters {
-    // * By design, every parameter should be initialized with a null value.
-
     SEARCHING_METHOD method;    // Specifies the searching method.
-    SITUATION situation;        // (...)
-    key_t key;                  // (...)
-    uint64_t reg_qtt;           // (...)
-    search_result result;       // (...)
-    bool display_help;          // (...)
+    SITUATION situation;        // Specifies the registries file order situation.
+    key_t key;                  // Specifies the key that will be searched.
+    uint64_t reg_qtt;           // Specifies how many registries is in the data file.
+    
+    bool display_help;          // Specifies whether the enter in help mode.
 };
-
-
 
 /*  */
 static void
@@ -111,41 +108,40 @@ PrintSearchResults(search_result * _Sr)
 static SEARCH_RESPONSE 
 __ERBT(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _ERBTFilename)
 {
-    /*
-    REG_STREAM * input_stream = (REG_STREAM *) fopen(_InputFilename, "rb");
-    if (input_stream == NULL)
-        return _SE_REGDATAFILE;
+    // Time-measure variables.
+    struct timeval start_time, end_time;
 
+    // File over which the ERBT will be constructed at.
     ERBT_STREAM * output_stream = (ERBT_STREAM *) fopen(_ERBTFilename, "w+b");
-    if (output_stream == NULL) {
-        fclose(input_stream);
+    if (output_stream == NULL)
         return _SE_EBST_FILE;
+
+    {   // Building the ERBT.
+
+        gettimeofday(& start_time, NULL);
+        if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream)) {
+            fclose(output_stream);
+            return _SE_ERBTBUILD;
+        }
+        gettimeofday(& end_time, NULL);
+        result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
-    gettimeofday(&start_time, NULL);
-    if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream)) {
-        fclose(input_stream); fclose(output_stream);
-        return _SE_ERBTBUILD;
-    }
-    gettimeofday(&end_time, NULL);
-    result->measures.construction_time = time_diff_sec(start_time, end_time);
-
+    // Re-opening the erbt file in read-mode.
     fclose(output_stream);
     output_stream = fopen(_ERBTFilename, "rb");
-    if (output_stream == NULL) {
-        fclose(input_stream);
+    if (output_stream == NULL)
         return _SE_EBST_FILE;
+
+    {   // Searching for the key.
+
+        gettimeofday(& start_time, NULL);
+        result -> success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, parameters -> key, & result -> target);
+        gettimeofday(& end_time, NULL);
+        result -> measures.time_span = time_diff_sec(start_time, end_time);
     }
 
-    gettimeofday(& start_time, NULL);
-    result->success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, _Key, & result->target);
-    gettimeofday(& end_time, NULL);
-
-    printf("ERBT SEARCH DEU CERTO? %d\n", result->success);
-
-    result->measures.time_span = time_diff_sec(start_time, end_time);
-    */
-
+    fclose(output_stream);
     return SEARCH_FAILURE;
 }
 
@@ -156,7 +152,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
     // Time-measure variables.
     struct timeval start_time, end_time;
 
-    EBST_STREAM * output_stream = NULL;     // File over which the external data-structure will be constructed at.
+    EBST_STREAM * output_stream = NULL;     // File over which the EBST will be constructed at.
     frame_t frame = { 0 };                  // Registries frame used in the MRT build.
 
     {   // Initialization.
@@ -208,146 +204,115 @@ __EBST(const struct application_parameters * parameters, search_result * result,
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
-/*  B-Tree search engine. Applies the B-Tree construction and 
-    search for the given filenames. In case of success, the registry 
-    is written into the <target> in the result. */
+/*  Handles the B tree searching. 
+    First, the data-structure is attempted being constructed. */
 static SEARCH_RESPONSE
 __BTREE(const struct application_parameters * parameters, search_result * result,
     REG_STREAM * input_stream, const char * _OutputFilename) 
 {   
     // Time-measure variables.
 	struct timeval start_time, end_time;
-    
-    // Opening the output file-stream
-    // for the construction.
 
+    // File over which the B tree data-structure will be constructed at.
     B_STREAM * output_stream = (B_STREAM *) fopen(_OutputFilename, "w+b");
-    if (output_stream == NULL) {
-        fclose(input_stream);
+    if (output_stream == NULL)
         return _SE_BFILE;
+
+    {   // Building the data-structure.
+
+        gettimeofday(& start_time, NULL);
+        if (! BTree_Build(input_stream, output_stream))
+        {
+            fclose(output_stream);
+            return _SE_BBUILD;
+        }
+	    gettimeofday(& end_time, NULL);
+	    result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
-    // Measuring the time before construction,
-    gettimeofday(& start_time, NULL);
-    
-    if (! BTree_Build(input_stream, output_stream))
-    {
-        fclose(input_stream);
-        fclose(output_stream);
-        return _SE_BBUILD;
-    }
-    
-    // measuring the time after it.
-	gettimeofday(& end_time, NULL);
-
-    // Interpreting the time the contruction took in [seconds].
-	result -> measures.construction_time = time_diff_sec(start_time, end_time);
-    
-
-    // Re-opening the output B-Tree stream in the read mode.
+    // Re-opening the B tree file in read mode.
     fclose(output_stream);
     output_stream = (B_STREAM *) fopen(_OutputFilename, "rb");
-    if (output_stream == NULL) {
+    if (output_stream == NULL)
         return _SE_BFILE;
-    }
     
-    /*  The frame for search. As there will only be requested one 
+    {   // Searching for the key.
+
+        /*  The frame for search. As there will only be requested one
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
-    frame_t frame = { 0 };
-    if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
-        fclose(output_stream);
-        return _SE_MAKEFRAME;
+        frame_t frame = { 0 };
+        if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
+            fclose(output_stream);
+            return _SE_MAKEFRAME;
+        }
+
+        gettimeofday(& start_time, NULL);
+        result -> success = BTree_Search(parameters -> key, input_stream, output_stream, & frame, & result -> target);
+        gettimeofday(& end_time, NULL);
+        result -> measures.time_span = time_diff_sec(start_time, end_time);
+
+        freeFrame(& frame);
     }
-    
-    // Measuring the time in between the search.
-    gettimeofday(& start_time, NULL);
-        bool search_response = BTree_Search(parameters -> key, input_stream, output_stream, & frame, & result -> target);
-    gettimeofday(& end_time, NULL);
-
-    // Interpreting the time the search took in [seconds].
-    result -> measures.time_span = time_diff_sec(start_time, end_time);
-
-    freeFrame(& frame);
 
     fclose(output_stream);
-
-    if (! search_response)
-    {
-        printf("Key not found!\n");
-        return SEARCH_FAILURE;
-    }
-    return SEARCH_SUCCESS;
+    return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
-/*  The B*Tree search-engine. */
+/*  The B* tree search-engine. */
 static SEARCH_RESPONSE
 __BSTAR(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _OutputFilename)
 {
     // Time-measure variables.
 	struct timeval start_time, end_time;
     
-    // Opening output file-stream
-    // for the construction.
-    
+    // File over which the B* tree data-structure will be constructed at.
     BSTAR_STREAM * output_stream = fopen(_OutputFilename, "w+b");
-    if (output_stream == NULL) {
+    if (output_stream == NULL)
         return _SE_BSTARFILE;
+
+    {   // Building the data-structure.
+
+        gettimeofday(& start_time, NULL);
+        if (! BSTree_Build(input_stream, output_stream))
+        {
+            fclose(output_stream);
+            return _SE_BSTARBUILD;
+        }
+	    gettimeofday(& end_time, NULL);
+	    result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
-    // Measuring the time before construction,
-    gettimeofday(& start_time, NULL);
-    
-    if (! BSTree_Build(input_stream, output_stream))
-    {
-        fclose(output_stream);
-        return _SE_BSTARBUILD;
-    }
-    
-    // measuring the time after it.
-	gettimeofday(& end_time, NULL);
-
-    // Interpreting the time the contruction took in [seconds].
-	result -> measures.construction_time = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
-    
-    // Re-opening the output B-Tree stream in the read mode.
+    // Re-opening the output B* tree stream in the read mode.
     fclose(output_stream);
     output_stream = fopen(_OutputFilename, "rb");
-    if (output_stream == NULL) {
+    if (output_stream == NULL)
         return _SE_BSTARFILE;
+    
+    {   // Searching for the key
+
+        /*  The frame for search. As there will only be requested one 
+            search operation, the role of the frame is not fundamentally
+            important and its advantage is not used. */
+        frame_t frame = { 0 }; 
+        if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
+            fclose(output_stream);
+            return _SE_MAKEFRAME;
+        }
+        
+        gettimeofday(& start_time, NULL);
+        result -> success = BSTree_Search(parameters -> key, input_stream, output_stream, & frame, & result -> target);
+        gettimeofday(& end_time, NULL);
+        result -> measures.time_span = time_diff_sec(start_time, end_time);
+
+        freeFrame(& frame);
     }
     
-    /*  The frame for search. As there will only be requested one 
-        search operation, the role of the frame is not fundamentally
-        important and its advantage is not used. */
-    frame_t frame = { 0 }; 
-    if (!  frame_make(& frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
-        fclose(output_stream);
-        return _SE_MAKEFRAME;
-    }
-    
-    // Measuring the time in between the search.
-    gettimeofday(& start_time, NULL);
-        bool search_response = BSTree_Search(parameters -> key, input_stream, output_stream, & frame, & result -> target);
-    gettimeofday(& end_time, NULL);
-
-    // Interpreting the time the search took in [seconds].
-    result -> measures.time_span = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
-
-    fclose(input_stream);
     fclose(output_stream);
-    freeFrame(& frame);
-
-
-    if (! search_response)
-    {
-        printf("Key not found!\n");
-        return SEARCH_FAILURE;
-    }
-    return SEARCH_SUCCESS;
+    return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
-/*  The "Indexed Sequential Search" search-engine. */
+/*  Indexed Sequential Search search-engine. */
 static SEARCH_RESPONSE
 __ISS(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream)
 {
@@ -355,34 +320,37 @@ __ISS(const struct application_parameters * parameters, search_result * result, 
     if (parameters -> situation == DISORDERED)
         return _SE_UNORDERED_ISS;
 
+    // Time-measure variables.
     struct timeval start_time, end_time;
     
-    IndexTable index_table = { 0 }; 
+    IndexTable index_table = { 0 };
 
-    gettimeofday(& start_time, NULL);
-    if (! buildIndexTable(& index_table, parameters -> reg_qtt, input_stream))
-        return _SE_INDEXTABLE;
-    gettimeofday(& end_time, NULL);
+    {   // Building indexed-table.
 
-    result -> measures.construction_time = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
-
-    frame_t frame = { 0 };  frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE);
-
-    gettimeofday(& start_time, NULL);
-        bool search_response = indexedSequencialSearch(parameters -> key, input_stream, & index_table, & frame, result, (parameters -> situation == ASCENDING_ORDER) ? true : false);
-    gettimeofday(& end_time, NULL);
-
-    result -> measures.time_span = ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
-    
-    deallocateIndexTable(&index_table);
-    fclose(input_stream);
-    freeFrame(& frame);
-
-    if (! search_response) {
-        printf("Key not found!\n");
-        return SEARCH_FAILURE;
+        gettimeofday(& start_time, NULL);
+        if (! buildIndexTable(& index_table, parameters -> reg_qtt, input_stream))
+            return _SE_INDEXTABLE;
+        gettimeofday(& end_time, NULL);
+        result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
-    return SEARCH_SUCCESS;
+
+    frame_t frame = { 0 }; 
+    if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
+        deallocateIndexTable(& index_table);
+        return _SE_MAKEFRAME;
+    }
+
+    {   // Searching for the key.
+
+        gettimeofday(& start_time, NULL);
+        result -> success = indexedSequencialSearch(parameters -> key, input_stream, & index_table, & frame, result, (parameters -> situation == ASCENDING_ORDER) ? true : false);
+        gettimeofday(& end_time, NULL);
+        result -> measures.time_span = time_diff_sec(start_time, end_time);
+    }
+
+    deallocateIndexTable(& index_table);
+    freeFrame(& frame);
+    return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
 /*  The actual redirector to the search-engines. 
@@ -400,7 +368,6 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         return false;
     }
     
-
     /*  Tracks the search state for error, in case of, or success. */
     SEARCH_RESPONSE search_response = SEARCH_FAILURE;
     
@@ -431,11 +398,11 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         break;
 
     default:
+        /*  This should be unreacheable. */
         break;
     }
     
     fclose(input_stream);
-
 
     /*  Search-engines error representation. */
     if ((search_response != SEARCH_SUCCESS) && (search_response != SEARCH_FAILURE))
@@ -448,16 +415,13 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         return false;
     }
 
-    result -> success = search_response == SEARCH_SUCCESS;
-
-
+    result -> success = search_response == SEARCH_SUCCESS;  // * redundant
 
     // Finished-up execution without errors...
     return true;
 }
 
-/*  Parses the arguments for the main-program. 
-    Returns by ref. the method, situation and the key. */
+/*  Parses the arguments for the main-program. */
 static bool
 _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
 {
@@ -527,17 +491,17 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
     return true;
 }
 
+
 /*  SPECS.
     
-    Base calling: 
-        "pesquisa <method> <register-quantity-in-file> <file-order-situation> <searching-key>". 
-
+    $ pesquisa method register-quantity-in-file file-order-situation searching-key <-P> 
+        <-in=registries-input-data-file>
 
     return-code:
-        0:  successful flux;
-        -1: parsing error;
-        -2: searching error;
-        -3: logging initialization error.
+        0:      successful flux;
+        -1:     parsing error;
+        -2:     searching error;
+        -3:     logging initialization error.
 */
 int main(int argc, char ** argsv)
 {

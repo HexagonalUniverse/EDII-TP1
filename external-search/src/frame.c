@@ -122,9 +122,9 @@ freeFrame(frame_t * _Frame)
 inline bool
 frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t * _ReturnFrameIndex)
 {
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-    DebugPrintR("searching for page index: %u\n", (unsigned int) _PageIndex);
-#endif
+    #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+        DebugPrintR("searching for page index: %u\n", (unsigned int) _PageIndex);
+    #endif
 
     if (isFrameEmpty(_Frame))
         return false;
@@ -132,9 +132,9 @@ frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t *
     for (uint32_t i = _Frame -> first;; i = incr_frame(i)) {
         if (_PageIndex == _Frame -> indexes[i]) {
 
-#if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
-            DebugPrintR("found at #%u\n", (unsigned int) i);
-#endif
+            #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
+                        DebugPrintR("found at #%u\n", (unsigned int) i);
+            #endif
 
             * _ReturnFrameIndex = i;
             return true;
