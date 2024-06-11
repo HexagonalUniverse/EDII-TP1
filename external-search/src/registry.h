@@ -9,7 +9,6 @@
 
 #include "commons.h"
 
-
 // Registry's data_2 char-array size.
 #define RD2_SIZE	1000
 

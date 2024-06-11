@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <string.h>
 #include <time.h>
@@ -6,6 +8,8 @@
 #define MIN_ARGS 3
 #define MAX_FILE_NAME 31
 #define CONST_GAP_RANGE     2146
+
+#define DATA_FILES_PATH "./temp/"
 
 typedef enum{
     ORDERED_ASCENDING,
@@ -16,8 +20,21 @@ typedef enum{
     DISORDERED_GAP
 }GenMode;
 
+
+static inline bool readRegistry(FILE* _file, uint64_t _pos, registry_t* _returnRegistry){
+    fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
+    return fread(_returnRegistry, sizeof(registry_t), 1, _file) > 0;
+}
+
+static inline bool writeRegistry(FILE* _file, uint64_t _pos, registry_t* _Registry){
+    fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
+    return fwrite(_Registry, sizeof(registry_t), 1, _file) > 0;
+}
+
+
+
 //Creating a random string
-static char *createRandStr(char* _str, const uint64_t _strSize) {
+static inline char *createRandStr(char* _str, const uint64_t _strSize) {
     for (int i = 0; i < _strSize - 1; i++)
         _str[i] = rand() % 26 + 65;
     _str[_strSize - 1] = '\0';
@@ -26,81 +43,114 @@ static char *createRandStr(char* _str, const uint64_t _strSize) {
 
 // S = O(N), T = O(N)
 //Creating random Data for registries
-static void createData(registry_t* _reg, const uint64_t* _noReg) {
-    for (int i = 0; i < *_noReg; i++) {
-        _reg[i].data_1 = rand() % LONG_MAX;
-        createRandStr(_reg[i].data_2, RD2_SIZE);
-        createRandStr(_reg[i].data_3, RD3_SIZE);
-    }
+static inline void createData(registry_t* _reg) {
+    _reg->data_1 = rand() % LONG_MAX;
+    createRandStr(_reg->data_2, RD2_SIZE);
+    createRandStr(_reg->data_3, RD3_SIZE);
 }
 
-static void shuffleKeys(registry_t* _reg, const uint64_t* _noReg){
-    int j, aux;
-    for (int i = 0; i < *_noReg; i++) {
-        j = rand() % *_noReg;
-        aux = _reg[i].key;
-        _reg[i].key = _reg[j].key;
-        _reg[j].key = aux;
+static void shuffleKeys(FILE* _file, const uint64_t _noReg){
+    uint64_t rand_pos;
+    key_t aux;
+    registry_t reg_1, reg_2;
+
+    for(int i = 0; i < _noReg; i++){
+        rand_pos = rand() % _noReg;
+        readRegistry(_file, i, &reg_1);
+        readRegistry(_file, rand_pos, &reg_2);
+
+        aux = reg_1.key;
+        reg_1.key = reg_2.key;
+        reg_2.key = aux;
+        writeRegistry(_file, i, &reg_1);
+        writeRegistry(_file, rand_pos, &reg_2);
     }
 }
 
 // S = O(N), T = O(N)
 //Creating keys for registries
-static void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t* _noReg) {
+void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg, FILE* _file) {
     srand(time(NULL));
+    key_t aux;
+
     switch (*_genMode) {
         case ORDERED_ASCENDING:
-            for(int i = 0; i < *_noReg; i++){
-                _reg[i].key = i;
+            for(int i = 0; i < _noReg; i++){
+                _reg->key = i;
+                createData(_reg);
+                writeRegistry(_file, i, _reg);
             }
             break;
 
         case ORDERED_ASCENDING_GAP:
-            for (int i = 0; i < *_noReg; i++) {
-                if (i == 0)
-                    _reg[i].key = rand() % CONST_GAP_RANGE + 1;
-                else
-                    _reg[i].key = _reg[i - 1].key + rand() % CONST_GAP_RANGE + 1;
+            createData(_reg);
+            _reg->key = rand() % CONST_GAP_RANGE + 1;
+            writeRegistry(_file, 0, _reg);
+
+            for (int i = 1; i < _noReg; i++) {
+                aux = _reg->key;
+
+                createData(_reg);
+                _reg->key = aux + rand() % CONST_GAP_RANGE + 1;
+
+                writeRegistry(_file, i, _reg);
             }
         break;
 
         case ORDERED_DESCENDING:
-            for(int i = 0; i < *_noReg; i++){
-                _reg[i].key = *_noReg - i;
+            for(int i = 0; i < _noReg; i++){
+                _reg->key = _noReg - i;
+                createData(_reg);
+                writeRegistry(_file, i, _reg);
             }
             break;
 
         case ORDERED_DESCENDING_GAP:
-            for (int i = 0; i < *_noReg; i++) {
-                if (i == 0)
-                    _reg[i].key = INT_MAX - rand() % CONST_GAP_RANGE + 1;
-                else
-                    _reg[i].key = _reg[i - 1].key - rand() % CONST_GAP_RANGE + 1;
+            createData(_reg);
+            _reg->key = INT_MAX - rand() % CONST_GAP_RANGE + 1;
+            writeRegistry(_file, 0, _reg);
+
+            for (int i = 1; i < _noReg; i++) {
+                aux = _reg->key;
+
+                createData(_reg);
+                _reg->key = aux - rand() % CONST_GAP_RANGE + 1;
+
+                writeRegistry(_file, i, _reg);
             }
         break;
 
         case DISORDERED:
-            for(int i = 0; i < *_noReg; i++){
-                _reg[i].key = i;
+            for(int i = 0; i < _noReg; i++){
+                _reg->key = i;
+                createData(_reg);
+                writeRegistry(_file, i, _reg);
             }
-            shuffleKeys(_reg, _noReg);
+            shuffleKeys(_file, _noReg);
             break;
 
         case DISORDERED_GAP:
-            for (int i = 0; i < *_noReg; i++) {
-                if (i == 0)
-                    _reg[i].key = rand() % CONST_GAP_RANGE + 1;
-                else
-                    _reg[i].key = _reg[i - 1].key + rand() % CONST_GAP_RANGE + 1;
+            createData(_reg);
+            _reg->key = rand() % CONST_GAP_RANGE + 1;
+            writeRegistry(_file, 0, _reg);
+
+            for (int i = 1; i < _noReg; i++) {
+                aux = _reg->key;
+
+                createData(_reg);
+                _reg->key = aux + rand() % CONST_GAP_RANGE + 1;
+
+                writeRegistry(_file, i, _reg);
             }
-            shuffleKeys(_reg, _noReg);
+
+            shuffleKeys(_file, _noReg);
         break;
     }
 }
 
-static void createRegistries(registry_t* _regs, const GenMode* _genMode, const uint64_t* _noReg){
-    createData(_regs, _noReg);
-    createKey(_regs, _genMode, _noReg);
+static void createRegistries(registry_t* _regs, const GenMode* _genMode, const uint64_t _noReg, FILE* _file){
+    //createData(_regs, _noReg);
+    createKey(_regs, _genMode, _noReg, _file);
 }
 
 static void 
@@ -142,22 +192,22 @@ interpretArguments(int argsc, char** argsv, GenMode* _returnGenMode, uint64_t* _
     }else{
         switch(*_returnGenMode){
             case ORDERED_ASCENDING:
-                sprintf(_returnFileName, "OA-data%s.bin", argsv[2]);
+                sprintf(_returnFileName, "%sOA-data%s.bin", DATA_FILES_PATH, argsv[2]);
                 break;
             case ORDERED_ASCENDING_GAP:
-                sprintf(_returnFileName, "OAG-data%s.bin", argsv[2]);
+                sprintf(_returnFileName, "%sOAG-data%s.bin", DATA_FILES_PATH, argsv[2]);
                 break;
             case ORDERED_DESCENDING:
-                sprintf(_returnFileName, "OD-data%s.bin", argsv[2]);
+                sprintf(_returnFileName, "%sOD-data%s.bin", DATA_FILES_PATH, argsv[2]);
                 break;
             case ORDERED_DESCENDING_GAP:
-                sprintf(_returnFileName, "ODG-data%s.bin", argsv[2]);
+                sprintf(_returnFileName, "%sODG-data%s.bin", DATA_FILES_PATH, argsv[2]);
                 break;
             case DISORDERED:
-                sprintf(_returnFileName, "D-data%s.bin", argsv[2]);
+                sprintf(_returnFileName, "%sD-data%s.bin", DATA_FILES_PATH, argsv[2]);
                 break;
             case DISORDERED_GAP:
-                sprintf(_returnFileName, "DG-data%s.bin", argsv[2]);
+                sprintf(_returnFileName, "%sDG-data%s.bin", DATA_FILES_PATH, argsv[2]);
                 break;
         }
     }
@@ -180,18 +230,17 @@ int main(int argc, char ** argsv) {
         return 1;
     }
 
-    registry_t *regs = calloc(noRegistries, sizeof(registry_t));
-    createRegistries(regs, &genMode, &noRegistries);
-
     FILE *file = NULL;
-    if((file = fopen(fileName, "wb")) == NULL){
+    if((file = fopen(fileName, "w+b")) == NULL){
         printf("ERROR unnable to open file\n");
         return 1;
     }
-    fwrite(regs, sizeof(registry_t), noRegistries, file);
+
+    registry_t reg;
+    createRegistries(&reg, &genMode, noRegistries, file);
+
     printf("Data generated at file: %s\n", fileName);
 
-    free(regs);
     fclose(file);
     return 0;
 }
