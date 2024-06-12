@@ -6,9 +6,6 @@
 /external-search/.vs/
 /external-search/.vscode/
 
-# Research and local annotations
-/Annotations/*
-
 
 # Binaries
 /external-search/bin/*
@@ -19,7 +16,8 @@
 *.so
 *.exe
 
-# Logging
+# Logging and cache
+/external-search/cache/*
 *.log
 
 # Specific built data-structures files

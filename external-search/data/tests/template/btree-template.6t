@@ -4,7 +4,7 @@ Testing BTree building from complex sequences.
 
 
 
-PROGRAM: ../../bin/exe/josue.exe
+PROGRAM: ../../../bin/exe/josue.exe
 
 
 This one was tedious, but we could manually verify it.

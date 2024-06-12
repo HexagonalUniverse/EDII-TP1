@@ -1,8 +1,8 @@
 // <erbt-state.c>
 
 #include <stdio.h>
-#include <external-search.h>
 #include "tests.h"
+#include <external-search.h>
 
 
 #ifdef TRANSPARENT_COUNTER

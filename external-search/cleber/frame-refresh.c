@@ -1,8 +1,8 @@
 
 
 #include <stdio.h>
-#include <external-search.h>
 #include "tests.h"
+#include <external-search.h>
 
 #ifdef TRANSPARENT_COUNTER
 struct __transparent_counter_t transparent_counter = { 0 };
