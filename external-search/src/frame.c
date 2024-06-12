@@ -289,13 +289,13 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
     #endif
 
     if (_FrameIndex == _Frame -> last) {
-    #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
-        DebugPrintf("Page already in last position.\n", NULL);
-    #endif
+        #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
+            DebugPrintf("Page already in last position.\n", NULL);
+        #endif
 
         return true;
     }
-
+    
     void * page_buffer = malloc(_Frame -> page_size);
     if (page_buffer == NULL)
         return false;

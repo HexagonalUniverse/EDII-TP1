@@ -12,7 +12,7 @@ Simpler things, that, besides not being that critical, must have attention.
 
 * [ ] Organize the printing of the application response.
 * [ ] Help directive "-h" display on main exe. call.
-* [ ]  Search errors debug and error presentation.
+* [ ] Search errors debug and error presentation.
 * [X] Logging construction optionally specified in makefile building.
 * [ ] (Ponder) Refactor frame_t to Frame?
 * [ ] Make B / B* trees split-root, split-child safe.
