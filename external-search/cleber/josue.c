@@ -3,11 +3,6 @@
 #include "external-search.h"
 
 
-#ifdef TRANSPARENT_COUNTER
-struct __transparent_counter_t transparent_counter = { 0 };
-#endif
-
-
 FILE * andrd_stream = NULL;
 
 

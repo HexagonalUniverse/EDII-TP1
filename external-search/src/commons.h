@@ -13,7 +13,7 @@
 
 // TODO: Move.
 #include "log.h"
-#include "transparent_counter.h"
+#include "transparent-counter.h"
 
 
 // Conveniences

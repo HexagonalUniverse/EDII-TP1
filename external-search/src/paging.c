@@ -2,11 +2,12 @@
 
 */
 
+
 #include "paging.h"
 
 
 inline size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _ReturnPage) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.reg.read ++;
     #endif
 
@@ -21,7 +22,7 @@ inline size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _R
 }
 
 inline size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage_t * _Page) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.reg.write ++;
     #endif
     
@@ -51,7 +52,7 @@ inline bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Refe
 }
 
 inline bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNode) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.b.read ++;
     #endif
     
@@ -65,7 +66,7 @@ inline bool read_bnode(B_STREAM * _Stream, size_t _NodeIndex, b_node * _ReturnNo
 }
 
 inline bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _WriteNode) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.b.write ++;
     #endif
 
@@ -79,7 +80,7 @@ inline bool write_bnode(B_STREAM * _Stream, size_t _NodeIndex, const b_node * _W
 }
 
 inline bool read_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, bstar_node * _ReturnNode) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.bs.read ++;
     #endif
     
@@ -88,7 +89,7 @@ inline bool read_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, bstar_node * _
 }
 
 inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_node * _WriteNode) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.bs.write ++;
     #endif
     
@@ -97,7 +98,7 @@ inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_n
 }
 
 bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.ebst.read++;
     #endif
 
@@ -112,7 +113,7 @@ bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _Return
 }
 
 bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode) {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.ebst.write ++;
     #endif
     
@@ -127,7 +128,7 @@ bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * 
 
 inline bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Node)
 {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.ebst.read++;
     #endif
 
@@ -137,7 +138,7 @@ inline bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * 
 
 inline bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode)
 {
-    #ifdef TRANSPARENT_COUNTER
+    #if TRANSPARENT_COUNTER
         transparent_counter.ebst.write++;
     #endif
 

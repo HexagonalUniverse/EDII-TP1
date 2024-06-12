@@ -5,10 +5,6 @@
 #include <external-search.h>
 
 
-#ifdef TRANSPARENT_COUNTER
-struct __transparent_counter_t transparent_counter = { 0 };
-#endif
-
 
 static bool __print_erbt_state(ERBT_STREAM * _Stream, size_t _NodesQtt)
 {

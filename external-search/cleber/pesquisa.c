@@ -8,42 +8,6 @@
 #include <string.h>     // for strcmp
 
 
-#ifdef TRANSPARENT_COUNTER
-struct __transparent_counter_t transparent_counter = { 0 };
-
-
-/*  Displays the counter in the "transparent-counter". */
-static void
-PrintCounter(void)
-{
-    printf("Counters:\n");
-    printf("\treg:\n\t\t| read = %" PRIu64 "\n\t\t| read = %" PRIu64 "\n", 
-        transparent_counter.reg.read,
-        transparent_counter.reg.write);
-
-    printf("\tb:\n\t\t| read = %" PRIu64 "\n\t\t| write = %" PRIu64 "\n",
-        transparent_counter.b.read,
-        transparent_counter.b.write);
-
-    printf("\tb*:\n\t\t| read = %" PRIu64 "\n\t\t| write = %" PRIu64 "\n",
-        transparent_counter.bs.read,
-        transparent_counter.bs.write);
-    
-    printf("\tebst:\n\t\t| read = %" PRIu64 "\n\t\t| write = %" PRIu64 "\n",
-        transparent_counter.ebst.read,
-        transparent_counter.ebst.write);
-
-    printf("\terbt:\n\t\t| read = %" PRIu64 "\n\t\t| write = %" PRIu64 "\n",
-        transparent_counter.erbt.read,
-        transparent_counter.erbt.write);
-
-    printf("\tcomparisons:\n\t\t| search = %" PRIu64 "\n\t\t| build = %" PRIu64 "\n",
-        transparent_counter.comparisons.search,
-        transparent_counter.comparisons.build);
-}
-#endif
-
-
 finline static double 
 time_diff_sec(struct timeval start_time, struct timeval end_time) {
     return ((double) (end_time.tv_usec - start_time.tv_usec) / 1e6) + ((double) (end_time.tv_sec - start_time.tv_sec));
@@ -551,9 +515,9 @@ int main(int argc, char ** argsv)
     PrintSearchResults(& result);
 
     #if TRANSPARENT_COUNTER
-        PrintCounter();
+        transparent_counter_print();
     #endif
-
+    
 
     #if IMPL_LOGGING
         FinalizeLogging();

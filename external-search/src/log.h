@@ -8,7 +8,7 @@
 
 
 #define ANSI_ESCAPE_CODE    true
-#include "ansi_esc.h"
+#include "ansi-esc.h"
 #include <stdarg.h>
 #include <stdbool.h>
 
@@ -18,7 +18,7 @@
 
 #define es_fg_blue()     aec_fg_rgb_l(75, 135, 225)    // Switchs the foreground to blue.
 
-#define _ES_FG_RED()          _AEC_FG_RGB_L(175, 75, 75)
+#define _ES_FG_RED()    _AEC_FG_PREFFIX _AEC_RGB_L_CONCLUDER(175, 75, 75)
 #define es_fg_red()     aec_fg_rgb_l(175, 75, 75)     // Switchs the foreground to red.
 
 #define es_fg_yellow()       aec_fg_rgb_l(225, 225, 75)        // Switchs the foreground to yellow.
