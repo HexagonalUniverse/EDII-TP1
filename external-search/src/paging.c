@@ -47,7 +47,7 @@ inline bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Refe
 
     // Once the page is read, copies the registry in it.
     * _ReturnRegistry = page_buffer.reg[_Reference -> original_pos % ITENS_PER_PAGE];
-    // printf("KEY FOUND! pointer at or.file: %u\n", (unsigned int) _RegistryPointer->original_pos);
+    printf("KEY FOUND! pointer at or.file: %u\n", (unsigned int) _Reference->original_pos);
     return true;
 }
 

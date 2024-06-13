@@ -67,7 +67,6 @@ PrintSearchResults(search_result * _Sr)
     }
 }
 
-
 /*  */
 static SEARCH_RESPONSE 
 __ERBT(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _ERBTFilename)
@@ -88,7 +87,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
             return _SE_ERBTBUILD;
         }
         gettimeofday(& end_time, NULL);
-        result -> measures.construction_time = time_diff_sec(start_time, end_time);
+        result->measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
     // Re-opening the erbt file in read-mode.
@@ -97,16 +96,21 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
     if (output_stream == NULL)
         return _SE_EBST_FILE;
 
+    frame_t frame = { 0 };
+    if (! frame_make(& frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
+        return _SE_MAKEFRAME;
+
     {   // Searching for the key.
 
         gettimeofday(& start_time, NULL);
-        result -> success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, parameters -> key, & result -> target);
+        result -> success = ERBT_Search((ERBT_STREAM *) output_stream, input_stream, & frame, parameters -> key, & result -> target);
         gettimeofday(& end_time, NULL);
         result -> measures.time_span = time_diff_sec(start_time, end_time);
     }
 
+    freeFrame(& frame);
     fclose(output_stream);
-    return SEARCH_FAILURE;
+    return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
 /*  The EBST (by MRT) search-engine. */
@@ -392,6 +396,8 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
     if ((argc == 2) && (! strcmp(argsv[1], "-h")))
     {
         // TODO: "-h" menu.
+        
+
         parameters -> display_help = true;
         return true;
     }
