@@ -361,7 +361,7 @@ bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, 
             (unsigned int) _Frame -> last);
     #endif
 
-    // TODO: potencially the following block than be extracted a method:
+    // TODO: potencially the following block than be extracted a method from.
     page_ptr = _frame_page_ptr(_Frame, _Frame -> last);
     if (page_ptr == NULL)
         return false;

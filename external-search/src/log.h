@@ -87,8 +87,6 @@ void FinalizeLogging(void);
 
 
 
-
-
 bool __debug_true_inline_printf(const char * _FormatMsg, ...);
 
 void __debug_func_in(const char * _FunctionName);

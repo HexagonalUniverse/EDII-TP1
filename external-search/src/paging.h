@@ -2,10 +2,6 @@
     
     Where the all "pages" and their fundamental IO operations are defined. */
 
-/*  
-
-*/
-
 
 #ifndef _ES_PAGING_HEADER_
 #define _ES_PAGING_HEADER_
@@ -30,25 +26,16 @@
 
 /*  The type of each type of stream dealt is annotated for hinting arguments. */
 
-/*	A stream representing the registries file. */
-typedef FILE	REG_STREAM;
-
-/*	A stream representing the b-tree data-structure. */
-typedef FILE	B_STREAM;
-
-/*	A stream representing the b*-tree data-structure. */
-typedef FILE	BSTAR_STREAM;
-
-/*	A stream representing the ebst data-structure. */
-typedef FILE	EBST_STREAM;
-
-/*	A stream representing the erbt data-structure. */
-typedef FILE	ERBT_STREAM;
+typedef FILE	REG_STREAM;     // A stream representing the registries file.
+typedef FILE	B_STREAM;       // A stream representing the B tree data-structure.
+typedef FILE	BSTAR_STREAM;   // A stream representing the B* tree data-structure.
+typedef FILE	EBST_STREAM;    // A stream representing the (pure) ebst data-structure.
+typedef FILE	ERBT_STREAM;    // A stream representing the erbt data-structure.
 
 
 // The default registries filename.
-#define INPUT_DATAFILENAME			"temp/u-100.bin"
-// #define INPUT_DATAFILENAME			"temp/input-data.bin"
+// #define INPUT_DATAFILENAME			"temp/u-100.bin"
+#define INPUT_DATAFILENAME			"temp/input-data.bin"
 
 // The default b-tree data-structure filename.
 #define OUTPUT_BTREE_FILENAME	    "temp/data.btree"

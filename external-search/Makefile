@@ -65,7 +65,7 @@ endif
 
 # (Aesthetic) __build_msg...
 ifeq ($(TRANSPARENT),1)
-	OPTIONAL_COMPILE_DIRECTIVES += -D TRANSPARENT_COUNTER=true
+	OPTIONAL_COMPILE_DIRECTIVES += $(__transparent_directive)
 	
 	ifdef __build_msg
 		__build_msg += e transparente
@@ -96,7 +96,7 @@ endif
 
 #${__build_msg:%=%.o}
 # build:
-build: $(target_executables)
+build: $(target_executables) __build_data_gen
 	@echo tudo $(__build_msg).
 
 
@@ -115,8 +115,18 @@ $(target_lib): $(object_files)
 # Assembling each object file.
 $(dir_obj)%.o: $(dir_src)%.c $(header_files)
 	@$(MAKEDIR)
-	@gcc -c $< -o $@ $(OPTIONAL_COMPILE_DIRECTIVES) $(OBJ_COMPILE_DIRECTIVES)
+	@gcc -c $(OPTIONAL_COMPILE_DIRECTIVES) $< -o $@ $(OBJ_COMPILE_DIRECTIVES)
 	@echo ES-LIB: Compiled $@.
+
+
+# Data-generation stuff...
+__build_data_gen: ./bin/exe/data-gen.exe ./bin/exe/data-read.exe
+
+./bin/exe/data-gen.exe: ./data/src/data-gen.c
+	gcc $(EXE_COMPILE_DIRECTIVES) $< -o $@
+
+./bin/exe/data-read.exe: ./data/src/data-read.c
+	gcc $(EXE_COMPILE_DIRECTIVES) $< -o $@
 
 
 # Re-building		make rebuild <FLAGS>

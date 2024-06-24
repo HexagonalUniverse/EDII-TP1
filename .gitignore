@@ -1,11 +1,10 @@
 /Temporary/
 
 # IDE folders
+/.venv/
+/.idea/
 /.vs/
 /.vscode/
-/external-search/.vs/
-/external-search/.vscode/
-
 
 # Binaries
 /external-search/bin/*

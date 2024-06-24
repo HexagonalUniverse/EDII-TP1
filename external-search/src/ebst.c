@@ -32,11 +32,7 @@ ERBT_readHeader(ERBT_STREAM * _Stream, ERBT_Header * _ReturnHeader)
 
 
 // The debugging set-up for the ERBT.
-<<<<<<< HEAD
 #if IMPL_LOGGING && 0
-=======
-#if IMPL_LOGGING
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
 #if RECORD_ERBT
     #define RBT_PRINTING_FILENAME   "last-rbt.txt"
@@ -46,12 +42,12 @@ ERBT_readHeader(ERBT_STREAM * _Stream, ERBT_Header * _ReturnHeader)
 
 static void fPrintERBTNode(const erbt_node * _Node, FILE * _Stream) {
     fprintf(_Stream, "\t| (left:%3d, right:%3d), key:%3d | ",
-        (int) _Node -> left,
-        (int) _Node -> right,
-        (int) _Node -> reg_ptr.key);
+        (int) _Node->left,
+        (int) _Node->right,
+        (int) _Node->reg_ptr.key);
 
     fprintf(_Stream, "father: %3.d, ",
-        (int) _Node -> father);
+        (int) _Node->father);
 
     if (_Node->color == RED)
         fprintf(_Stream, "RED");
@@ -83,38 +79,22 @@ void printRedBlackTree(ERBT_STREAM * _Stream) {
     erbt_node buffer_node = { 0 };
     uint32_t i = 0;
 
-<<<<<<< HEAD
-    while (read_erbtnode(_Stream, i ++, & buffer_node)) {
-    
-#if STDERR_DEBUG_LOGGING
-=======
     while (frame_retrieve_page(_Stream, i ++, & buffer_node)) {
 
     #if STDERR_DEBUG_LOGGING
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
         if (buffer_node.color == RED)
             aec_fg_red();
         else
             aec_fg_white();
-<<<<<<< HEAD
-#endif // STDERR_DEBUG_LOGGING
-=======
     #endif // STDERR_DEBUG_LOGGING
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
         printDebugSpacing();
         fprintf(debug_stream, "#%u", (unsigned int) (i - 1));
         fPrintERBTNode(& buffer_node, debug_stream);
 
-<<<<<<< HEAD
-#if STDERR_DEBUG_LOGGING
-        aec_reset();
-#endif // STDERR_DEBUG_LOGGING
-=======
     #if STDERR_DEBUG_LOGGING
         aec_reset();
     #endif // STDERR_DEBUG_LOGGING
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     }
 }
 
@@ -130,22 +110,14 @@ static inline void __RBT_WRITE(ERBT_STREAM * _Stream, size_t _NodesQtt)
 
     erbt_node buffer_node = { 0 };
     size_t iterator = 0;
-<<<<<<< HEAD
-    while (read_erbtnode(_Stream, iterator ++, & buffer_node)) {
-=======
     while (frame_retrieve_page(_Stream, iterator ++, & buffer_node)) {
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
         fprintf(RBT_PRINTING_STREAM, "%d %d %d %d ",
             (int) buffer_node.reg_ptr.key,
             (int) buffer_node.left,
             (int) buffer_node.right,
             (int) buffer_node.father);
 
-<<<<<<< HEAD
-        fprintf(RBT_PRINTING_STREAM, 
-=======
         fprintf(RBT_PRINTING_STREAM,
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
             buffer_node.color == RED ? "RED" : "BLACK");
         fputc('\n', RBT_PRINTING_STREAM);
     }
@@ -160,19 +132,6 @@ static inline void __RBT_WRITE(ERBT_STREAM * _Stream, size_t _NodesQtt)
 #endif // IMPL_LOGGING
 
 
-<<<<<<< HEAD
-/*  Initializes a standard node for insertion. 
-    It is such that it has its pointers nulled (by ERBT_NULL_INDEX)
-    and is red. */
-inline static erbt_node 
-ERBT_nodeStarter(const registry_pointer * _Entry) {
-    erbt_node new_node = {
-        .color =    RED,
-        .reg_ptr =  * _Entry,
-        .father =   ERBT_NULL_INDEX,
-        .left =     ERBT_NULL_INDEX,
-        .right =    ERBT_NULL_INDEX,
-=======
 /*  Initializes a standard node for insertion.
     It is such that it has its pointers nulled (by ERBT_NULL_INDEX)
     and is red. */
@@ -184,37 +143,11 @@ ERBT_nodeStarter(const registry_pointer * _Entry) {
         .father = ERBT_NULL_INDEX,
         .left = ERBT_NULL_INDEX,
         .right = ERBT_NULL_INDEX,
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     };
     return new_node;
 }
 
 /*  Case of root inserting in inserting into the ERBT. */
-<<<<<<< HEAD
-inline static bool 
-_ERBT_insert_root(ERBT_Builder * _builder, const registry_pointer * _Entry) {
-    erbt_node new_node = ERBT_nodeStarter(_Entry);
-    new_node.color = BLACK;
-    
-    _builder -> registries_written ++;
-    return write_erbtnode(_builder -> file_stream, _builder -> header.root_ptr, & new_node);
-}
-
-bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
-    #if IMPL_LOGGING
-        raiseDebug(); 
-    #endif
-
-    // In case of first entry on the binary search tree (root node).
-    if (_builder -> registries_written == 0) {
-#if IMPL_LOGGING
-        bool insert_root_r = _ERBT_insert_root(_builder, _Entry);
-        fallDebug();
-        return insert_root_r;
-#else
-        return _ERBT_insert_root(_builder, _Entry);
-#endif
-=======
 inline static bool
 _ERBT_insert_root(ERBT_Builder * _builder, const registry_pointer * _Entry) {
     erbt_node new_node = ERBT_nodeStarter(_Entry);
@@ -225,9 +158,9 @@ _ERBT_insert_root(ERBT_Builder * _builder, const registry_pointer * _Entry) {
 }
 
 bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
-#if IMPL_LOGGING
-    raiseDebug();
-#endif
+    #if IMPL_LOGGING
+        raiseDebug();
+    #endif
 
     // In case of first entry on the binary search tree (root node).
     if (_builder->registries_written == 0) {
@@ -238,67 +171,33 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
     #else
         return _ERBT_insert_root(_builder, _Entry);
     #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     }
 
     /*  The new node to be inserted in the tree. */
     erbt_node newNode = ERBT_nodeStarter(_Entry);
 
     erbt_node currentNode = { 0 };                      // The node over focus on the traversal.
-<<<<<<< HEAD
-    uint32_t node_index = _builder -> header.root_ptr;  // Tracks the index of currentNode.
-    
-=======
     uint32_t node_index = _builder->header.root_ptr;  // Tracks the index of currentNode.
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     /*  Sinalizes whether there was an error
         on the inserting process the traversal to halt.
         Failure happens if a node with the same key already
         exists on the structure or a node IO operation fails. */
     bool had_failure = true;
 
-<<<<<<< HEAD
-    while (read_erbtnode(_builder -> file_stream, node_index, & currentNode)) {
-        /*  As the error sinalizer starts sinalized, in case of failing the
-            very first read op., this information is correctly propagated down below.
-            Otherwise it is reset for deeper verification. Note that it is always the 
-=======
     while (frame_retrieve_page(_builder->file_stream, &_builder->frame, node_index, & currentNode)) {
         /*  As the error sinalizer starts sinalized, in case of failing the
             very first read op., this information is correctly propagated down below.
             Otherwise it is reset for deeper verification. Note that it is always the
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
             case if a failure occurred the loop to break. */
         had_failure = false;
 
         // Check the left first.
-<<<<<<< HEAD
-        if (cmp_ls_build(_Entry -> key, currentNode.reg_ptr.key)) {
-=======
         if (cmp_ls_build(_Entry->key, currentNode.reg_ptr.key)) {
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
             /*  Checks whether the current node has a left child. */
             if (currentNode.left == EBST_NULL_INDEX) {
                 /*  If it does not, newNode is fit as that.
-<<<<<<< HEAD
-                    Updates the relationship between them and writes 
-                    down newNode as in the last position so far. */
-
-                newNode.father = node_index;
-                currentNode.left = _builder -> registries_written;
-
-                // Updating the father.
-                if (! write_erbtnode(_builder -> file_stream, node_index, & currentNode))
-                    had_failure = true;
-
-                // Adding the new node.
-                if (! write_erbtnode(_builder -> file_stream, _builder -> registries_written, & newNode))
-                    had_failure = true;
-                
-                _builder -> registries_written ++;
-=======
                     Updates the relationship between them and writes
                     down newNode as in the last position so far. */
 
@@ -314,44 +213,21 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
                     had_failure = true;
 
                 _builder->registries_written ++;
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
                 break;
 
             }
             // Navigating left.
             node_index = currentNode.left;
-<<<<<<< HEAD
-          
-        // Check then the right.
-        } else if (cmp_bg_build(_Entry -> key, currentNode.reg_ptr.key)) {
-              
-=======
 
             // Check then the right.
         }
         else if (cmp_bg_build(_Entry->key, currentNode.reg_ptr.key)) {
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
             /*  Checks whether the current node has a right child. */
             if (currentNode.right == EBST_NULL_INDEX) {
                 /*  If it does not, newNode is fit as that.
                     Updates the relationship between them and writes
                     down newNode as in the last position so far. */
-<<<<<<< HEAD
-                
-                newNode.father = node_index;
-                currentNode.right = _builder -> registries_written;
-
-                // Updating the father.
-                if (! write_erbtnode(_builder -> file_stream, node_index, & currentNode))
-                    had_failure = true;
-
-                // Adding the new node.
-                if (! write_erbtnode(_builder -> file_stream, _builder -> registries_written, & newNode))
-                    had_failure = true;
-
-                _builder -> registries_written ++;
-=======
 
                 newNode.father = node_index;
                 currentNode.right = _builder->registries_written;
@@ -365,23 +241,11 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
                     had_failure = true;
 
                 _builder->registries_written ++;
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
                 break;
             }
             // Navigating right.
             node_index = currentNode.right;
 
-<<<<<<< HEAD
-        /*  In case the nodes match keys - neither they're 
-            bigger or lower than any another. */
-        } else {
-            /*  This implies in failure. */
-
-            #if IMPL_LOGGING
-                        DebugPrintR("Error: nodes are equal...\n", NULL);
-            #endif
-            
-=======
             /*  In case the nodes match keys - neither they're
                 bigger or lower than any another. */
         }
@@ -392,31 +256,26 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
                 DebugPrintR("Error: nodes are equal...\n", NULL);
             #endif
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
             had_failure = true;
             break;
         }
     }
 
-#if IMPL_LOGGING
-    if (had_failure) {
-        /*  TODO: Proper debug here. */
-        DebugPrintR("Insertion Error: something went wrong...\n", NULL);
-    }
-    fallDebug();
-#endif
+    #if IMPL_LOGGING
+        if (had_failure) {
+            /*  TODO: Proper debug here. */
+            DebugPrintR("Insertion Error: something went wrong...\n", NULL);
+        }
+        fallDebug();
+    #endif
+        
     return ! had_failure;
 }
 
 
 /*  Structures a right rotation around the passed pivot in the tree.
-<<<<<<< HEAD
-    Manages to update only the branching pointers in the data-structure stream. 
- 
-=======
     Manages to update only the branching pointers in the data-structure stream.
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     Define X as pivot node and Y as its original left child.
 
     Invariants of use:
@@ -425,11 +284,7 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
 
     The six following operations are done in order to guaranteeing the
     after-rotation properties:
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     1. X's left subtree becomes Y's right one.
     2. X's father becomes Y's one instead.
     3. Y will have X as its right child.
@@ -437,47 +292,27 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
     5. In concordance to (3), X adopts Y as its father.
     6. In concordance to (1), the right subtree of Y will have X as its root. */
 static void
-<<<<<<< HEAD
-rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex) 
-{
-#if IMPL_LOGGING
-    raiseDebug();
-    DebugPrintf("pivot: %d\n", _pivotIndex);
-#endif 
-=======
 rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
 {
     #if IMPL_LOGGING
         raiseDebug();
         DebugPrintf("pivot: %d\n", _pivotIndex);
     #endif 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     if (_pivotIndex == EBST_NULL_INDEX)
     {
         // * error: quitting in order to prevent program confusion
         #if IMPL_LOGGING
-<<<<<<< HEAD
-                DebugPrintR("error\n", NULL);
-        #endif
-
-=======
             DebugPrintR("error\n", NULL);
         #endif
         
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
         return;
     }
 
     /*  X: pivot-node; Y: its left child. */
     erbt_node X = { 0 }, Y = { 0 };
-<<<<<<< HEAD
-    read_erbtnode(_builder -> file_stream, _pivotIndex, & X);
-    read_erbtnode(_builder -> file_stream, X.left, & Y);
-=======
     frame_retrieve_page(_builder->file_stream, &_builder ->frame, _pivotIndex, & X);
     frame_retrieve_page(_builder->file_stream, &_builder->frame, X.left, & Y);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     /*  Tracks Y index - as X.left will be updated. */
     const ebst_ptr old_x_left = X.left;
@@ -485,47 +320,22 @@ rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
 
     // 1. Y's right subtree becomes X's left one.
     X.left = Y.right;
-<<<<<<< HEAD
- 
-=======
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     // 2. Y's father becomes the same as X's original one.
     Y.father = X.father;
 
     // 3. Y adopts X as its right child.
     Y.right = _pivotIndex;
 
-<<<<<<< HEAD
-    /*  4. Propagating the X-Y substitution as child information 
-        up to X's father. */
-    if (X.father != ERBT_NULL_INDEX) {
-        erbt_node x_father;
-        read_erbtnode(_builder -> file_stream, X.father, & x_father);
-=======
     /*  4. Propagating the X-Y substitution as child information
         up to X's father. */
     if (X.father != ERBT_NULL_INDEX) {
         erbt_node x_father;
         frame_retrieve_page(_builder->file_stream, &_builder->frame, X.father, & x_father);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
         // X being originally the right-child, resets its pointer to Y's index;
         if (x_father.right == _pivotIndex)
             x_father.right = old_x_left;
-<<<<<<< HEAD
-        
-        // does so equally X being the left one.
-        else
-            x_father.left = old_x_left;
-        
-        write_erbtnode(_builder -> file_stream, X.father, & x_father);
-    }
-    else {
-        // Then _pivotIndex == _builder -> header.root_ptr.
-        _builder -> header.root_ptr = old_x_left;
-        ERBT_writeHeader(_builder -> file_stream, & _builder -> header);
-=======
 
         // does so equally X being the left one.
         else
@@ -534,10 +344,9 @@ rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
         frame_update_page(_builder->file_stream, &_builder->frame, X.father, & x_father);
     }
     else {
-        // Then _pivotIndex == _builder -> header.root_ptr.
+        // Then _pivotIndex == _builder->header.root_ptr.
         _builder->header.root_ptr = old_x_left;
         ERBT_writeHeader(_builder->file_stream, &_builder->header);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     }
 
     // 5. In concordance with (.3), X recognizes Y as its father.
@@ -546,20 +355,6 @@ rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     // 6. Tells the before Y's right subtree that X become its root.
     if (X.left != ERBT_NULL_INDEX) {
         erbt_node y_right_subtree_root;
-<<<<<<< HEAD
-        read_erbtnode(_builder -> file_stream, X.left, & y_right_subtree_root);
-        y_right_subtree_root.father = _pivotIndex;
-        write_erbtnode(_builder -> file_stream, X.left, & y_right_subtree_root);
-    }
-    
-    // Updating target and its left child in their respective positions. (Position is preserved)
-    write_erbtnode(_builder -> file_stream, old_x_left, & Y);
-    write_erbtnode(_builder -> file_stream, _pivotIndex, & X);
-
-#if IMPL_LOGGING
-    printRedBlackTree(_builder->file_stream);
-#endif
-=======
         frame_retrieve_page(_builder->file_stream, &_builder->frame, X.left, & y_right_subtree_root);
         y_right_subtree_root.father = _pivotIndex;
         frame_update_page(_builder->file_stream, &_builder->frame, X.left, & y_right_subtree_root);
@@ -570,8 +365,9 @@ rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     frame_update_page(_builder->file_stream, &_builder->frame, _pivotIndex, & X);
 
 #if IMPL_LOGGING
+#if 0
     printRedBlackTree(_builder->file_stream);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
+#endif
     fallDebug();
 #endif
 }
@@ -581,36 +377,24 @@ rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     (...)
 
     TODO: docs.
-    TODO: rotates -> bool on return.
+    TODO: rotates->bool on return.
 */
 static void
-<<<<<<< HEAD
-rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex) 
-=======
 rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 {
-#if IMPL_LOGGING
-    raiseDebug();
-    DebugPrintf("pivot: %d\n", _pivotIndex);
-#endif
+    #if IMPL_LOGGING
+        raiseDebug();
+        DebugPrintf("pivot: %d\n", _pivotIndex);
+    #endif
 
     /*  X: pivot-node; Y: its right child. */
     erbt_node X, Y;
-<<<<<<< HEAD
-    read_erbtnode(_builder -> file_stream, _pivotIndex, & X);
-    read_erbtnode(_builder -> file_stream, X.right, & Y);
-    /*  Tracks Y index - as X.right will be updated. */
-    const ebst_ptr old_x_right = X.right;
-
-
-=======
     frame_retrieve_page(_builder->file_stream, &_builder->frame, _pivotIndex, & X);
     frame_retrieve_page(_builder->file_stream, &_builder->frame, X.right, & Y);
-    /*  Tracks Y index - as X.right will be updated. */
+
+    /*  Tracks Y index - as X.right will be updated. */
     const ebst_ptr old_x_right = X.right;
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     // 1. Y's left subtree becomes X's right one.
     X.right = Y.left;
 
@@ -624,11 +408,7 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
         up to X's father. */
     if (X.father != ERBT_NULL_INDEX) {
         erbt_node x_father;
-<<<<<<< HEAD
-        read_erbtnode(_builder -> file_stream, X.father, & x_father);
-=======
         frame_retrieve_page(_builder->file_stream, &_builder->frame, X.father, & x_father);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
         // X being originally the right-child, resets its pointer to Y's index;
         if (x_father.right == _pivotIndex)
@@ -641,18 +421,11 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
         frame_update_page(_builder->file_stream, &_builder->frame, X.father, & x_father);
     }
     else {
-        // Then _pivotIndex == _builder -> header.root_ptr.
-<<<<<<< HEAD
-        _builder -> header.root_ptr = old_x_right;
-        ERBT_writeHeader(_builder -> file_stream, & _builder -> header);
-    }
-    
-=======
+        // Then _pivotIndex == _builder->header.root_ptr.
         _builder->header.root_ptr = old_x_right;
         ERBT_writeHeader(_builder->file_stream, & _builder->header);
     }
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     // 5. In concordance with (.3), X recognizes Y as its father.
     X.father = old_x_right;
@@ -660,16 +433,6 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     // 6. Tells the before Y's left subtree that X become its root.
     if (X.right != ERBT_NULL_INDEX) {
         erbt_node y_left_subtree_root;
-<<<<<<< HEAD
-        read_erbtnode(_builder -> file_stream, X.right, & y_left_subtree_root);
-        y_left_subtree_root.father = _pivotIndex;
-        write_erbtnode(_builder -> file_stream, X.right, & y_left_subtree_root);
-    }
-    
-    // Updating target and its left child in their respective positions. (Position is preserved)
-    write_erbtnode(_builder -> file_stream, old_x_right, & Y);
-    write_erbtnode(_builder -> file_stream, _pivotIndex, & X);
-=======
         frame_retrieve_page(_builder->file_stream, &_builder->frame, X.right, & y_left_subtree_root);
         y_left_subtree_root.father = _pivotIndex;
         frame_update_page(_builder->file_stream, &_builder->frame, X.right, & y_left_subtree_root);
@@ -678,10 +441,11 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     // Updating target and its left child in their respective positions. (Position is preserved)
     frame_update_page(_builder->file_stream, &_builder->frame, old_x_right, & Y);
     frame_update_page(_builder->file_stream, &_builder->frame, _pivotIndex, & X);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     #if IMPL_LOGGING
+    #if 0
         printRedBlackTree(_builder->file_stream);
+    #endif
         fallDebug();
     #endif
 }
@@ -703,17 +467,10 @@ _initializeBalancer(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
     balancer.builder = _builder;
     balancer.node_index = _NodeIndex;
     balancer.uncle_index = ERBT_NULL_INDEX;
-<<<<<<< HEAD
-    
-    balancer.node = (erbt_node)             { 0 };
-    balancer.father_node = (erbt_node)      { 0 };
-    balancer.uncle_node = (erbt_node)       { 0 };
-=======
 
     balancer.node = (erbt_node) { 0 };
     balancer.father_node = (erbt_node) { 0 };
     balancer.uncle_node = (erbt_node) { 0 };
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     balancer.grandfather_node = (erbt_node) { 0 };
     balancer.father_node.father = ERBT_NULL_INDEX;
     balancer.grandfather_node.father = ERBT_NULL_INDEX;
@@ -726,21 +483,6 @@ _initializeBalancer(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
 inline static bool
 updateBalacer(struct ERBT_Balancer * _Balancer)
 {
-<<<<<<< HEAD
-#if IMPL_LOGGING
-    raiseDebug();
-#endif
-
-    if (_Balancer -> node.father != ERBT_NULL_INDEX) {
-#if IMPL_LOGGING
-        DebugPrintf("Reading father <%u>\n", (unsigned int) _Balancer -> node.father);
-#endif
-        if (! read_erbtnode(_Balancer->builder->file_stream, _Balancer->node.father, &_Balancer->father_node))
-        {
-#if IMPL_LOGGING
-            fallDebug();
-#endif
-=======
     #if IMPL_LOGGING
         raiseDebug();
     #endif
@@ -755,50 +497,10 @@ updateBalacer(struct ERBT_Balancer * _Balancer)
             #if IMPL_LOGGING
                 fallDebug();
             #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
             return false;
         }
 
-<<<<<<< HEAD
-        if (_Balancer -> father_node.father != ERBT_NULL_INDEX) {
-#if IMPL_LOGGING
-            DebugPrintf("Reading grandfather <%u>\n", (unsigned int) _Balancer -> father_node.father);
-#endif
-
-            if (!read_erbtnode(_Balancer->builder->file_stream, _Balancer->father_node.father, &_Balancer->grandfather_node))
-            {
-#if IMPL_LOGGING
-                fallDebug();
-#endif
-                return false;
-            }
-        }
-        
-        else {
-#if IMPL_LOGGING
-            DebugPrint("Not reading grandfather <%u>\n");
-#endif
-
-            _Balancer -> grandfather_node = (erbt_node){ 0 };
-        }
-    }
-    else {
-#if IMPL_LOGGING
-        DebugPrint("Not reading father <%u>\n");
-#endif
-
-        _Balancer -> father_node = (erbt_node){ 0 };
-        _Balancer -> grandfather_node = (erbt_node){ 0 };
-
-        _Balancer -> father_node.father = ERBT_NULL_INDEX;
-    }
-
-#if IMPL_LOGGING
-    fallDebug();
-#endif
-
-=======
         if (_Balancer->father_node.father != ERBT_NULL_INDEX) {
             #if IMPL_LOGGING
                 DebugPrintf("Reading grandfather <%u>\n", (unsigned int) _Balancer->father_node.father);
@@ -836,53 +538,24 @@ updateBalacer(struct ERBT_Balancer * _Balancer)
     #if IMPL_LOGGING
         fallDebug();
     #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     return true;
 }
 
 
-<<<<<<< HEAD
-/*  
-=======
 /*
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     TODO: better docs.
 
 ERBT balance case 1.1 and 2.1: color correction
       BLACK                                  RED
-   <-       ->      == Becomes ==>        <-     ->
+   <-      ->     == Becomes ==>        <-     ->
 RED           RED                   BLACK           BLACK
 */
 inline static void
-<<<<<<< HEAD
-_ERBT_Balance_case_change(struct ERBT_Balancer * balancer) 
-=======
 _ERBT_Balance_case_change(struct ERBT_Balancer * balancer)
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 {
-#if IMPL_LOGGING
-    raiseDebug();
-#endif
-<<<<<<< HEAD
-    
-    // CASE 1.1 & 2.1: Uncle also is RED
-    balancer -> grandfather_node.color = RED;
-    balancer -> uncle_node.color = BLACK;
-    balancer -> father_node.color = BLACK;
-
-    write_erbtnode(balancer -> builder -> file_stream, balancer -> father_node.father, & balancer -> grandfather_node);
-    write_erbtnode(balancer -> builder -> file_stream, balancer -> uncle_index, & balancer -> uncle_node);
-    write_erbtnode(balancer-> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
-
-    // Grandpa becomes the Main Node
-    // balancer -> node.line = balancer -> father_node.father;
-    balancer -> node_index = balancer -> father_node.father;
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
-
-#if IMPL_LOGGING
-    fallDebug();
-#endif
-=======
+    #if IMPL_LOGGING
+        raiseDebug();
+    #endif
 
     // CASE 1.1 & 2.1: Uncle also is RED
     balancer->grandfather_node.color = RED;
@@ -895,127 +568,82 @@ _ERBT_Balance_case_change(struct ERBT_Balancer * balancer)
     frame_update_page(balancer->builder->file_stream, & balancer->builder->frame, balancer->node.father, & balancer->father_node);
 
     // Grandpa becomes the Main Node
-    // balancer -> node.line = balancer -> father_node.father;
+    // balancer->node.line = balancer->father_node.father;
     balancer->node_index = balancer->father_node.father;
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node_index, & balancer->node);
 
     #if IMPL_LOGGING
         fallDebug();
     #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 }
 
 /*  ERBT balance case 1.2: Adapts a node-frame for case 1.3.
     TODO: better docs. */
 inline static void
 _ERBT_Balance_case1_2(struct ERBT_Balancer * balancer) {
-<<<<<<< HEAD
-#if IMPL_LOGGING
-    raiseDebug();
-#endif
-    // CASE 1.2: Main Node is not at the same side as he's father
-    rotateLeft(balancer -> builder, balancer -> node.father);
-=======
     #if IMPL_LOGGING
         raiseDebug();
     #endif
 
     // CASE 1.2: Main Node is not at the same side as he's father
     rotateLeft(balancer->builder, balancer->node.father);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
-    // Updates the position, bringing the sequence back to Grandpa -> Son -> Father  
+    // Updates the position, bringing the sequence back to Grandpa->Son->Father  
     /*  For passing to case 1.3, the node will now be that that was originally the father...
 
     */
-<<<<<<< HEAD
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, & balancer -> node);
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> father_node);
-
-    balancer -> node_index = balancer -> node.father; // * not necessary, but this implies in concordance...
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> father_node.father, & balancer -> grandfather_node);
-=======
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node.father, & balancer->node);
     frame_retrieve_page(balancer->builder->file_stream, & balancer->builder->frame, balancer->node_index, & balancer->father_node);
 
     balancer->node_index = balancer->node.father; // * not necessary, but this implies in concordance...
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->father_node.father, & balancer->grandfather_node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     #if IMPL_LOGGING
+    #if 0
         DebugPrintf("After case 1.2:\n", NULL);
         printRedBlackTree(balancer->builder->file_stream);
+    #endif
         fallDebug();
     #endif
 }
 
 /*  TODO: better docs. CASE 1.3: balancer.node is at the correct side.
 Grandpa                                                         <- Father ->
-        ->                                              Grandpa              Last Node
+       ->                                             Grandpa              Last Node
             Father
                     ->
                         Last Node
 */
 inline static void
 _ERBT_Balance_case1_3(struct ERBT_Balancer * balancer) {
-#if IMPL_LOGGING
-    raiseDebug();
-    DebugPrintf("Rotate right for grandfather: %u\n", (unsigned int) balancer->father_node.father);
-#endif
+    #if IMPL_LOGGING
+        raiseDebug();
+        DebugPrintf("Rotate right for grandfather: %u\n", (unsigned int) balancer->father_node.father);
+    #endif
 
     // * Note: the positions doesn't change with the rotation, only the pointer in the stream.
-<<<<<<< HEAD
-    rotateRight(balancer -> builder, balancer -> father_node.father);
-=======
     rotateRight(balancer->builder, balancer->father_node.father);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     /*  At this point, the color between the X and Y (on the rotation context)
         have to be switched.
 
         X corresponds to the grandfather, at the step that Y is the father. */
-<<<<<<< HEAD
-#if IMPL_LOGGING
-    DebugPrintf("Various transformations... %d %d %d\n", 
-        balancer -> node_index, balancer -> node.father, balancer -> father_node.father);
-#endif
-
-    // Bringing them back to the balancer - main memory.
-    // const ebst_ptr father_index = balancer -> node.father;
-    const ebst_ptr grandfather_index = balancer -> father_node.father;
-    read_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, &balancer -> father_node);
-    read_erbtnode(balancer -> builder -> file_stream, grandfather_index, &balancer -> grandfather_node);
-=======
     #if IMPL_LOGGING
         DebugPrintf("Various transformations... %d %d %d\n",
             balancer->node_index, balancer->node.father, balancer->father_node.father);
     #endif
 
     // Bringing them back to the balancer - main memory.
-    // const ebst_ptr father_index = balancer -> node.father;
+    // const ebst_ptr father_index = balancer->node.father;
     const ebst_ptr grandfather_index = balancer->father_node.father;
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node.father, &balancer->father_node);
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, grandfather_index, &balancer->grandfather_node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     bool father_color = balancer->father_node.color;
     balancer->father_node.color = balancer->grandfather_node.color;
     balancer->grandfather_node.color = father_color;
 
     // Writing them back.
-<<<<<<< HEAD
-    write_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
-    write_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
-
-    // The balancing afterwards continues on current-node's father. So,
-    read_erbtnode(balancer->builder->file_stream, grandfather_index, & balancer -> node);
-    balancer -> node_index = grandfather_index;
-    // balancer->father_ndoe = erbt_node{ 0 };
-
-#if IMPL_LOGGING
-    fallDebug();
-#endif
-=======
     frame_update_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node.father, &balancer->father_node);
     frame_update_page(balancer->builder->file_stream, &balancer->builder->frame, grandfather_index, &balancer->grandfather_node);
 
@@ -1027,45 +655,29 @@ _ERBT_Balance_case1_3(struct ERBT_Balancer * balancer) {
     #if IMPL_LOGGING
         fallDebug();
     #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 }
 
 /*  TODO: better docs. ERBT balance case 2.2: Adapts a node-frame for case 2.3. */
 inline static void
 _ERBT_Balance_case2_2(struct ERBT_Balancer * balancer) {
-<<<<<<< HEAD
-#if IMPL_LOGGING
-    raiseDebug();
-#endif
-=======
     #if IMPL_LOGGING
         raiseDebug();
     #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     rotateRight(balancer->builder, balancer->node.father);
 
     // Updates the node-information, after the rotation, into the balancer - bringing it to main-memory.
-<<<<<<< HEAD
-    // read_erbtnode(balancer -> builder -> file_stream, balancer -> node.father, & balancer -> father_node);
-    //read_erbtnode(balancer -> builder -> file_stream, balancer -> node_index, & balancer -> node);
-
-    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->node);
-    read_erbtnode(balancer->builder->file_stream, balancer->node_index, &balancer->father_node);
-
-    balancer->node_index = balancer->node.father; // * not necessary, but this implies in concordance...
-    read_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
-=======
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node.father, &balancer->node);
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node_index, &balancer->father_node);
 
     balancer->node_index = balancer->node.father; // * not necessary, but this implies in concordance...
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->father_node.father, &balancer->grandfather_node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     #if IMPL_LOGGING
-        DebugPrintf("After case 1.2:\n", NULL);
+    #if 0    
+    DebugPrintf("After case 1.2:\n", NULL);
         printRedBlackTree(balancer->builder->file_stream);
+    #endif
         fallDebug();
     #endif
 }
@@ -1073,40 +685,23 @@ _ERBT_Balance_case2_2(struct ERBT_Balancer * balancer) {
 /*  ... */
 inline static void
 _ERBT_Balance_case_2_3(struct ERBT_Balancer * balancer) {
-#if IMPL_LOGGING
-    raiseDebug();
-    DebugPrintf("Rotate left for grandfather: %u\n", (unsigned int) balancer->father_node.father);
-#endif
+    #if IMPL_LOGGING
+        raiseDebug();
+        DebugPrintf("Rotate left for grandfather: %u\n", (unsigned int) balancer->father_node.father);
+    #endif
 
     rotateLeft(balancer->builder, balancer->father_node.father);
 
     // Bringing them back to the balancer - main memory.
     const ebst_ptr grandfather_index = balancer->father_node.father;
-<<<<<<< HEAD
-    read_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
-    read_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
-=======
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame,balancer->node.father, &balancer->father_node);
     frame_retrieve_page(balancer->builder->file_stream, &balancer->builder->frame, grandfather_index, &balancer->grandfather_node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
     bool father_color = balancer->father_node.color;
     balancer->father_node.color = balancer->grandfather_node.color;
     balancer->grandfather_node.color = father_color;
 
     // Writing them back.
-<<<<<<< HEAD
-    write_erbtnode(balancer->builder->file_stream, balancer->node.father, &balancer->father_node);
-    write_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->grandfather_node);
-
-    // The balancing afterwards continues on current-node's father. So,
-    read_erbtnode(balancer->builder->file_stream, grandfather_index, &balancer->node);
-    balancer->node_index = grandfather_index;
-
-#if IMPL_LOGGING
-    fallDebug();
-#endif
-=======
     frame_update_page(balancer->builder->file_stream, &balancer->builder->frame, balancer->node.father, &balancer->father_node);
     frame_update_page(balancer->builder->file_stream, &balancer->builder->frame, grandfather_index, &balancer->grandfather_node);
 
@@ -1117,7 +712,6 @@ _ERBT_Balance_case_2_3(struct ERBT_Balancer * balancer) {
     #if IMPL_LOGGING
         fallDebug();
     #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 }
 
 
@@ -1126,20 +720,12 @@ static inline bool
 ERBT_set_root_black(ERBT_Builder * _builder)
 {
     erbt_node buffer = { 0 };
-<<<<<<< HEAD
-    if (! read_erbtnode(_builder -> file_stream, _builder -> header.root_ptr, & buffer))
-=======
     if (! frame_retrieve_page(_builder->file_stream, &_builder->frame, _builder->header.root_ptr, & buffer))
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
         return false;
 
     if (buffer.color == RED) {
         buffer.color = BLACK;
-<<<<<<< HEAD
-        if (! write_erbtnode(_builder -> file_stream, _builder -> header.root_ptr, & buffer))
-=======
         if (! frame_update_page(_builder->file_stream, &_builder->frame, _builder->header.root_ptr, & buffer))
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
             return false;
     }
     return true;
@@ -1147,65 +733,39 @@ ERBT_set_root_black(ERBT_Builder * _builder)
 
 /*  Balances the External Red-Black Tree. */
 void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
-#if IMPL_LOGGING
-    raiseDebug();
-    DebugPrintf("_XLine: %u\n", (unsigned int) _NodeIndex);
-#endif 
+    #if IMPL_LOGGING
+        raiseDebug();
+        DebugPrintf("_XLine: %u\n", (unsigned int) _NodeIndex);
+    #endif 
 
     /*  The balancing process manager. */
     struct ERBT_Balancer balancer = _initializeBalancer(_builder, _NodeIndex);
-<<<<<<< HEAD
-    
-    read_erbtnode(balancer.builder->file_stream, balancer.node_index, &balancer.node);
-=======
 
     frame_retrieve_page(balancer.builder->file_stream, &_builder->frame, balancer.node_index, &balancer.node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     updateBalacer(& balancer);
 
     // If: the balancer.node is root or balancer.node is Black or Father is Black, the balancing ends
     /* (...) */
     while ((balancer.node_index != 0) && (balancer.father_node.color == RED) && (balancer.father_node.father != -1)) {
-<<<<<<< HEAD
-        
-#if IMPL_LOGGING
-        DebugPrintY("Inside the while loop...\n\t", NULL);
-#endif
 
-        // In case the father node is at left,
-        if (balancer.node.father == balancer.grandfather_node.left) {
-#if IMPL_LOGGING
-            printf("\t"); DebugPrintY("father is left...\n", NULL);
-#endif
-
-            // Set main uncle
-            if (balancer.grandfather_node.right != ERBT_NULL_INDEX) {
-                read_erbtnode(_builder->file_stream, balancer.grandfather_node.right, &balancer.uncle_node);
-=======
-
-    #if IMPL_LOGGING
-        DebugPrintY("Inside the while loop...\n\t", NULL);
-    #endif
-
-        // In case the father node is at left,
-        if (balancer.node.father == balancer.grandfather_node.left) {
         #if IMPL_LOGGING
-            printf("\t"); DebugPrintY("father is left...\n", NULL);
+            DebugPrintY("Inside the while loop...\n\t", NULL);
         #endif
+
+        // In case the father node is at left,
+        if (balancer.node.father == balancer.grandfather_node.left) {
+            #if IMPL_LOGGING
+                printf("\t"); DebugPrintY("father is left...\n", NULL);
+            #endif
 
             // Set main uncle
             if (balancer.grandfather_node.right != ERBT_NULL_INDEX) {
                 frame_retrieve_page(_builder->file_stream, &_builder->frame, balancer.grandfather_node.right, &balancer.uncle_node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
                 balancer.uncle_index = balancer.grandfather_node.right;
 
             }
             else {
-<<<<<<< HEAD
-                balancer.uncle_node = (erbt_node){ 0 };
-=======
                 balancer.uncle_node = (erbt_node) { 0 };
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
                 // balancer.uncle_node.line = ERBT_NULL_INDEX;
                 balancer.uncle_node.father = ERBT_NULL_INDEX;
 
@@ -1228,32 +788,18 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
             // In case the father node is at the right,
         }
         else {
-<<<<<<< HEAD
-#if IMPL_LOGGING
-            DebugPrintY("father is right...\n", NULL);
-#endif
-
-            // Set balancer.uncle_node
-            if ((balancer.father_node.father != ERBT_NULL_INDEX) && (balancer.grandfather_node.left != ERBT_NULL_INDEX)) {
-                read_erbtnode(_builder->file_stream, balancer.grandfather_node.left, &balancer.uncle_node);
-=======
-        #if IMPL_LOGGING
-            DebugPrintY("father is right...\n", NULL);
-        #endif
+            #if IMPL_LOGGING
+                DebugPrintY("father is right...\n", NULL);
+            #endif
 
             // Set balancer.uncle_node
             if ((balancer.father_node.father != ERBT_NULL_INDEX) && (balancer.grandfather_node.left != ERBT_NULL_INDEX)) {
                 frame_retrieve_page(_builder->file_stream, &_builder->frame, balancer.grandfather_node.left, &balancer.uncle_node);
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
                 balancer.uncle_index = balancer.grandfather_node.left;
 
             }
             else {
-<<<<<<< HEAD
-                balancer.uncle_node = (erbt_node){ 0 };
-=======
                 balancer.uncle_node = (erbt_node) { 0 };
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
                 // balancer.uncle_node.line = ERBT_NULL_INDEX;
                 balancer.uncle_node.father = ERBT_NULL_INDEX;
 
@@ -1277,21 +823,6 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
 
         // Set/update Nodes
         if (balancer.node.father != ERBT_NULL_INDEX) {
-<<<<<<< HEAD
-            read_erbtnode(_builder->file_stream, balancer.node.father, &balancer.father_node);
-
-            if (balancer.father_node.father != ERBT_NULL_INDEX) {
-                read_erbtnode(_builder->file_stream, balancer.father_node.father, &balancer.grandfather_node);
-            }
-            else {
-                balancer.father_node.father = ERBT_NULL_INDEX;
-                balancer.grandfather_node = (erbt_node){ 0 };
-            }
-        }
-        else {
-            balancer.father_node = (erbt_node){ 0 };
-            balancer.grandfather_node = (erbt_node){ 0 };
-=======
             frame_retrieve_page(_builder->file_stream, &_builder->frame, balancer.node.father, &balancer.father_node);
 
             if (balancer.father_node.father != ERBT_NULL_INDEX) {
@@ -1305,7 +836,6 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
         else {
             balancer.father_node = (erbt_node) { 0 };
             balancer.grandfather_node = (erbt_node) { 0 };
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
             balancer.father_node.father = ERBT_NULL_INDEX;
         }
@@ -1316,42 +846,6 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
     if (! ERBT_set_root_black(_builder)) {
         // TODO: Futurely, the balancing is better verified.
     }
-<<<<<<< HEAD
-        
-#if IMPL_LOGGING
-    fallDebug();
-#endif
-}
-
-
-/*  Generates the external data-structure of the red-black tree. 
-    Functionally reads page per page from the input stream and inserts, 
-    balacing afterwards the tree, registry per registry in it. */
-bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
-#if IMPL_LOGGING
-    raiseDebug();
-
-#if RECORD_ERBT
-    RBT_PRINTING_STREAM = fopen(RBT_PRINTING_FILENAME, "w");
-    if (RBT_PRINTING_STREAM == NULL)
-        return false;
-#endif
-
-#endif // IMPL_LOGGING
-
-    // Where pages from _InputStream are lied down.
-    regpage_t page_buffer = { 0 };      
-    
-    /*  The registry data that will be passed to the
-        the data-structure assembling. */
-    registry_pointer reg_ptr = { 0 };   
-
-    // The handler in the data-structure assembling process.
-    ERBT_Builder builder = { 0 };       
-
-    if (! frame_make(& builder.frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
-        return false;
-=======
 
     #if IMPL_LOGGING
         fallDebug();
@@ -1387,25 +881,16 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
     if (! frame_make(& builder.frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
         return false;
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     /*  If it is was not possible to make the frame the whole building process fails.
         Otherwise what it is left to initialize on the builder is properly done. */
     builder.file_stream = _OutputStream;
     builder.registries_written = 0;
 
-<<<<<<< HEAD
-    /*  (...) */
-    if (! fwrite(& builder.header, sizeof(ERBT_Header), 1, _OutputStream)) {
-        return false;
-    }
-    
-=======
     /*  Initializing the header. */
     if (! fwrite(& builder.header, sizeof(ERBT_Header), 1, _OutputStream)) {
         return false;
     }
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     // Counters that tracks the reading progress of the input-stream.
     uint32_t regs_read = 0, currentPage = 0;
 
@@ -1413,84 +898,38 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
     bool insert_failure = false;
 
 
-<<<<<<< HEAD
-    while ((! insert_failure) && 
-=======
     while ((! insert_failure) &&
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
         ((regs_read = read_regpage(_InputStream, currentPage ++, & page_buffer)) > 0))
     {
         for (uint32_t i = 0; i < regs_read; i ++) {
             reg_ptr.key = page_buffer.reg[i].key;
 
-<<<<<<< HEAD
-#if IMPL_LOGGING
-            DebugPrintf("Inserting #%u: %d\n",
-                (unsigned int) reg_ptr.original_pos,
-                reg_ptr.key);
-#endif
-=======
         #if IMPL_LOGGING
             DebugPrintf("Inserting #%u: %d\n",
                 (unsigned int) reg_ptr.original_pos,
                 reg_ptr.key);
         #endif
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 
             if (! ERBT_insert(& builder, & reg_ptr)) {
                 insert_failure = false;
                 break;
             }
 
-<<<<<<< HEAD
-#if IMPL_LOGGING
-            /*
-            fprintf(debug_stream, "\n");
-            DebugPrintf("After inserting:\n", NULL);
-            printRedBlackTree(builder.file_stream);
-            fprintf(debug_stream, "\n\n");
-            */
-#endif          
-
             ERBT_Balance(& builder, builder.registries_written - 1);
 
-#if IMPL_LOGGING
+        #if IMPL_LOGGING
             fprintf(debug_stream, "\n");
             DebugPrintf("After balacing:\n", NULL);
         #if 0
             printRedBlackTree(builder.file_stream);
         #endif
             fprintf(debug_stream, "\n\n");
-#endif
-
-            reg_ptr.original_pos ++;
-        }
-
-        if (currentPage > 7) {
-#if IMPL_LOGGING
-            DebugPrint("currentPage > 7: break\n");
-#endif
-            break;
-        }
-
-
-    }
-    
-=======
-            ERBT_Balance(& builder, builder.registries_written - 1);
-
-        #if IMPL_LOGGING
-            fprintf(debug_stream, "\n");
-            DebugPrintf("After balacing:\n", NULL);
-            printRedBlackTree(builder.file_stream);
-            fprintf(debug_stream, "\n\n");
         #endif
 
             reg_ptr.original_pos ++;
         }
     }
 
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     freeFrame(& builder.frame);
 
 #if IMPL_LOGGING
@@ -1506,11 +945,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
 }
 
 
-<<<<<<< HEAD
-bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, const key_t _Key, registry_t * _Target)
-=======
 bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, frame_t * _Frame, const key_t _Key, registry_t * _Target)
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
 {
     ERBT_Header header = { 0 };
     if (! ERBT_readHeader(_Stream, & header))
@@ -1519,11 +954,7 @@ bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, frame_t * _Fr
     ebst_ptr node_index = header.root_ptr;
     erbt_node current_node = { 0 };
 
-<<<<<<< HEAD
-    while ((node_index != ERBT_NULL_INDEX) && read_erbtnode(_Stream, node_index, & current_node))
-=======
     while ((node_index != ERBT_NULL_INDEX) && frame_retrieve_page(_Stream, _Frame, node_index, & current_node))
->>>>>>> 5b5149ed355325b0adcb0ac2c7a83762ca8c7a3f
     {
         if (cmp_eq_search(_Key, current_node.reg_ptr.key))
             return search_registry(_InputStream, & current_node.reg_ptr, _Target);
@@ -1570,8 +1001,8 @@ static mrt_stack_node * new_mrtStackNode(const struct mrt_stack_item * _Item)
         return NULL;
 
 
-    sn -> item = * _Item;
-    sn -> next = NULL;
+    sn->item = * _Item;
+    sn->next = NULL;
     return sn;
 }
 
@@ -1584,10 +1015,10 @@ static bool mrtStackPush(MRT_Stack * _Stack, const struct mrt_stack_item * _Item
     if (new_node == NULL)
         return false;
 
-    mrt_stack_node * head_next = _Stack -> head;
-    _Stack -> head = new_node;
-    _Stack -> head -> next = head_next;
-    _Stack -> size ++;
+    mrt_stack_node * head_next = _Stack->head;
+    _Stack->head = new_node;
+    _Stack->head->next = head_next;
+    _Stack->size ++;
 
     return true;
 }
@@ -1661,7 +1092,7 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, fram
         frame_retrieve_index(_InputStream, _Frame, middle / ITENS_PER_PAGE, & page_pointer);
 
         buffer_node.reg_ptr.original_pos = middle;
-        buffer_node.reg_ptr.key = ((regpage_t *) _Frame -> pages)[page_pointer].reg[middle % ITENS_PER_PAGE].key;
+        buffer_node.reg_ptr.key = ((regpage_t *) _Frame->pages)[page_pointer].reg[middle % ITENS_PER_PAGE].key;
 
         // DebugPrintR("buffer-node: (%d, %d) <pos:%d, key:%d>\n", buffer_node.left, buffer_node.right, buffer_node.reg_ptr.original_pos, buffer_node.reg_ptr.key);
 

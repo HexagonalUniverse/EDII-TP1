@@ -8,6 +8,9 @@
 #define TRANSPARENT_COUNTER_H
 
 
+#include <stdbool.h.>
+
+
 #if ! defined(TRANSPARENT_COUNTER)
 	// Toggles the transparent-counter.
 	#define TRANSPARENT_COUNTER		false
@@ -20,32 +23,10 @@
 
 void transparent_counter_print(void);
 
+struct page_transferences { uint64_t read, write; };
 
 extern struct __the_transparent_counter {
-	struct {
-		uint64_t read;
-		uint64_t write;
-	} reg;
-
-	struct {
-		uint64_t read;
-		uint64_t write;
-	} ebst;
-
-	struct {
-		uint64_t read;
-		uint64_t write;
-	} erbt;
-
-	struct {
-		uint64_t read;
-		uint64_t write;
-	} b;
-
-	struct {
-		uint64_t read;
-		uint64_t write;
-	} bs;
+	struct page_transferences reg, ebst, erbt, b, bs;
 
 	struct {
 		uint64_t search;

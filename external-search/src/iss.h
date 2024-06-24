@@ -6,7 +6,6 @@
 #include "searching.h"
 
 
-/*	*/
 typedef struct {
 	key_t * keys;
 	uint32_t length;

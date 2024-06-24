@@ -35,7 +35,7 @@ static inline bool writeRegistry(FILE* _file, uint64_t _pos, registry_t* _Regist
 
 //Creating a random string
 static inline char *createRandStr(char* _str, const uint64_t _strSize) {
-    for (int i = 0; i < _strSize - 1; i++)
+    for (uint64_t i = 0; i < _strSize - 1; i++)
         _str[i] = rand() % 26 + 65;
     _str[_strSize - 1] = '\0';
     return _str;
@@ -54,7 +54,7 @@ static void shuffleKeys(FILE* _file, const uint64_t _noReg){
     key_t aux;
     registry_t reg_1, reg_2;
 
-    for(int i = 0; i < _noReg; i++){
+    for(uint64_t i = 0; i < _noReg; i++){
         rand_pos = rand() % _noReg;
         readRegistry(_file, i, &reg_1);
         readRegistry(_file, rand_pos, &reg_2);
@@ -75,7 +75,7 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
 
     switch (*_genMode) {
         case ORDERED_ASCENDING:
-            for(int i = 0; i < _noReg; i++){
+            for(uint64_t i = 0; i < _noReg; i++){
                 _reg->key = i;
                 createData(_reg);
                 writeRegistry(_file, i, _reg);
@@ -87,7 +87,7 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
             _reg->key = rand() % CONST_GAP_RANGE + 1;
             writeRegistry(_file, 0, _reg);
 
-            for (int i = 1; i < _noReg; i++) {
+            for (uint64_t i = 1; i < _noReg; i++) {
                 aux = _reg->key;
 
                 createData(_reg);
@@ -98,7 +98,7 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
         break;
 
         case ORDERED_DESCENDING:
-            for(int i = 0; i < _noReg; i++){
+            for(uint64_t i = 0; i < _noReg; i++){
                 _reg->key = _noReg - i;
                 createData(_reg);
                 writeRegistry(_file, i, _reg);
@@ -110,7 +110,7 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
             _reg->key = INT_MAX - rand() % CONST_GAP_RANGE + 1;
             writeRegistry(_file, 0, _reg);
 
-            for (int i = 1; i < _noReg; i++) {
+            for (uint64_t i = 1; i < _noReg; i++) {
                 aux = _reg->key;
 
                 createData(_reg);
@@ -121,7 +121,7 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
         break;
 
         case DISORDERED:
-            for(int i = 0; i < _noReg; i++){
+            for(uint64_t i = 0; i < _noReg; i++){
                 _reg->key = i;
                 createData(_reg);
                 writeRegistry(_file, i, _reg);
@@ -134,7 +134,7 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
             _reg->key = rand() % CONST_GAP_RANGE + 1;
             writeRegistry(_file, 0, _reg);
 
-            for (int i = 1; i < _noReg; i++) {
+            for (uint64_t i = 1; i < _noReg; i++) {
                 aux = _reg->key;
 
                 createData(_reg);

@@ -47,7 +47,6 @@ inline bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Refe
 
     // Once the page is read, copies the registry in it.
     * _ReturnRegistry = page_buffer.reg[_Reference -> original_pos % ITENS_PER_PAGE];
-    printf("KEY FOUND! pointer at or.file: %u\n", (unsigned int) _Reference->original_pos);
     return true;
 }
 
@@ -99,7 +98,7 @@ inline bool write_bstar(BSTAR_STREAM * _Stream, size_t _NodeIndex, const bstar_n
 
 bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _ReturnNode) {
     #if TRANSPARENT_COUNTER
-        transparent_counter.ebst.read++;
+        transparent_counter.erbt.read ++;
     #endif
 
     fseek(_Stream, erbtnode_pos(_NodeIndex), SEEK_SET);
@@ -114,7 +113,7 @@ bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _Return
 
 bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode) {
     #if TRANSPARENT_COUNTER
-        transparent_counter.ebst.write ++;
+        transparent_counter.erbt.write ++;
     #endif
     
     #if DEBUG_PAGE_WRITING
@@ -126,20 +125,18 @@ bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * 
     return fwrite(_WriteNode, sizeof(erbt_node), 1, _Stream) > 0;
 }
 
-inline bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Node)
-{
+inline bool read_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, ebst_node * _Node) {
     #if TRANSPARENT_COUNTER
-        transparent_counter.ebst.read++;
+        transparent_counter.ebst.read ++;
     #endif
 
     fseek(_Stream, sizeof(ebst_node) * _NodeIndex, SEEK_SET);
     return fread(_Node, sizeof(ebst_node), 1, _Stream) > 0;
 }
 
-inline bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode)
-{
+inline bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_node * _WriteNode) {
     #if TRANSPARENT_COUNTER
-        transparent_counter.ebst.write++;
+        transparent_counter.ebst.write ++;
     #endif
 
     fseek(_Stream, sizeof(ebst_node) * _NodeIndex, SEEK_SET);

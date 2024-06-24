@@ -19,9 +19,9 @@
 // Conveniences
 // ------------
 
+// Definition compatible with GNU gcc compiler.
 // Modifier for forcing function inlining.
 // Let "finline void func(...) { ... }" on its definition.
-// * Definition compatible with GNU gcc compiler.
 #define finline					__attribute__((always_inline)) inline
 
 /* 	Returns whether a number x in between two numbers: a and b.

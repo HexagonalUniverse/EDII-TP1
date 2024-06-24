@@ -24,8 +24,6 @@ typedef struct {
 
 	struct {
 		bool success : 1;
-		uint32_t transference_count;
-		uint32_t comparison_count;
 	}; // flags
 
 	/*	Holds on temporal measures about the application of searching. */
@@ -35,7 +33,7 @@ typedef struct {
 		double construction_time;
 
 		/*	The time the search itself takes to completion. */
-		double time_span;
+		double search_time;
 	} measures;
 } search_result;	// Occupies 6040 [bytes]. Allign by 8 [bytes].
 
