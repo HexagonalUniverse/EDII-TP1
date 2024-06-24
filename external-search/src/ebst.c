@@ -32,7 +32,7 @@ ERBT_readHeader(ERBT_STREAM * _Stream, ERBT_Header * _ReturnHeader)
 
 
 // The debugging set-up for the ERBT.
-#if IMPL_LOGGING
+#if IMPL_LOGGING && 0
 
 #if RECORD_ERBT
     #define RBT_PRINTING_FILENAME   "last-rbt.txt"
@@ -362,7 +362,8 @@ rotateRight(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     write_erbtnode(_builder -> file_stream, _pivotIndex, & X);
 
 #if IMPL_LOGGING
-    printRedBlackTree(_builder -> file_stream);
+    printRedBlackTree(_builder->file_stream);
+#endif
     fallDebug();
 #endif
 }
@@ -386,8 +387,7 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     erbt_node X, Y;
     read_erbtnode(_builder -> file_stream, _pivotIndex, & X);
     read_erbtnode(_builder -> file_stream, X.right, & Y);
-
-    /*  Tracks Y index - as X.right will be updated. */
+    /*  Tracks Y index - as X.right will be updated. */
     const ebst_ptr old_x_right = X.right;
 
 
@@ -414,7 +414,7 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
         else
             x_father.left = old_x_right;
 
-        write_erbtnode(_builder -> file_stream, X.father, & x_father);
+        frame_update_page(_builder->file_stream, &_builder->frame, X.father, & x_father);
     }
     else {
         // Then _pivotIndex == _builder -> header.root_ptr.
@@ -438,10 +438,10 @@ rotateLeft(ERBT_Builder * _builder, const ebst_ptr _pivotIndex)
     write_erbtnode(_builder -> file_stream, old_x_right, & Y);
     write_erbtnode(_builder -> file_stream, _pivotIndex, & X);
 
-#if IMPL_LOGGING
-    printRedBlackTree(_builder -> file_stream);
-    fallDebug();
-#endif
+    #if IMPL_LOGGING
+        printRedBlackTree(_builder->file_stream);
+        fallDebug();
+    #endif
 }
 
 
@@ -589,11 +589,11 @@ _ERBT_Balance_case1_2(struct ERBT_Balancer * balancer) {
     balancer -> node_index = balancer -> node.father; // * not necessary, but this implies in concordance...
     read_erbtnode(balancer -> builder -> file_stream, balancer -> father_node.father, & balancer -> grandfather_node);
 
-#if IMPL_LOGGING
-    DebugPrintf("After case 1.2:\n", NULL);
-    printRedBlackTree(balancer -> builder -> file_stream);
-    fallDebug();
-#endif
+    #if IMPL_LOGGING
+        DebugPrintf("After case 1.2:\n", NULL);
+        printRedBlackTree(balancer->builder->file_stream);
+        fallDebug();
+    #endif
 }
 
 /*  TODO: better docs. CASE 1.3: balancer.node is at the correct side.
@@ -665,11 +665,11 @@ _ERBT_Balance_case2_2(struct ERBT_Balancer * balancer) {
     balancer->node_index = balancer->node.father; // * not necessary, but this implies in concordance...
     read_erbtnode(balancer->builder->file_stream, balancer->father_node.father, &balancer->grandfather_node);
 
-#if IMPL_LOGGING
-    DebugPrintf("After case 1.2:\n", NULL);
-    printRedBlackTree(balancer->builder->file_stream);
-    fallDebug();
-#endif
+    #if IMPL_LOGGING
+        DebugPrintf("After case 1.2:\n", NULL);
+        printRedBlackTree(balancer->builder->file_stream);
+        fallDebug();
+    #endif
 }
 
 /*  ... */
@@ -918,7 +918,9 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
 #if IMPL_LOGGING
             fprintf(debug_stream, "\n");
             DebugPrintf("After balacing:\n", NULL);
+        #if 0
             printRedBlackTree(builder.file_stream);
+        #endif
             fprintf(debug_stream, "\n\n");
 #endif
 
