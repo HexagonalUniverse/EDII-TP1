@@ -15,8 +15,8 @@
 *.so
 *.exe
 
-# Logging and cache
-/external-search/cache/*
+# Logging and temporaries
+/external-search/temp/
 *.log
 
 # Specific built data-structures files
@@ -28,4 +28,3 @@
 
 /external-search/bin/exe/josue.exe
 /external-search/bin/exe/pesquisa.exe
-/external-search/temp/input-data.bin
