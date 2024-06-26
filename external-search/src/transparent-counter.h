@@ -36,23 +36,31 @@ extern struct __the_transparent_counter {
 } transparent_counter;
 
 
-#define cmp_eq_build(key1, key2)	((key1 == key2)	&& (++ transparent_counter.comparisons.build))
-#define cmp_bg_build(key1, key2)	((key1 > key2) && (++ transparent_counter.comparisons.build))
-#define cmp_ls_build(key1, key2)	((key1 < key2) && (++ transparent_counter.comparisons.build))
+#define cmp_eq_build(key1, key2)	( (++ transparent_counter.comparisons.build) && (key1 == key2) )
+#define cmp_bg_build(key1, key2)	( (++ transparent_counter.comparisons.build) && (key1 > key2) )
+#define cmp_ls_build(key1, key2)	( (++ transparent_counter.comparisons.build) && (key1 < key2) )
+#define cmp_be_build(key1, key2)	( (++ transparent_counter.comparisons.build) && (key1 >= key2) )
+#define cmp_le_build(key1, key2)	( (++ transparent_counter.comparisons.build) && (key1 >= key2) )
 
-#define cmp_eq_search(key1, key2)	((key1 == key2) && (++ transparent_counter.comparisons.search))
-#define cmp_bg_search(key1, key2)	((key1 > key2) && (++ transparent_counter.comparisons.search))
-#define cmp_ls_search(key1, key2)	((key1 < key2) && (++ transparent_counter.comparisons.search))
+#define cmp_eq_search(key1, key2)	( (++ transparent_counter.comparisons.search) && (key1 == key2) )
+#define cmp_bg_search(key1, key2)	( (++ transparent_counter.comparisons.search) && (key1 > key2) )
+#define cmp_ls_search(key1, key2)	( (++ transparent_counter.comparisons.search) && (key1 < key2) )
+#define cmp_be_search(key1, key2)	( (++ transparent_counter.comparisons.search) && (key1 >= key2) )
+#define cmp_le_search(key1, key2)	( (++ transparent_counter.comparisons.search) && (key1 <= key2) )
 
 #else
 
 #define cmp_eq_build(key1, key2)	(key1 == key2)
 #define cmp_bg_build(key1, key2)	(key1 > key2)
 #define cmp_ls_build(key1, key2)	(key1 < key2)
+#define cmp_be_build(key1, key2)	(key1 >= key2)
+#define cmp_le_build(key1, key2)	(key1 <= key2)
 
 #define cmp_eq_search(key1, key2)	(key1 == key2)
 #define cmp_bg_search(key1, key2)	(key1 > key2)
 #define cmp_ls_search(key1, key2)	(key1 < key2)
+#define cmp_be_search(key1, key2)	(key1 >= key2)
+#define cmp_le_search(key1, key2)	(key1 <= key2)
 #endif
 
 #endif

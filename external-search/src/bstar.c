@@ -370,7 +370,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
         }
     }
 
-    freeFrame(& bs_builder.frame);
+    frame_free(& bs_builder.frame);
 
 #if IMPL_LOGGING
     if (insert_failure)

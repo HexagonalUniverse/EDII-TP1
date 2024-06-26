@@ -108,7 +108,7 @@ frame_make(frame_t * _Frame, const size_t _FrameSize, const size_t _PageSize, pa
 }
 
 inline void 
-freeFrame(frame_t * _Frame)
+frame_free(frame_t * _Frame)
 {
     if (_Frame -> indexes != NULL)
         free(_Frame -> indexes);

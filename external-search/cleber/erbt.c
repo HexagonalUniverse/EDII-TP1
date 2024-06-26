@@ -105,7 +105,7 @@ int main(void)
 
 	int response = __build_erbt_from_stdin_sequence(&frame);
 
-	freeFrame(&frame);
+	frame_free(&frame);
 
 	#if IMPL_LOGGING
 		FinalizeLogging();

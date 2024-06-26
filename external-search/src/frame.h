@@ -84,7 +84,7 @@ typedef struct {
 bool frame_make(frame_t * _Frame, const size_t _FrameSize, const size_t _PageSize, page_type _Type);
 
 /*  Deconstructs (deallocates) the frame. */
-void freeFrame(frame_t * _Frame);
+void frame_free(frame_t * _Frame);
 
 /*  Attempts finding the frame-index at which a given page index is. 
     Returns whether it could find it. */

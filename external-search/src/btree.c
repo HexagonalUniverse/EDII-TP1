@@ -469,7 +469,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
     // Termination of the building process.
     // * the only dynamic part pending de-allocation being the frame.
 
-    freeFrame(& b_builder.frame);
+    frame_free(& b_builder.frame);
 
     #if IMPL_LOGGING
         if (insert_failure)

@@ -153,7 +153,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
         result -> measures.search_time = time_diff_sec(start_time, end_time);
     }
 
-    freeFrame(&frame);
+    frame_free(&frame);
     fclose(output_stream);
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
@@ -185,7 +185,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
         gettimeofday(&start_time, NULL);
         if (! EBST_MRT_Build(input_stream, output_stream, &frame, parameters->situation == ASCENDING_ORDER, parameters->reg_qtt)) {
             fclose(output_stream);
-            freeFrame(&frame);
+            frame_free(&frame);
 
             return _SE_EBSTMRTBUILD;
         }
@@ -195,7 +195,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
         result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
-    freeFrame(&frame);
+    frame_free(&frame);
 
     // Re-opening the data-structure file in read-mode.
     fclose(output_stream);
@@ -264,7 +264,7 @@ __BTREE(const struct application_parameters * parameters, search_result * result
         gettimeofday(&end_time, NULL);
         result -> measures.search_time = time_diff_sec(start_time, end_time);
 
-        freeFrame(&frame);
+        frame_free(&frame);
     }
 
     fclose(output_stream);
@@ -317,7 +317,7 @@ __BSTAR(const struct application_parameters * parameters, search_result * result
         gettimeofday(&end_time, NULL);
         result -> measures.search_time = time_diff_sec(start_time, end_time);
 
-        freeFrame(&frame);
+        frame_free(&frame);
     }
     
     fclose(output_stream);
@@ -361,7 +361,7 @@ __ISS(const struct application_parameters * parameters, search_result * result, 
     }
 
     deallocateIndexTable(&index_table);
-    freeFrame(&frame);
+    frame_free(&frame);
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 

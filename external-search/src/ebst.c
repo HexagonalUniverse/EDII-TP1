@@ -930,7 +930,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
         }
     }
 
-    freeFrame(& builder.frame);
+    frame_free(& builder.frame);
 
 #if IMPL_LOGGING
     fallDebug();

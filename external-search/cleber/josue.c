@@ -92,7 +92,7 @@ __btree_build(int argc, char ** argsv, FILE * _OutputStream) {
 #endif
     }
 
-    freeFrame(& b_builder.frame);
+    frame_free(& b_builder.frame);
 
     return ! insert_failure;
 }

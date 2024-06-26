@@ -24,3 +24,5 @@
 *.bstar
 *.ebst
 *.erbt
+/external-search/bin/exe/josue.exe
+/external-search/bin/exe/pesquisa.exe
