@@ -1,3 +1,7 @@
+/*	<src/iss.h>
+	
+	Holds the Indexed Sequential Search searching algorithm. */
+
 
 #ifndef _ES_ISS_HEADER_
 #define _ES_ISS_HEADER_

@@ -1089,10 +1089,10 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, fram
 
         // seekReadRegistry(middle, & buffer_node.root_item)
         
-        frame_retrieve_index(_InputStream, _Frame, middle / ITENS_PER_PAGE, & page_pointer);
+        frame_retrieve_index(_InputStream, _Frame, middle / REGPAGE_ITENS, & page_pointer);
 
         buffer_node.reg_ptr.original_pos = middle;
-        buffer_node.reg_ptr.key = ((regpage_t *) _Frame->pages)[page_pointer].reg[middle % ITENS_PER_PAGE].key;
+        buffer_node.reg_ptr.key = ((regpage_t *) _Frame->pages)[page_pointer].reg[middle % REGPAGE_ITENS].key;
 
         // DebugPrintR("buffer-node: (%d, %d) <pos:%d, key:%d>\n", buffer_node.left, buffer_node.right, buffer_node.reg_ptr.original_pos, buffer_node.reg_ptr.key);
 

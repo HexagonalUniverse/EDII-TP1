@@ -18,7 +18,7 @@ inline size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _R
 
     // Setting the file pointer to the beggining of the indexed page on the file.
     fseek(_Stream, regpage_pos(_Index), SEEK_SET);
-    return fread(_ReturnPage -> reg, sizeof(registry_t), ITENS_PER_PAGE, _Stream);
+    return fread(_ReturnPage -> reg, sizeof(registry_t), REGPAGE_ITENS, _Stream);
 }
 
 inline size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage_t * _Page) {
@@ -33,20 +33,20 @@ inline size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage
 
     // Setting the file pointer to the beggining of the indexed page on the file.
     fseek(_Stream, regpage_pos(_Index), SEEK_SET);
-    return fwrite(_Page -> reg, sizeof(registry_t), ITENS_PER_PAGE, _Stream);
+    return fwrite(_Page -> reg, sizeof(registry_t), REGPAGE_ITENS, _Stream);
 }
 
 inline bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Reference, registry_t * _ReturnRegistry) {
     regpage_t page_buffer = { 0 };
 
     // The page at which the registry lies on the registries-stream.
-    const size_t page_index = _Reference -> original_pos / ITENS_PER_PAGE;
+    const size_t page_index = _Reference -> original_pos / REGPAGE_ITENS;
 
     if (! read_regpage(_Stream, page_index, & page_buffer))
         return false;
 
     // Once the page is read, copies the registry in it.
-    * _ReturnRegistry = page_buffer.reg[_Reference -> original_pos % ITENS_PER_PAGE];
+    * _ReturnRegistry = page_buffer.reg[_Reference -> original_pos % REGPAGE_ITENS];
     return true;
 }
 

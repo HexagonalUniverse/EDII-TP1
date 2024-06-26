@@ -531,7 +531,7 @@ void show_regpage_frame(const frame_t * _Frame) { // show the Frame pages
 
         putchar('\n');
 
-        for (int j = 0; j < ITENS_PER_PAGE; j++) {
+        for (unsigned int j = 0; j < REGPAGE_ITENS; j++) {
             printf("Reg %d\n", ((regpage_t *) _Frame->pages)[i].reg[j].key);
         }
         printf("\n");

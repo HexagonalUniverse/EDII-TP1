@@ -20,10 +20,10 @@ int main(int argc, char** argv){
         return 1;
     }
 
-    registry_t reg[ITENS_PER_PAGE];
+    registry_t reg[REGPAGE_ITENS];
     int page_index;
     int q_itens;
-    while((q_itens = fread(&reg, sizeof(registry_t), ITENS_PER_PAGE, file))){
+    while((q_itens = fread(&reg, sizeof(registry_t), REGPAGE_ITENS, file))){
         printf("Page read index: %d\n", page_index++);
         for(int i = 0; i < q_itens; i++){
             printRegistry(&reg[i]);

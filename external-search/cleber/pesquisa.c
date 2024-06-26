@@ -516,6 +516,8 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
 */
 int main(int argc, char ** argsv)
 {
+    printf("B node size: %llu\n", sizeof(b_node));
+
     #if IMPL_LOGGING
         if (! InitializeLogging())
         {

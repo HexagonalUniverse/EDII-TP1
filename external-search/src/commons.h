@@ -11,7 +11,8 @@
 #include <stdbool.h>	/*	The boolean type is globally used. */
 #include <inttypes.h>	/*	For size-specified integer types. */
 
-// TODO: Move.
+/*	Every further part of the system import consequentially the 
+	logging system and the occasional transparent counter.*/
 #include "log.h"
 #include "transparent-counter.h"
 
