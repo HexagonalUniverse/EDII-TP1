@@ -324,7 +324,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
     bs_builder.root.is_leaf = true;
     bs_builder.nodes_qtt = 1;
 
-    if (! frame_make(& bs_builder.frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE))
+    if (! frame_make(& bs_builder.frame, BSTAR_PAGE))
     {
 #if IMPL_LOGGING
         DebugPrintf("bs:err1\n", NULL);

@@ -100,7 +100,7 @@ int main(void)
 	#endif	
 
 	Frame frame;
-	if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
+	if (! frame_make(&frame, ERBT_PAGE))
 		return -1;
 
 	int response = __build_erbt_from_stdin_sequence(&frame);

@@ -82,23 +82,47 @@ __print_frame_indexes(const Frame * _Frame)
 #endif
 
 
+/*  Hashes the page's type size. */
+static inline size_t __page_size(page_type _Type)
+{
+    switch (_Type)
+    {
+    case B_PAGE:        return sizeof(b_node);
+    case BSTAR_PAGE:    return sizeof(bstar_node);
+    case REG_PAGE:      return sizeof(regpage_t);
+    case EBST_PAGE:     return sizeof(ebst_node);
+    case ERBT_PAGE:     return sizeof(erbt_node);
+    }
+    return (size_t) (-1);
+}
+
+#define __frame_max_size(_PageSize)    (FRAME_BUFFER_SIZE / _PageSize)
+
+
 inline bool
-frame_make(Frame * _Frame, const size_t _FrameSize, const size_t _PageSize, page_type _Type) {
+frame_make(Frame * const _Frame, page_type _Type) {
+    if (nin_range(0, 4, _Type))
+        return false;
+    
     Frame frame = {
-        .page_size =_PageSize,
-        .type =     _Type,
-        .first =    FRAME_NULL_INDEX,
-        .last =     FRAME_NULL_INDEX,
-        .size =     0,
-        .pages =    0,
-        .max_size = _FrameSize
+        .page_size =    __page_size(_Type),
+        .type =         _Type,
+        .first =        FRAME_NULL_INDEX,
+        .last =         FRAME_NULL_INDEX,
+        .size =         0,
+        .pages =        0,
+        .max_size =     0,
     };
+    frame.max_size = __frame_max_size(frame.page_size);
+
+    printf("<HD> frame max-size: %u\n", (unsigned int) frame.max_size);
+
     * _Frame = frame;
-    _Frame ->  pages = calloc(_FrameSize, _PageSize);
+    _Frame ->  pages = calloc(frame.max_size, frame.page_size);
     if (_Frame -> pages == NULL)
         return false;
 
-    _Frame -> indexes = (uint32_t *) calloc(_FrameSize, sizeof(uint32_t));
+    _Frame -> indexes = (uint32_t *) calloc(frame.max_size, sizeof(uint32_t));
     if (_Frame -> indexes == NULL) {
         free(_Frame -> pages);
         return false;

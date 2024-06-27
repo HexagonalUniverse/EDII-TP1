@@ -878,7 +878,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
     // The handler in the data-structure assembling process.
     ERBT_Builder builder = { 0 };
 
-    if (! frame_make(& builder.frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
+    if (! frame_make(& builder.frame, ERBT_PAGE))
         return false;
 
     /*  If it is was not possible to make the frame the whole building process fails.

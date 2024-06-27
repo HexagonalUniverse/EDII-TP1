@@ -142,7 +142,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
         return _SE_EBST_FILE;
 
     Frame frame = { 0 };
-    if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
+    if (! frame_make(&frame, ERBT_PAGE))
         return _SE_MAKEFRAME;
 
     {   // Searching for the key.
@@ -174,7 +174,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
         if (output_stream == NULL)
             return _SE_EBST_FILE;
 
-        if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
+        if (! frame_make(&frame, REG_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
@@ -254,7 +254,7 @@ __BTREE(const struct application_parameters * parameters, search_result * result
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
         Frame frame = { 0 };
-        if (!  frame_make(&frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
+        if (!  frame_make(&frame, B_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
@@ -307,7 +307,7 @@ __BSTAR(const struct application_parameters * parameters, search_result * result
             search operation, the role of the frame is not fundamentally
             important and its advantage is not used. */
         Frame frame = { 0 }; 
-        if (!  frame_make(&frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
+        if (!  frame_make(&frame, BSTAR_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
@@ -347,7 +347,7 @@ __ISS(const struct application_parameters * parameters, search_result * result, 
     }
 
     Frame frame = { 0 }; 
-    if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
+    if (! frame_make(&frame, REG_PAGE)) {
         deallocateIndexTable(&index_table);
         return _SE_MAKEFRAME;
     }

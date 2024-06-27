@@ -55,6 +55,12 @@ typedef struct {
     /*  For the sake of the page polymorphism of the frame, the pages array is dynamic.
         But invariably, it will always allocate <PAGES_PER_FRAME> elements (pages) in it. */
 
+    /*  Holds on the information of the page-type that defines the Frame. */
+    struct {
+        page_type type;
+        size_t page_size;   // The size in bytes of the page.
+    } page_header;
+
     // A dynamic array of pages of size <PAGES_PER_FRAME>.
     void * pages;
 
@@ -62,20 +68,13 @@ typedef struct {
         uint32_t page_size;
         page_type type;
     // ^^
+    
+    uint32_t * indexes; // The corresponding indexes for the pages. Array of size <PAGES_PER_FRAME>.
+    uint32_t first;     // Pointer to the initial position of the circular-queue. Inclusive.
+    uint32_t last;      // Pointer to the last position of the circular-queue. Inclusive.
+    uint32_t size;      // The size of the frame in pages; it is: "how many pages are load into the frame"?
 
-    // The corresponding indexes for the pages. Array of size <PAGES_PER_FRAME>.
-    // uint32_t indexes[PAGES_PER_FRAME];
-    uint32_t * indexes;
-
-    // Pointer to the initial position of the circular-queue. Inclusive.
-    uint32_t first;
-
-    // Pointer to the last position of the circular-queue. Inclusive.
-    uint32_t last;
-
-    // The size of the frame in pages; it is: "how many pages are load into the frame"?
-    uint32_t size;
-    uint32_t max_size;
+    uint32_t max_size;  // The frame's max size.
 } Frame;
 // TODO: (Refactor) -> Frame? For which it can be considered as an ds object.
 
@@ -93,7 +92,7 @@ typedef struct {
 
 /*  The frame data-structure constructor.
     Allocates the frame by reference. Returns success. */
-bool frame_make(Frame * _Frame, const size_t _FrameSize, const size_t _PageSize, page_type _Type);
+bool frame_make(Frame * const _Frame, page_type _Type);
 
 /*  Deconstructs (deallocates) the frame. */
 void frame_free(Frame * _Frame);

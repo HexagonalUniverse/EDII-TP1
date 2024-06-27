@@ -417,7 +417,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
     b_builder.root.is_leaf = true;
     b_builder.nodes_qtt = 1;
 
-    if (! frame_make(& b_builder.frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE))
+    if (! frame_make(& b_builder.frame, B_PAGE))
     {
         #if IMPL_LOGGING
             DebugPrintf("bb:err1\n", NULL);
