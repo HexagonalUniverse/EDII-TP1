@@ -19,6 +19,18 @@
 #include "paging.h"
 
 
+#define FRAME_BUFFER_SIZE_IMPL  false   // * toggles the new update on the buffer.
+typedef unsigned char byte;
+
+
+#if ! defined(FRAME_BUFFER_SIZE)
+    
+    /*  Defines the buffer size in bytes for the page storage of the frame. 
+        Default as 256 [kB]. */
+    #define FRAME_BUFFER_SIZE   262144u
+#endif
+
+
 #if ! defined(PAGES_PER_FRAME)
 
     // How many page-frames are there to be stored in the pagination-system.
