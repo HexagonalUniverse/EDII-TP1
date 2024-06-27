@@ -17,13 +17,13 @@
 bool BTree_Build(REG_STREAM *, B_STREAM *);
 
 /*  */
-bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream, frame_t * _Frame, registry_t * target);
+bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream, Frame * _Frame, registry_t * target);
 
 /*  (...) */
 typedef struct {
     B_STREAM * file_stream;
     uint32_t nodes_qtt;
-    frame_t frame;
+    Frame frame;
     b_node root;
 } B_Builder;
 

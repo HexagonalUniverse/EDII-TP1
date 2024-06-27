@@ -141,7 +141,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
     if (output_stream == NULL)
         return _SE_EBST_FILE;
 
-    frame_t frame = { 0 };
+    Frame frame = { 0 };
     if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
         return _SE_MAKEFRAME;
 
@@ -166,7 +166,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
     struct timeval start_time, end_time;
 
     EBST_STREAM * output_stream = NULL;     // File over which the EBST will be constructed at.
-    frame_t frame = { 0 };                  // Registries frame used in the MRT build.
+    Frame frame = { 0 };                  // Registries frame used in the MRT build.
 
     {   // Initialization.
 
@@ -253,7 +253,7 @@ __BTREE(const struct application_parameters * parameters, search_result * result
         /*  The frame for search. As there will only be requested one
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
-        frame_t frame = { 0 };
+        Frame frame = { 0 };
         if (!  frame_make(&frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
@@ -306,7 +306,7 @@ __BSTAR(const struct application_parameters * parameters, search_result * result
         /*  The frame for search. As there will only be requested one 
             search operation, the role of the frame is not fundamentally
             important and its advantage is not used. */
-        frame_t frame = { 0 }; 
+        Frame frame = { 0 }; 
         if (!  frame_make(&frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
@@ -346,7 +346,7 @@ __ISS(const struct application_parameters * parameters, search_result * result, 
         result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
-    frame_t frame = { 0 }; 
+    Frame frame = { 0 }; 
     if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
         deallocateIndexTable(&index_table);
         return _SE_MAKEFRAME;

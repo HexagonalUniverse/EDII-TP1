@@ -40,7 +40,7 @@ static bool __print_erbt_state(ERBT_STREAM * _Stream, size_t _NodesQtt)
 	return _NodesQtt == node_iterator;
 }
 
-static int __build_erbt_from_stdin_sequence(frame_t * _Frame)
+static int __build_erbt_from_stdin_sequence(Frame * _Frame)
 {
 	unsigned int number_of_keys = 0;
 	if (scanf("%u", &number_of_keys) <= 0)
@@ -99,7 +99,7 @@ int main(void)
 		return -6;
 	#endif	
 
-	frame_t frame;
+	Frame frame;
 	if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
 		return -1;
 

@@ -21,6 +21,6 @@ bool deallocateIndexTable(IndexTable * _Table);
 bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * _Stream);
 
 
-bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, IndexTable * _Table, frame_t * _Frame, search_result * _Sr, bool is_ascending);
+bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, IndexTable * _Table, Frame * _Frame, search_result * _Sr, bool is_ascending);
 
 #endif // _ES_ISS_HEADER_

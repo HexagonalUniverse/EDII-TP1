@@ -383,7 +383,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
 
 
 /*  Sopa de macaco. */
-bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStream, frame_t * _Frame, registry_t * target)
+bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStream, Frame * _Frame, registry_t * target)
 {
     // Tracks the tree node we're at. Initialized to the root.
     bstar_node node_buffer = { 0 };

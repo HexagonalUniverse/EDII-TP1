@@ -112,7 +112,7 @@ printIndexTable(IndexTable * _Table){
 
 /*  */
 bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, 
-    IndexTable * _Table, frame_t * _Frame, search_result * _Sr, bool is_ascending)
+    IndexTable * _Table, Frame * _Frame, search_result * _Sr, bool is_ascending)
 {
 	#if IMPL_LOGGING
 		printIndexTable(_Table);

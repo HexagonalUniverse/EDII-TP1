@@ -561,7 +561,7 @@ _ERBT_Balance_case_change(struct ERBT_Balancer * balancer)
     balancer->grandfather_node.color = RED;
     balancer->uncle_node.color = BLACK;
     balancer->father_node.color = BLACK;
-    bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, void * _ReturnPage);
+    bool frame_retrieve_page(FILE * _Stream, Frame * _Frame, uint32_t _PageIndex, void * _ReturnPage);
 
     frame_update_page(balancer->builder->file_stream, & balancer->builder->frame, balancer->father_node.father, & balancer->grandfather_node);
     frame_update_page(balancer->builder->file_stream, & balancer->builder->frame, balancer->uncle_index, & balancer->uncle_node);
@@ -945,7 +945,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
 }
 
 
-bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, frame_t * _Frame, const key_t _Key, registry_t * _Target)
+bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, Frame * _Frame, const key_t _Key, registry_t * _Target)
 {
     ERBT_Header header = { 0 };
     if (! ERBT_readHeader(_Stream, & header))
@@ -1041,7 +1041,7 @@ static bool mrtStackPop(MRT_Stack * _Stack, struct mrt_stack_item * _ReturnItem)
 }
 
 
-bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, frame_t * _Frame, bool ascending, uint64_t _RegistriesQtt)
+bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, Frame * _Frame, bool ascending, uint64_t _RegistriesQtt)
 {
     // * for instance.
     if (! ascending)
