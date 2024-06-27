@@ -1,6 +1,6 @@
 /*	<src/registry.h>
 
-	Definition of the registry data-type. */
+	Define the registry data-type. */
 
 
 #ifndef _ES_REGISTRY_HEADER_
@@ -25,11 +25,13 @@ typedef struct {
 		the overall structure size is 4 [bytes] more than it need to be.
 		In practice, only 6012 [bytes] are used. */
 
-	key_t key;		// The information for localization.
+	key_t key;
 
-	int64_t data_1;
-	char data_2[RD2_SIZE];
-	char data_3[RD3_SIZE];
+	struct {	// The data.
+		int64_t data_1;
+		char data_2[RD2_SIZE];
+		char data_3[RD3_SIZE];
+	};
 } registry_t;		// Occupies 6016 [bytes]. Allign by 8 [bytes].
 
 
