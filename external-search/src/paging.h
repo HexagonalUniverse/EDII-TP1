@@ -58,11 +58,11 @@
 
 /*  The type of each type of stream dealt is annotated for hinting arguments. */
 
-typedef FILE	REG_STREAM;     // A stream representing the registries file.
-typedef FILE	B_STREAM;       // A stream representing the B tree data-structure.
-typedef FILE	BSTAR_STREAM;   // A stream representing the B* tree data-structure.
-typedef FILE	EBST_STREAM;    // A stream representing the (pure) ebst data-structure.
-typedef FILE	ERBT_STREAM;    // A stream representing the erbt data-structure.
+typedef FILE REG_STREAM;    // A stream representing the registries file.
+typedef FILE B_STREAM;      // A stream representing the B tree data-structure.
+typedef FILE BSTAR_STREAM;  // A stream representing the B* tree data-structure.
+typedef FILE EBST_STREAM;   // A stream representing the (pure) ebst data-structure.
+typedef FILE ERBT_STREAM;   // A stream representing the erbt data-structure.
 
 
 // The default registries data file filename. 
@@ -126,15 +126,8 @@ typedef uint32_t b_ptr;
     => 12X <= PAGE_BUFFER_SIZE - 8
     therefore X' = max X = floor{(PAGE_BUFFER_SIZE - 4 - sizeof(b_ptr)) / (|registry_pointer| + |b_ptr|)}.
 
-    For X fitting in (uint8_t : 7):
-        126 = (PAGE_BUFFER_SIZE - 4 - sizeof(b_ptr)) / (|registry_pointer| + |b_ptr|)
-        => 126 * 12 = PAGE_BUFFER_SIZE - 8
-        therefore PAGE_BUFFER_SIZE = 8 + 126 * 12 = 1520.
-
     If we instead hold the registries themselves, instead of pointers to them:
-        |reg|X + 4X + 8 <= BS   =>  X <= (BS - 8) // 6020 = 5.   { BS = 32 [kB] }
-
-    40 <= (BS - 5) / 12     =>  BS => 485. */
+        |reg|X + 4X + 8 <= BS   =>  X <= (BS - 8) // 6020 = 5.   { BS = 32 [kB] } */
 
 /*  How many registry-pointers, at its maximum, holds each b node.
     * Attent to what, currently, it is calculated based on BNODE_BUFFER_SIZE and not PAGE_BUFFER_SIZE.
@@ -221,20 +214,16 @@ typedef struct {
 
     /*  Recognized differently if it is an inner or a leaf node. */
     union {
-        // 8 * ITENS_PER_PAGE + 4 [B], 4 [B] alignment.
         struct {
             key_t keys[BSTREE_ITENS];
             b_ptr children_ptr[BSTREE_ITENS + 1];
         } inner;
 
-        // 8 * ITENS_PER_PAGE [B], 4 [B] alignment.
         struct {
             registry_pointer reg_ptr[BSTREE_ITENS];
         } leaf;
-    }; // 8 * ITENS_PER_PAGE + 4 [B] total, with a waste of 4 [B] if it is a leaf.
+    };
 
-    // 8 * ITENS_PER_PAGE + 4 + 1 => 8 * (ITENS_PER_PAGE + 1) [B], 4 [B] alignment.
-    // For ITENS_PER_PAGE = 5, occupies then 48 [B].
 } bstar_node;
 
 /*  Returns the position at which the node given by the passed index is at the
@@ -291,7 +280,6 @@ typedef struct {
     // ebst_node;
     registry_pointer reg_ptr;
     ebst_ptr left, right;
-
 
     bool color      : 1;    // Determines which color is the node - either red or black.
     ebst_ptr father : 31;   // A pointer to the node's father.

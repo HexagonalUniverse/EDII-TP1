@@ -1,6 +1,6 @@
-""" <csstructures.py>
+""" <cstructures.py>
 
-    Defines data-classes representing structures in the C program."""
+    Defines data-classes representing structures in the C programs."""
 
 
 from typing import Callable, Any
@@ -27,6 +27,7 @@ def cstructure_parse_line_values(cls: type, line: str) -> list[Any]:
             field_type(tokens[0])
         )
         tokens = tokens[1:]
+
     return values
 
 

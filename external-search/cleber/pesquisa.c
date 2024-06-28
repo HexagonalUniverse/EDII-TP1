@@ -8,6 +8,15 @@
 #include <string.h>     // for strcmp
 
 
+#if ! defined(IMPL_ERBT_ONLY)
+    /*  A compilation directive that will tell whether or not the 
+        ERBT will be used over the EBST by MRT in the implementation. 
+        In other words, if true, ERBT will be the searching handle 
+        inconditionally for the binary-tree call. */
+    #define IMPL_ERBT_ONLY  false
+#endif // ! defined(IMPL_ERBT_ONLY)
+
+
 /*  Profiling and output
     ==================== */
 
@@ -158,6 +167,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
+#if ! IMPL_ERBT_ONLY
 /*  Handles the EBST (by MRT) searching. */
 static SEARCH_RESPONSE
 __EBST(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _EBSTFilename)
@@ -216,6 +226,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
     fclose(output_stream);
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
+#endif // ! IMPL_ERBT_ONLY
 
 /*  Handles the B tree searching. */
 static SEARCH_RESPONSE
@@ -386,6 +397,8 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         break;
 
     case EXTERNAL_BINARY_SEARCH:
+        #if ! IMPL_ERBT_ONLY
+
         /*  For EBS, the decision between a ebst (by mrt) 
             and erbt is hereby made. */
         switch (parameters -> situation) {
@@ -395,7 +408,14 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         
         default:    // As such, reduced algorithmic complexity is taken in advantage in the ordered case.
             search_response = __EBST(parameters, result, input_stream, OUTPUT_EBST_FILENAME);
-        } break;
+        } 
+        
+        #else // IMPL_ERBT_ONLY
+        
+        search_response = __ERBT(parameters, result, input_stream, OUTPUT_ERBT_FILENAME);
+        
+        #endif // IMPL_ERBT_ONLY #if sequence.
+        break;
 
     case BTREE_SEARCH:
         search_response = __BTREE(parameters, result, input_stream, OUTPUT_BTREE_FILENAME);
@@ -516,8 +536,6 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
 */
 int main(int argc, char ** argsv)
 {
-    printf("B node size: %llu\n", sizeof(b_node));
-
     #if IMPL_LOGGING
         if (! InitializeLogging())
         {
@@ -525,6 +543,8 @@ int main(int argc, char ** argsv)
             printf("Failed initializing the logging system.\n");
             return -3;
         }
+
+
     #endif // IMPL_LOGGING
 
     /*  Parsing program parameters. */

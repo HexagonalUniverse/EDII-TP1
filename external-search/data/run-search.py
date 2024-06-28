@@ -4,124 +4,11 @@
     on "pesquisa.exe".
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Callable, Any, IO
+from typing import IO
 
-
-def list_apply(__funcs: list[Callable], __values: list[Any]) -> list[Any]:
-    return [f(v) for f, v in zip(__funcs, __values)]
-
-
-def cstructure_parse_line_values(cls: type, line: str) -> list[Any]:
-    tokens: list[str] = line.split(" ")
-    values: list = list()
-    for field_type in cls.__annotations__.values():
-        if hasattr(field_type, "__annotations__"):
-            l: int = len(field_type.__annotations__)
-            values.append(
-                field_type(*tokens[:l])
-            )
-            tokens = tokens[l:]
-            continue
-        values.append(
-            field_type(tokens[0])
-        )
-        tokens = tokens[1:]
-    return values
-
-
-def cstructure_get_from_line(cls: type, line: str):
-    return cls(* cstructure_parse_line_values(cls, line))
-
-
-@dataclass(init=False, repr=True, eq=True, order=False, frozen=True)
-class CStructure(ABC):
-    """Represents a C structure."""
-
-    @staticmethod
-    @abstractmethod
-    def get_from_line(line: str): ...
-
-    def line_repr(self) -> str:
-        return " ".join(str(self.__getattribute__(a)) for a in self.__annotations__.keys())
-
-
-@dataclass(init=True, repr=True, eq=True, order=False, frozen=True)
-class IntTuple(CStructure):
-    x: int
-    y: int
-
-    @staticmethod
-    def get_from_line(line: str):
-        return cstructure_get_from_line(IntTuple, line)
-
-    def __getitem__(self, item: int) -> int:
-        if item == 0:
-            return self.x
-        elif item == 1:
-            return self.y
-        raise IndexError
-
-
-@dataclass(init=True, repr=True, eq=True, order=False, frozen=True)
-class SearchingRegistry(CStructure):
-    key: int
-    data_1: int
-    data_2: str
-    data_3: str
-
-    @staticmethod
-    def get_from_line(line: str):
-        return cstructure_get_from_line(SearchingRegistry, line)
-
-
-@dataclass(init=True, repr=True, eq=True, order=False, frozen=True)
-class TransparentCounter(CStructure):
-    reg: IntTuple
-    ebst: IntTuple
-    erbt: IntTuple
-    b: IntTuple
-    bs: IntTuple
-    total_cmp: IntTuple
-
-    @staticmethod
-    def get_from_line(line: str):
-        return cstructure_get_from_line(TransparentCounter, line)
-
-    def __getitem__(self, index: int) -> int:
-        if index >= 12 or index < 0:
-            raise IndexError
-        d: int = index // 2
-        r: int = index % 2
-
-        match d:
-            case 0:
-                return self.reg[r]
-            case 1:
-                return self.ebst[r]
-            case 2:
-                return self.ebst[r]
-            case 3:
-                return self.b[r]
-            case 4:
-                return self.bs[r]
-            case 5:
-                return self.total_cmp[r]
-        raise ValueError
-
-
-@dataclass(init=True, repr=True, eq=True, order=False, frozen=True)
-class PesquisaProfile(CStructure):
-    registry: SearchingRegistry
-    transparent: TransparentCounter
-
-    construction_time: float
-    search_time: float
-
-    @staticmethod
-    def get_from_line(line: str):
-        return cstructure_get_from_line(PesquisaProfile, line)
+from project_manager import ProjectManager
+from cstructures import PesquisaProfile, TransparentCounter, SearchingRegistry, IntTuple
 
 
 @dataclass(init=True, repr=True, eq=True, order=False, frozen=True)
@@ -151,13 +38,13 @@ class AvgSample(object):
         for j in range(1, 3):
             v[j] /= l
 
-        return AvgSample(l, reg_qtt, method, * v)
+        return AvgSample(l, reg_qtt, method, *v)
 
     def write(self, __file: IO) -> None:
         """Writes a line in csv format corresponding to the dataclass information."""
         __file.write(
             ",".join(map(str,
-                         [self.method, self.samples, self.cardinality, * [self.transparent[i] for i in range(12)],
+                         [self.method, self.samples, self.cardinality, *[self.transparent[i] for i in range(12)],
                           self.construction_time, self.search_time]
                          )) + "\n"
         )
@@ -171,35 +58,14 @@ class AvgSample(object):
 
 class PesquisaProfiler(object):
     __slots__: list[str] = [
-        "__r_paths", "__a_paths",
+        "__project_manager",
         "__order_dict"
     ]
 
-    __r_paths: dict[str, str]
-    __a_paths: dict[str, str]
+    __project_manager: ProjectManager
 
     def __init__(self) -> None:
-        from os import path
-
-        # Base project directory. <external-search/>
-        base_dir: str = path.abspath(path.join(__file__, "..\\.."))
-
-        # Relative filepaths from <external-search/>.
-        self.__r_paths: dict[str, str] = {
-            "dir_cache": "temp/cache/",
-            "dir_sample": "data/samples/",
-
-            "logging_file": "temp/cache/_last_pesquisa_run.log",
-            "input_datafile": "temp/input-data.bin",
-            "searching_executable": "bin/exe/pesquisa.exe",
-            "data_gen_executable": "bin/exe/data-gen.exe",
-        }
-
-        # Absolute filepaths. Mapping path.abspath over __r_paths.
-        self.__a_paths: dict[str, str] = dict()
-        for key in self.__r_paths.keys():
-            self.__a_paths[key] = path.abspath(path.join(base_dir, self.__r_paths[key]))
-        self.__a_paths["base_dir"] = base_dir
+        self.__project_manager: ProjectManager = ProjectManager()
 
         self.__order_dict: dict[str, int] = {
             "ascending": 1,
@@ -208,7 +74,7 @@ class PesquisaProfiler(object):
         }
 
     def __fetch_profile_log(self) -> PesquisaProfile:
-        with open(self.__a_paths["logging_file"], "r") as log_file:
+        with open(self.__project_manager["logging_file"], "r") as log_file:
             reg_line: str = log_file.readline()
             time_measures: list[float] = list(map(float, log_file.readline().split(" ")))
             transparent_counter_line: str = log_file.readline()
@@ -223,17 +89,15 @@ class PesquisaProfiler(object):
     def __run_instance(self, method: int, qtt: int, situation: int, key: int) -> PesquisaProfile:
         """Runs a single instance (search handle session) of "pesquisa.exe", given the parameters.
         Unprotected in parameters."""
-        import subprocess
+        timeout: int = 10
 
-        process_args: list[str] = list(map(str, [self.__a_paths["searching_executable"], method, qtt, situation, key]))
-
-        process_result: subprocess.CompletedProcess
-        process_result = subprocess.run(
-            process_args, stdout=subprocess.PIPE, text=True, timeout=10, shell=False, cwd=self.__a_paths["base_dir"]
-        )
-
-        if process_result.returncode != 0:
-            raise RuntimeError(f"Exited with code {process_result.returncode}")
+        try:
+            self.__project_manager.run_process_in_context(
+                *map(str, [self.__project_manager["searching_executable"], method, qtt, situation, key]),
+                timeout=timeout
+            )
+        except RuntimeError as re:
+            raise RuntimeError("Error running instance", re)
 
         return self.__fetch_profile_log()
 
@@ -259,44 +123,17 @@ class PesquisaProfiler(object):
                 profiles.append(self.__run_instance(method_id, registries_qtt, ordering_id, key))
             except RuntimeError:
                 profiles.append(PesquisaProfile(SearchingRegistry(0, 0, "undef", "undef"),
-                                                TransparentCounter(* (IntTuple(0, 0) for _ in range(6))),
+                                                TransparentCounter(*(IntTuple(0, 0) for _ in range(6))),
                                                 0, 0
                                                 ))
 
         return profiles
 
-    def generate(self, *, registries_qtt: int = 100, file_order: str = "unordered") -> None:
-        import subprocess
-
-        if not isinstance(registries_qtt, int):
-            raise TypeError
-        elif registries_qtt <= 0:
-            raise ValueError
-
-        if not isinstance(file_order, str):
-            raise TypeError
-        elif file_order not in ["ascending", "ascending-gap", "descending",
-                                "descending-gap", "unordered", "unordered-gap"]:
-            raise ValueError
-
-        file_order_id: int = ["ascending", "ascending-gap", "descending",
-                              "descending-gap", "unordered", "unordered-gap"].index(file_order)
-
-        process_result: subprocess.CompletedProcess
-        process_result = subprocess.run(
-            [self.__a_paths["data_gen_executable"], str(file_order_id), str(registries_qtt),
-             self.__a_paths["input_datafile"]],
-            stdout=subprocess.PIPE, text=True, timeout=120, shell=False, cwd=self.__a_paths["base_dir"]
-        )
-
-        if process_result.returncode != 0:
-            raise RuntimeError
-
     def generate_and_sample_avg_from_methods(self, *, registries_qtt: int = 100, file_order: str = "unordered",
                                              samples: int) -> list[AvgSample]:
         from random import randint
 
-        self.generate(registries_qtt=registries_qtt, file_order=file_order)
+        self.__project_manager.generate_input(registries_qtt=registries_qtt, file_order=file_order)
 
         # Sampling
         methods_data: list[list[PesquisaProfile]] = list()
@@ -309,15 +146,40 @@ class PesquisaProfiler(object):
         avg_samples: list[AvgSample] = list()
         for i in range(4):
             avg_samples.append(
-                AvgSample.get(i,registries_qtt, [methods_data[j][i] for j in range(samples)])
+                AvgSample.get(i, registries_qtt, [methods_data[j][i] for j in range(samples)])
             )
         return avg_samples
+
+    def generate_and_sample_avg_b_bp(self, *, registries_qtt: int = 100, samples: int = 5) \
+            -> tuple[AvgSample, AvgSample]:
+        from random import randint
+
+        self.__project_manager.generate_input(registries_qtt=registries_qtt, file_order="unordered")
+
+        b_data: list[PesquisaProfile] = []
+        bp_data: list[PesquisaProfile] = []
+        for _ in range(samples):
+            key: int = randint(0, registries_qtt - 1)
+            b_data.append(self.__run_instance(method=2, qtt=registries_qtt, situation=3, key=key))
+            bp_data.append(self.__run_instance(method=3, qtt=registries_qtt, situation=3, key=key))
+
+        return AvgSample.get(2, registries_qtt, b_data), AvgSample.get(3, registries_qtt, bp_data)
+
+    def sample_avg_ebst(self, *, registries_qtt: int = 100, samples: int = 5) -> AvgSample:
+        from random import randint
+
+        ebst_data: list[PesquisaProfile] = []
+
+        for _ in range(samples):
+            key: int = randint(0, registries_qtt - 1)
+            ebst_data.append(self.__run_instance(method=1, qtt=registries_qtt, situation=1, key=key))
+        return AvgSample.get(1, registries_qtt, ebst_data)
 
 
 def sample_average_same_key_log_scale(file_order: str = "ascending", limit: int = 1_000, base: int = 10,
                                       samples: int = 5, filename: str = None) -> None:
     """Samples and stores the data from running an average of #samples of <pesquisa.exe> profiling, with the registries
-    data file ranging in number logarithmically from (base) to (base * floor{log_{base}{limit}} and the file_order,
+    data file ranging in number logarithmically from (base) to (base * floor{log_{base}{limit}}) and the file_order,
     for each searching method, into the passed filename."""
 
     import numpy as np
@@ -328,7 +190,7 @@ def sample_average_same_key_log_scale(file_order: str = "ascending", limit: int 
     if filename is None:
         filename = f"samples/all-avg{samples}-{file_order}-sk-log-{limit}.csv"
 
-    file: IO = open(filename, "w")
+    file: IO = open(filename, "a")
     AvgSample.write_file_header(file)
 
     profiler = PesquisaProfiler()
@@ -364,6 +226,118 @@ def sample_average_same_key_log_scale(file_order: str = "ascending", limit: int 
     file.close()
 
 
+def sample_average_lin_b_bp_tree(start: int = 100, gap: int = 100, bound: int = 10_000, samples: int = 5,
+                                 filename: str = None) -> None:
+    from time import time
+
+    if filename is None:
+        filename = f"samples/bb+-avg{samples}-lin-{bound}.csv"
+
+    file: IO = open(filename, "a")
+    AvgSample.write_file_header(file)
+
+    profiler = PesquisaProfiler()
+
+    # Measuring the sampling time...
+    last_time: float
+    current_time: float
+    last_time_measure: float | None
+    current_time_measure: float | None = None
+
+    for card in range(start, bound + 1, gap):
+        print(f"{filename}: #{card}. ", end='')
+
+        last_time = time()
+        avg_samples: tuple[AvgSample, AvgSample] = profiler.generate_and_sample_avg_b_bp(
+            registries_qtt=card,samples=samples
+        )
+        current_time = time()
+
+        last_time_measure = current_time_measure
+        current_time_measure = current_time - last_time
+
+        if last_time_measure is None:
+            last_time_measure = current_time_measure
+
+        time_incr_per: float = round(100 * (current_time_measure - last_time_measure) / last_time_measure, 2)
+        print(f"Sampling took {current_time_measure} [s] "
+              f"({'+' if time_incr_per > 0 else ''}{time_incr_per}%).")
+
+        for y in avg_samples:
+            y.write(file)
+
+    file.close()
+
+
+def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 1_000, samples: int = 5,
+                                 filename: str = None) -> None:
+    from time import time
+
+    if filename is None:
+        filename = f"samples/ebst_erbt+-avg{samples}-lin-{bound}.csv"
+
+    file: IO = open(filename, "a")
+    AvgSample.write_file_header(file)
+
+    profiler = PesquisaProfiler()
+    p_manager: ProjectManager = ProjectManager()
+
+    # Measuring the sampling time...
+    last_time: float
+    current_time: float
+    last_time_measure: float | None
+    current_time_measure: float | None = None
+
+    p_manager.rebuild("-D IMPL_ERBT_ONLY=false", debug_mode=None, transparent_mode=True)
+    print("EBST ---\n")
+    file.write("ebst\n")
+    for card in range(start, bound + 1, gap):
+        print(f"{filename}: #{card}. ", end='')
+
+        p_manager.generate_input(registries_qtt=card, file_order="ascending")
+
+        last_time = time()
+        avg_sample: AvgSample = profiler.sample_avg_ebst(registries_qtt=card, samples=samples)
+        current_time = time()
+
+        last_time_measure = current_time_measure
+        current_time_measure = current_time - last_time
+
+        if last_time_measure is None:
+            last_time_measure = current_time_measure
+
+        time_incr_per: float = round(100 * (current_time_measure - last_time_measure) / last_time_measure, 2)
+        print(f"Sampling took {current_time_measure} [s] "
+              f"({'+' if time_incr_per > 0 else ''}{time_incr_per}%).")
+
+        avg_sample.write(file)
+
+    p_manager.rebuild("-D IMPL_ERBT_ONLY=true", debug_mode=None, transparent_mode=True)
+    print("ERBT ---\n")
+    file.write("erbt\n")
+    for card in range(start, bound + 1, gap):
+        print(f"{filename}: #{card}. ", end='')
+
+        p_manager.generate_input(registries_qtt=card, file_order="ascending")
+
+        last_time = time()
+        avg_sample: AvgSample = profiler.sample_avg_ebst(registries_qtt=card, samples=samples)
+        current_time = time()
+
+        last_time_measure = current_time_measure
+        current_time_measure = current_time - last_time
+
+        if last_time_measure is None:
+            last_time_measure = current_time_measure
+
+        time_incr_per: float = round(100 * (current_time_measure - last_time_measure) / last_time_measure, 2)
+        print(f"Sampling took {current_time_measure} [s] "
+              f"({'+' if time_incr_per > 0 else ''}{time_incr_per}%).")
+
+        avg_sample.write(file)
+    file.close()
+
+
 def test_cstructure_parsing() -> None:
     print(
         SearchingRegistry.get_from_line("1 2 nothing nothing")
@@ -375,11 +349,14 @@ def test_cstructure_parsing() -> None:
 
 
 if __name__ == "__main__":
-    p_profiler = PesquisaProfiler()
-    p_profiler.generate(registries_qtt=100_000, file_order="ascending")
+    p_manager = ProjectManager()
+    p_manager.generate_input(registries_qtt=1_000_000, file_order="ascending")
+    exit(0)
 
-    exit(1)
     sample_average_same_key_log_scale(
         file_order="ascending", limit=10_000, base=10, samples=5
     )
 
+    #sample_average_lin_b_bp_tree()
+    exit(0)
+    sample_average_lin_ebst_erbt(start=100, gap=100, bound=1_000, samples=5)

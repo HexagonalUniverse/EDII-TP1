@@ -2,11 +2,11 @@
 
 	Holds the External Binary Search Tree (EBST for short) algorithms. 
 	Defines two different types of EBST's: a "pure", that can only be 
-	built on ordered conditions, and a ERBT (External Red Black Tree.) */
+	built on ordered conditions, and the ERBT (External Red Black Tree.) */
 
 
-#ifndef _E_BINARY_SEARCH_TREE_EBST_HEADER_
-#define _E_BINARY_SEARCH_TREE_EBST_HEADER_
+#ifndef _ES_EBST_HEADER_
+#define _ES_EBST_HEADER_
 
 
 #include "searching.h"
@@ -37,4 +37,4 @@ bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, Frame * _Fram
 bool EBST_MRT_Build(REG_STREAM *, EBST_STREAM *, Frame *,bool ascending, uint64_t _RegistriesQtt);
 bool EBST_Search(EBST_STREAM * _Stream, REG_STREAM * _InputStream, const key_t _Key, registry_t * _Target);
 
-#endif // _E_BINARY_SEARCH_TREE_EBST_HEADER_
+#endif // _ES_EBST_HEADER_

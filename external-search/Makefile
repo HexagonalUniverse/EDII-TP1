@@ -45,27 +45,31 @@ target_lib				:= $(dir_lib)$(target_libname)
 # Building		make build <FLAGS>
 # ================================
 
+# Toggling Directives
+DEBUG			?= 0
+TRANSPARENT		?= 0
+
+# Compiling options*
+OPTIONAL_COMPILE_DIRECTIVES	?= 
+__OPTIONAL_COMPILE_DIRECTIVES	:=
+
 EXE_COMPILE_DIRECTIVES		:= -Wall -Wextra -O3 -I"$(dir_hdr)" -L"$(dir_lib)" -l:"$(target_libname)"
 OBJ_COMPILE_DIRECTIVES		:= -Wall -Wextra -O3 -I"$(dir_hdr)"
 
 __transparent_directive		:= -D TRANSPARENT_COUNTER=true
-OPTIONAL_COMPILE_DIRECTIVES	:= 
 
-# Directives
-DEBUG			?= 0
-TRANSPARENT		?= 0
 
 
 ifeq ($(DEBUG),1)
-	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true
+	__OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true
 else ifeq ($(DEBUG),2)
-	OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true -D STDERR_DEBUG_LOGGING=true
+	__OPTIONAL_COMPILE_DIRECTIVES += -D IMPL_LOGGING=true -D STDERR_DEBUG_LOGGING=true
 endif
 
 
 # (Aesthetic) __build_msg...
 ifeq ($(TRANSPARENT),1)
-	OPTIONAL_COMPILE_DIRECTIVES += $(__transparent_directive)
+	__OPTIONAL_COMPILE_DIRECTIVES += $(__transparent_directive)
 	
 	ifdef __build_msg
 		__build_msg += e transparente
@@ -81,6 +85,8 @@ ifneq ($(DEBUG),0)
 	endif
 endif
 __build_msg ?= normal
+
+__OPTIONAL_COMPILE_DIRECTIVES += $(OPTIONAL_COMPILE_DIRECTIVES) 
 
 
 # Building the path...
@@ -103,7 +109,7 @@ build: $(target_executables) __build_data_gen
 # Compiling the drivers.
 $(dir_exe)%.exe: $(dir_drivers)%.c $(target_lib)
 	@$(MAKEDIR)
-	@gcc -o $@ $< $(OPTIONAL_COMPILE_DIRECTIVES) $(EXE_COMPILE_DIRECTIVES)
+	@gcc -o $@ $< $(__OPTIONAL_COMPILE_DIRECTIVES) $(EXE_COMPILE_DIRECTIVES)
 	@echo ES-LIB: Assembling $<.
 
 # Joining in the library.
@@ -115,7 +121,7 @@ $(target_lib): $(object_files)
 # Assembling each object file.
 $(dir_obj)%.o: $(dir_src)%.c $(header_files)
 	@$(MAKEDIR)
-	@gcc -c $(OPTIONAL_COMPILE_DIRECTIVES) $< -o $@ $(OBJ_COMPILE_DIRECTIVES)
+	@gcc -c $(__OPTIONAL_COMPILE_DIRECTIVES) $< -o $@ $(OBJ_COMPILE_DIRECTIVES)
 	@echo ES-LIB: Compiled $@.
 
 
