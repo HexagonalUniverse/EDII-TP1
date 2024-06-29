@@ -89,7 +89,7 @@ class PesquisaProfiler(object):
     def __run_instance(self, method: int, qtt: int, situation: int, key: int) -> PesquisaProfile:
         """Runs a single instance (search handle session) of "pesquisa.exe", given the parameters.
         Unprotected in parameters."""
-        timeout: int = 10
+        timeout: int = 200
 
         try:
             self.__project_manager.run_process_in_context(
@@ -276,7 +276,7 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     if filename is None:
         filename = f"samples/ebst_erbt+-avg{samples}-lin-{bound}.csv"
 
-    file: IO = open(filename, "a")
+    file: IO = open(filename, "r+")
     AvgSample.write_file_header(file)
 
     profiler = PesquisaProfiler()
@@ -291,9 +291,10 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     p_manager.rebuild("-D IMPL_ERBT_ONLY=false", debug_mode=None, transparent_mode=True)
     print("EBST ---\n")
     file.write("ebst\n")
+
     for card in range(start, bound + 1, gap):
         print(f"{filename}: #{card}. ", end='')
-
+        break
         p_manager.generate_input(registries_qtt=card, file_order="ascending")
 
         last_time = time()
@@ -315,9 +316,9 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     p_manager.rebuild("-D IMPL_ERBT_ONLY=true", debug_mode=None, transparent_mode=True)
     print("ERBT ---\n")
     file.write("erbt\n")
-    for card in range(start, bound + 1, gap):
+    # for card in range(start, bound + 1, gap):
+    for card in range(35000, bound + 1, 5_000):
         print(f"{filename}: #{card}. ", end='')
-
         p_manager.generate_input(registries_qtt=card, file_order="ascending")
 
         last_time = time()
@@ -348,15 +349,25 @@ def test_cstructure_parsing() -> None:
     )
 
 
-if __name__ == "__main__":
-    p_manager = ProjectManager()
-    p_manager.generate_input(registries_qtt=1_000_000, file_order="ascending")
-    exit(0)
-
+def __official_sampling_1() -> None:
     sample_average_same_key_log_scale(
-        file_order="ascending", limit=10_000, base=10, samples=5
+        file_order="ascending", limit=1_000_000, base=10, samples=5
     )
 
-    #sample_average_lin_b_bp_tree()
-    exit(0)
-    sample_average_lin_ebst_erbt(start=100, gap=100, bound=1_000, samples=5)
+
+def __official_sampling_2() -> None:
+    sample_average_lin_ebst_erbt(
+        start=1_000, gap=1_000, bound=100_000, samples=5
+    )
+
+
+def __official_sampling_3() -> None:
+    sample_average_lin_b_bp_tree(
+        start=1_000, gap=1_000, bound=100_000, samples=5
+    )
+
+
+if __name__ == "__main__":
+    # __official_sampling_1()
+    __official_sampling_2()
+    # __official_sampling_3()

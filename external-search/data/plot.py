@@ -124,4 +124,4 @@ class ProjectPlotter(object):
 
 if __name__ == "__main__":
     p_plotter = ProjectPlotter()
-    p_plotter.plot_avg_methods("samples/all-avg5-ascending-sk-log-10000.csv")
+    p_plotter.plot_avg_methods("samples/all-avg5-ascending-sk-log-1000000.csv")

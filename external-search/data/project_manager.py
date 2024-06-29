@@ -101,7 +101,7 @@ class ProjectManager(object):
             )
         ]
 
-        timeout: int = 2    # seconds
+        timeout: int = 10    # seconds
         return self.run_process_in_context("make", "rebuild", * makefile_directives, timeout=timeout)
 
 
