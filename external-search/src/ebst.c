@@ -1043,21 +1043,16 @@ static bool mrtStackPop(MRT_Stack * _Stack, struct mrt_stack_item * _ReturnItem)
 
 bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, Frame * _Frame, bool ascending, uint64_t _RegistriesQtt)
 {
-    // * for instance.
-    if (! ascending)
-        return false;
-
     // The pointers in the subfile division of the input-stream.
     long long left = 0, right = ((long long) _RegistriesQtt) - 1, middle = 0;
 
-    // * stack initialization
-    struct mrt_stack_item split_buffer = { left, right };
+    // Stack initialization
 
+    struct mrt_stack_item split_buffer = { left, right };
     MRT_Stack split_stack = { 0 };
     mrtStackPush(& split_stack, & split_buffer);
 
     ebst_node buffer_node = { 0 };
-
     uint32_t iterator = 0;
     uint32_t page_pointer = 0;
     
@@ -1065,7 +1060,7 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, Fram
     {
         left = split_buffer.left; right = split_buffer.right;
         middle = midpoint(left, right);
-
+        
         buffer_node.left = EBST_NULL_INDEX;
         buffer_node.right = EBST_NULL_INDEX;
 
@@ -1073,8 +1068,9 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, Fram
         {
             split_buffer.right = middle - 1;
             mrtStackPush(&split_stack, & split_buffer);
-
-            buffer_node.left = iterator + 1 + rightSubfileSize(left, right);
+            
+            if (ascending)  buffer_node.left    = iterator + 1 + rightSubfileSize(left, right);
+            else            buffer_node.right   = iterator + 1 + rightSubfileSize(left, right);
         }
 
         if ((middle + 1) <= right)
@@ -1084,17 +1080,14 @@ bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, Fram
 
             mrtStackPush(& split_stack, & split_buffer);
 
-            buffer_node.right = iterator + 1;
+            if (ascending)  buffer_node.right   = iterator + 1;
+            else            buffer_node.left    = iterator + 1;
         }
-
-        // seekReadRegistry(middle, & buffer_node.root_item)
         
         frame_retrieve_index(_InputStream, _Frame, middle / REGPAGE_ITENS, & page_pointer);
 
         buffer_node.reg_ptr.original_pos = middle;
         buffer_node.reg_ptr.key = ((regpage_t *) _Frame->pages)[page_pointer].reg[middle % REGPAGE_ITENS].key;
-
-        // DebugPrintR("buffer-node: (%d, %d) <pos:%d, key:%d>\n", buffer_node.left, buffer_node.right, buffer_node.reg_ptr.original_pos, buffer_node.reg_ptr.key);
 
         write_ebstnode(_OutputStream, iterator, & buffer_node);
 
