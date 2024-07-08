@@ -8,7 +8,7 @@
 #define TRANSPARENT_COUNTER_H
 
 
-#include <stdbool.h.>
+#include <stdbool.h>
 
 
 #if ! defined(TRANSPARENT_COUNTER)

@@ -119,25 +119,25 @@ bool BSTree_SplitChild(bstar_node * x, const size_t _Index, BStar_Builder * _bs_
     bstar_node z = { 0 };
     z.is_leaf = y.is_leaf;
 
-    z.item_count = BTREE_MINIMUM_DEGREE_m1;
+    z.item_count = BSTREE_MINIMUM_DEGREE_m1;
 
     if (z.is_leaf)
     {
         z.item_count ++;
-        for (size_t j = 0; j < BTREE_MINIMUM_DEGREE; j ++)
-            z.leaf.reg_ptr[j] = y.leaf.reg_ptr[j + BTREE_MINIMUM_DEGREE_m1];
+        for (size_t j = 0; j < BSTREE_MINIMUM_DEGREE; j ++)
+            z.leaf.reg_ptr[j] = y.leaf.reg_ptr[j + BSTREE_MINIMUM_DEGREE_m1];
     }
     else
     // Inner node case 
     {
-        for (size_t j = 0; j < BTREE_MINIMUM_DEGREE_m1; j ++)
-            z.inner.keys[j] = y.inner.keys[j + BTREE_MINIMUM_DEGREE];
+        for (size_t j = 0; j < BSTREE_MINIMUM_DEGREE_m1; j ++)
+            z.inner.keys[j] = y.inner.keys[j + BSTREE_MINIMUM_DEGREE];
 
-        for (size_t j = 0; j < BTREE_MINIMUM_DEGREE; j ++)
-            z.inner.children_ptr[j] = y.inner.children_ptr[j + BTREE_MINIMUM_DEGREE];
+        for (size_t j = 0; j < BSTREE_MINIMUM_DEGREE; j ++)
+            z.inner.children_ptr[j] = y.inner.children_ptr[j + BSTREE_MINIMUM_DEGREE];
     }
 
-    y.item_count = BTREE_MINIMUM_DEGREE - 1;
+    y.item_count = BSTREE_MINIMUM_DEGREE - 1;
     
     // Invariant: that will always be the case x being an inner-node...
     
@@ -155,9 +155,9 @@ bool BSTree_SplitChild(bstar_node * x, const size_t _Index, BStar_Builder * _bs_
     x -> inner.children_ptr[_Index + 1] = _bs_builder -> nodes_qtt;
     
     if (z.is_leaf)
-        x -> inner.keys[_Index] = y.leaf.reg_ptr[BTREE_MINIMUM_DEGREE - 1].key;
+        x -> inner.keys[_Index] = y.leaf.reg_ptr[BSTREE_MINIMUM_DEGREE - 1].key;
     else
-        x -> inner.keys[_Index] = y.inner.keys[BTREE_MINIMUM_DEGREE - 1];
+        x -> inner.keys[_Index] = y.inner.keys[BSTREE_MINIMUM_DEGREE - 1];
     
 
     // By effect, x have gained a child.
@@ -265,7 +265,7 @@ BSTree_insertNonFull(bstar_node * x, const size_t _XIndex, const registry_pointe
         i ++;
         
         frame_retrieve_page(_bs_builder -> file_stream, & _bs_builder -> frame, x -> inner.children_ptr[i], & c);
-        if (c.item_count == (2 * BTREE_MINIMUM_DEGREE - 1)) {
+        if (c.item_count == (2 * BSTREE_MINIMUM_DEGREE - 1)) {
             BSTree_SplitChild(x, i, _bs_builder);
             frame_update_page(_bs_builder -> file_stream, & _bs_builder -> frame, _XIndex, x);
 
@@ -299,7 +299,7 @@ BSTree_insert(const registry_pointer * _Reg, BStar_Builder * _bs_builder)
 #endif
 
     /*  TODO */
-    if (_bs_builder -> root.item_count == (2 * BTREE_MINIMUM_DEGREE - 1)) {
+    if (_bs_builder -> root.item_count == (2 * BSTREE_MINIMUM_DEGREE - 1)) {
         BSTree_SplitRoot(_bs_builder);
     }
 
@@ -324,7 +324,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
     bs_builder.root.is_leaf = true;
     bs_builder.nodes_qtt = 1;
 
-    if (! frame_make(& bs_builder.frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE))
+    if (! frame_make(& bs_builder.frame, BSTAR_PAGE))
     {
 #if IMPL_LOGGING
         DebugPrintf("bs:err1\n", NULL);
@@ -383,7 +383,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
 
 
 /*  Sopa de macaco. */
-bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStream, frame_t * _Frame, registry_t * target)
+bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStream, Frame * _Frame, registry_t * target)
 {
     // Tracks the tree node we're at. Initialized to the root.
     bstar_node node_buffer = { 0 };

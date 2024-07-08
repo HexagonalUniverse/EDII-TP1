@@ -11,7 +11,8 @@
 #include <stdbool.h>	/*	The boolean type is globally used. */
 #include <inttypes.h>	/*	For size-specified integer types. */
 
-// TODO: Move.
+/*	Every further part of the system import consequentially the 
+	logging system and the occasional transparent counter.*/
 #include "log.h"
 #include "transparent-counter.h"
 
@@ -24,10 +25,15 @@
 // Let "finline void func(...) { ... }" on its definition.
 #define finline					__attribute__((always_inline)) inline
 
-/* 	Returns whether a number x in between two numbers: a and b.
-	Note that b >= a in order to a valid verification be done;
-	otherwise the result will always be false. */
-#define in_range(a, b, x)       (((b) >= x) && (x >= (a)))
+/* 	Returns whether a number x in between a and b.
+	Note that b >= a in order to a valid verification to be done.
+	Unsafe in side-effects for x. */
+#define in_range(a, b, x)		(((b) >= (x)) && ((x) >= (a)))
+
+	/*	Returns whether a number x is NOT between a and b.
+		Note that b >= a in order to a valid verification to be done.
+		Unsafe in side-effects for x. */
+#define nin_range(a, b, x)		(((b) < (x)) || ((x) < (a)))
 
 /*	Returns the ceil of the division between x and y,
 	where x and y are either of integer or natural type.

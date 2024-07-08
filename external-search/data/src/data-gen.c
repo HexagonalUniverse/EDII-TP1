@@ -1,9 +1,17 @@
+/*  <data/src/data-gen.c>
+    
+    (...) */  
+
+#define _FILE_OFFSET_BITS   64
+#define _LARGEFILE_SOURCE  
+#define _LARGEFILE64_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
 #include <time.h>
 #include "../src/registry.h"
+
 
 #define MIN_ARGS 3
 #define MAX_FILE_NAME 31
@@ -21,13 +29,15 @@ typedef enum{
 }GenMode;
 
 
+#define large_fseek(_Stream, _Offset, _Origin)  fseeko64(_Stream, _Offset, _Origin)
+
 static inline bool readRegistry(FILE* _file, uint64_t _pos, registry_t* _returnRegistry){
-    fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
+    large_fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
     return fread(_returnRegistry, sizeof(registry_t), 1, _file) > 0;
 }
 
 static inline bool writeRegistry(FILE* _file, uint64_t _pos, registry_t* _Registry){
-    fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
+    large_fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
     return fwrite(_Registry, sizeof(registry_t), 1, _file) > 0;
 }
 
@@ -184,9 +194,9 @@ interpretArguments(int argsc, char** argsv, GenMode* _returnGenMode, uint64_t* _
         printf("\n\tGenModes:\n\t[0] ORDERED_ASCENDING\n\t[1] ORDERED_ASCENDING_GAP\n\t[2] ORDERED_DESCENDING\n\t[3] ORDERED_DESCENDING_GAP\n\t[4] DISORDERED\n\t[5] DISORDERED_GAP\n\n");
         return false;
     }
-
+    
     *_returnGenMode = atoi(argsv[1]);
-    *_returnNoRegistries = atoi(argsv[2]);
+    *_returnNoRegistries = atoll(argsv[2]);
     if(argsc > MIN_ARGS){
         strcpy(_returnFileName, argsv[3]);
     }else{

@@ -15,7 +15,7 @@
 
 
 static void
-__print_frame_indexes(const frame_t * _Frame)
+__print_frame_indexes(const Frame * _Frame)
 {
     /*
     DebugPrintf("Frame size: %u, first: %u, last: %u\n", 
@@ -82,23 +82,47 @@ __print_frame_indexes(const frame_t * _Frame)
 #endif
 
 
+/*  Hashes the page's type size. */
+static inline size_t __page_size(page_type _Type)
+{
+    switch (_Type)
+    {
+    case B_PAGE:        return sizeof(b_node);
+    case BSTAR_PAGE:    return sizeof(bstar_node);
+    case REG_PAGE:      return sizeof(regpage_t);
+    case EBST_PAGE:     return sizeof(ebst_node);
+    case ERBT_PAGE:     return sizeof(erbt_node);
+    }
+    return (size_t) (-1);
+}
+
+#define __frame_max_size(_PageSize)    (FRAME_BUFFER_SIZE / _PageSize)
+
+
 inline bool
-frame_make(frame_t * _Frame, const size_t _FrameSize, const size_t _PageSize, page_type _Type) {
-    frame_t frame = {
-        .page_size =_PageSize,
-        .type =     _Type,
-        .first =    FRAME_NULL_INDEX,
-        .last =     FRAME_NULL_INDEX,
-        .size =     0,
-        .pages =    0,
-        .max_size = _FrameSize
+frame_make(Frame * const _Frame, page_type _Type) {
+    if (nin_range(0, 4, _Type))
+        return false;
+    
+    Frame frame = {
+        .page_size =    __page_size(_Type),
+        .type =         _Type,
+        .first =        FRAME_NULL_INDEX,
+        .last =         FRAME_NULL_INDEX,
+        .size =         0,
+        .pages =        0,
+        .max_size =     0,
     };
+    frame.max_size = __frame_max_size(frame.page_size);
+
+    printf("<HD> frame max-size: %u\n", (unsigned int) frame.max_size);
+
     * _Frame = frame;
-    _Frame ->  pages = calloc(_FrameSize, _PageSize);
+    _Frame ->  pages = calloc(frame.max_size, frame.page_size);
     if (_Frame -> pages == NULL)
         return false;
 
-    _Frame -> indexes = (uint32_t *) calloc(_FrameSize, sizeof(uint32_t));
+    _Frame -> indexes = (uint32_t *) calloc(frame.max_size, sizeof(uint32_t));
     if (_Frame -> indexes == NULL) {
         free(_Frame -> pages);
         return false;
@@ -108,7 +132,7 @@ frame_make(frame_t * _Frame, const size_t _FrameSize, const size_t _PageSize, pa
 }
 
 inline void 
-frame_free(frame_t * _Frame)
+frame_free(Frame * _Frame)
 {
     if (_Frame -> indexes != NULL)
         free(_Frame -> indexes);
@@ -118,7 +142,7 @@ frame_free(frame_t * _Frame)
 }
 
 inline bool
-frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t * _ReturnFrameIndex)
+frame_search_index(const Frame * _Frame, const uint32_t _PageIndex, uint32_t * _ReturnFrameIndex)
 {
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintR("searching for page index: %u\n", (unsigned int) _PageIndex);
@@ -148,7 +172,7 @@ frame_search_index(const frame_t * _Frame, const uint32_t _PageIndex, uint32_t *
     return false;
 }
 
-bool frame_remove(frame_t * _Frame) {
+bool frame_remove(Frame * _Frame) {
     if (isFrameEmpty(_Frame))
         return false;
 
@@ -171,7 +195,7 @@ bool frame_remove(frame_t * _Frame) {
 }
 
 static finline bool
-_frame_last_read_page(uint32_t _PageIndex, frame_t * _Frame, FILE * _Stream) {
+_frame_last_read_page(uint32_t _PageIndex, Frame * _Frame, FILE * _Stream) {
     switch (_Frame -> type) {
     case REG_PAGE:
         return read_regpage((REG_STREAM *) _Stream, _PageIndex, & ((regpage_t *) _Frame -> pages)[_Frame -> last]) > 0;
@@ -190,7 +214,7 @@ _frame_last_read_page(uint32_t _PageIndex, frame_t * _Frame, FILE * _Stream) {
 }
 
 static finline void *
-_frame_page_ptr(frame_t * _Frame, uint32_t _FrameIndex)
+_frame_page_ptr(Frame * _Frame, uint32_t _FrameIndex)
 {
     switch (_Frame -> type) {
     case REG_PAGE:
@@ -210,7 +234,7 @@ _frame_page_ptr(frame_t * _Frame, uint32_t _FrameIndex)
     return NULL;
 }
 
-bool frame_add(uint32_t _PageIndex, frame_t * _Frame, FILE * _Stream)
+bool frame_add(uint32_t _PageIndex, Frame * _Frame, FILE * _Stream)
 {
     // In case the frame is full, the last page in it is removed.
     if (isFrameFull(_Frame)) {
@@ -244,7 +268,7 @@ bool frame_add(uint32_t _PageIndex, frame_t * _Frame, FILE * _Stream)
 }
 
 static bool 
-frame_add_directly(uint32_t _PageIndex, const void * _WritePage, frame_t * _Frame)
+frame_add_directly(uint32_t _PageIndex, const void * _WritePage, Frame * _Frame)
 {
     // In case the frame is full, the last page in it is removed.
     if (isFrameFull(_Frame)) {
@@ -280,7 +304,7 @@ frame_add_directly(uint32_t _PageIndex, const void * _WritePage, frame_t * _Fram
 
 */
 static inline bool
-_frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
+_frame_refresh(Frame * _Frame, uint32_t _FrameIndex)
 {
     #if IMPL_LOGGING && DEBUG_FRAME_REFRESH
         DebugPrintf("frame-index: %u, frame-type: %u, frame-size: %u.\n", 
@@ -330,7 +354,7 @@ _frame_refresh(frame_t * _Frame, uint32_t _FrameIndex)
     return true;
 }
 
-bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, void * _ReturnPage) {
+bool frame_retrieve_page(FILE * _Stream, Frame * _Frame, uint32_t _PageIndex, void * _ReturnPage) {
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintf("index: %u\n", (unsigned int) _PageIndex);
     #endif
@@ -370,7 +394,7 @@ bool frame_retrieve_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, 
     return true;
 }
 
-inline bool frame_retrieve_index(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, uint32_t * _ReturnIndex) {
+inline bool frame_retrieve_index(FILE * _Stream, Frame * _Frame, uint32_t _PageIndex, uint32_t * _ReturnIndex) {
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintf("page index: %u\n", (unsigned int) _PageIndex);
     #endif
@@ -432,7 +456,7 @@ _universal_write_page(FILE * _Stream, uint32_t _PageIndex, const void * _WriteNo
 }
 
 /*  */
-inline bool frame_update_page(FILE * _Stream, frame_t * _Frame, uint32_t _PageIndex, const void * _WritePage)
+inline bool frame_update_page(FILE * _Stream, Frame * _Frame, uint32_t _PageIndex, const void * _WritePage)
 {
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintR("index: %u\n", (unsigned int) _PageIndex);
@@ -516,7 +540,7 @@ PrintBNode(const b_node * _Node)
     printf("]\n");
 }
 
-void show_regpage_frame(const frame_t * _Frame) { // show the Frame pages
+void show_regpage_frame(const Frame * _Frame) { // show the Frame pages
     if (isFrameEmpty(_Frame)) {
         return;
     }
@@ -531,7 +555,7 @@ void show_regpage_frame(const frame_t * _Frame) { // show the Frame pages
 
         putchar('\n');
 
-        for (int j = 0; j < ITENS_PER_PAGE; j++) {
+        for (unsigned int j = 0; j < REGPAGE_ITENS; j++) {
             printf("Reg %d\n", ((regpage_t *) _Frame->pages)[i].reg[j].key);
         }
         printf("\n");
@@ -540,7 +564,7 @@ void show_regpage_frame(const frame_t * _Frame) { // show the Frame pages
 }
 
 /*  */
-void show_bnode_frame(const frame_t * _Frame) {
+void show_bnode_frame(const Frame * _Frame) {
     if (isFrameEmpty(_Frame))
         return;
 

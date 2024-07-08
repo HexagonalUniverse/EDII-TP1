@@ -73,7 +73,7 @@ __btree_build(int argc, char ** argsv, FILE * _OutputStream) {
     b_builder.root.is_leaf = true;
     b_builder.nodes_qtt = 1;
 
-    if (! frame_make(& b_builder.frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE))
+    if (! frame_make(& b_builder.frame, B_PAGE))
         return false;
 
     bool insert_failure = false;

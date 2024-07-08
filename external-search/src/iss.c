@@ -39,7 +39,7 @@ bool deallocateIndexTable(IndexTable * _Table)
 bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * _Stream)
 {
 	// How many entries will there be on the index table.
-    const uint32_t length = ceil_div(quantity, ITENS_PER_PAGE);
+    const uint32_t length = ceil_div(quantity, REGPAGE_ITENS);
 	
 	if (! allocateIndexTable(_ReturnTable, length))
 		return false;
@@ -63,7 +63,7 @@ bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * 
 /*	*/
 static inline bool 
 _regpage_binarySearch(regpage_t * _regPageArray, key_t key, uint32_t * _ReturnIndex, bool is_ascending) {
-    long beg = 0, end = ITENS_PER_PAGE - 1;
+    long beg = 0, end = REGPAGE_ITENS - 1;
 	long position;
 		
 	if (is_ascending) {
@@ -112,7 +112,7 @@ printIndexTable(IndexTable * _Table){
 
 /*  */
 bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, 
-    IndexTable * _Table, frame_t * _Frame, search_result * _Sr, bool is_ascending)
+    IndexTable * _Table, Frame * _Frame, search_result * _Sr, bool is_ascending)
 {
 	#if IMPL_LOGGING
 		printIndexTable(_Table);

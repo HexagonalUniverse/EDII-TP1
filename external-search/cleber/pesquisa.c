@@ -8,6 +8,15 @@
 #include <string.h>     // for strcmp
 
 
+#if ! defined(IMPL_ERBT_ONLY)
+    /*  A compilation directive that will tell whether or not the 
+        ERBT will be used over the EBST by MRT in the implementation. 
+        In other words, if true, ERBT will be the searching handle 
+        inconditionally for the binary-tree call. */
+    #define IMPL_ERBT_ONLY  false
+#endif // ! defined(IMPL_ERBT_ONLY)
+
+
 /*  Profiling and output
     ==================== */
 
@@ -141,8 +150,8 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
     if (output_stream == NULL)
         return _SE_EBST_FILE;
 
-    frame_t frame = { 0 };
-    if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(erbt_node), ERBT_PAGE))
+    Frame frame = { 0 };
+    if (! frame_make(&frame, ERBT_PAGE))
         return _SE_MAKEFRAME;
 
     {   // Searching for the key.
@@ -158,6 +167,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
 
+#if ! IMPL_ERBT_ONLY
 /*  Handles the EBST (by MRT) searching. */
 static SEARCH_RESPONSE
 __EBST(const struct application_parameters * parameters, search_result * result, REG_STREAM * input_stream, const char * _EBSTFilename)
@@ -166,7 +176,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
     struct timeval start_time, end_time;
 
     EBST_STREAM * output_stream = NULL;     // File over which the EBST will be constructed at.
-    frame_t frame = { 0 };                  // Registries frame used in the MRT build.
+    Frame frame = { 0 };                  // Registries frame used in the MRT build.
 
     {   // Initialization.
 
@@ -174,7 +184,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
         if (output_stream == NULL)
             return _SE_EBST_FILE;
 
-        if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
+        if (! frame_make(&frame, REG_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
@@ -216,6 +226,7 @@ __EBST(const struct application_parameters * parameters, search_result * result,
     fclose(output_stream);
     return result -> success ? SEARCH_SUCCESS : SEARCH_FAILURE;
 }
+#endif // ! IMPL_ERBT_ONLY
 
 /*  Handles the B tree searching. */
 static SEARCH_RESPONSE
@@ -253,8 +264,8 @@ __BTREE(const struct application_parameters * parameters, search_result * result
         /*  The frame for search. As there will only be requested one
         search operation, the role of the frame is not fundamentally
         important and its advantage is not used. */
-        frame_t frame = { 0 };
-        if (!  frame_make(&frame, PAGES_PER_FRAME, sizeof(b_node), B_PAGE)) {
+        Frame frame = { 0 };
+        if (!  frame_make(&frame, B_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
@@ -306,8 +317,8 @@ __BSTAR(const struct application_parameters * parameters, search_result * result
         /*  The frame for search. As there will only be requested one 
             search operation, the role of the frame is not fundamentally
             important and its advantage is not used. */
-        frame_t frame = { 0 }; 
-        if (!  frame_make(&frame, PAGES_PER_FRAME, sizeof(bstar_node), BSTAR_PAGE)) {
+        Frame frame = { 0 }; 
+        if (!  frame_make(&frame, BSTAR_PAGE)) {
             fclose(output_stream);
             return _SE_MAKEFRAME;
         }
@@ -346,8 +357,8 @@ __ISS(const struct application_parameters * parameters, search_result * result, 
         result -> measures.construction_time = time_diff_sec(start_time, end_time);
     }
 
-    frame_t frame = { 0 }; 
-    if (! frame_make(&frame, PAGES_PER_FRAME, sizeof(regpage_t), REG_PAGE)) {
+    Frame frame = { 0 }; 
+    if (! frame_make(&frame, REG_PAGE)) {
         deallocateIndexTable(&index_table);
         return _SE_MAKEFRAME;
     }
@@ -386,6 +397,8 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         break;
 
     case EXTERNAL_BINARY_SEARCH:
+        #if ! IMPL_ERBT_ONLY
+
         /*  For EBS, the decision between a ebst (by mrt) 
             and erbt is hereby made. */
         switch (parameters -> situation) {
@@ -395,7 +408,14 @@ _RedirectSearch(const struct application_parameters * parameters, search_result 
         
         default:    // As such, reduced algorithmic complexity is taken in advantage in the ordered case.
             search_response = __EBST(parameters, result, input_stream, OUTPUT_EBST_FILENAME);
-        } break;
+        } 
+        
+        #else // IMPL_ERBT_ONLY
+        
+        search_response = __ERBT(parameters, result, input_stream, OUTPUT_ERBT_FILENAME);
+        
+        #endif // IMPL_ERBT_ONLY #if sequence.
+        break;
 
     case BTREE_SEARCH:
         search_response = __BTREE(parameters, result, input_stream, OUTPUT_BTREE_FILENAME);
@@ -523,6 +543,8 @@ int main(int argc, char ** argsv)
             printf("Failed initializing the logging system.\n");
             return -3;
         }
+
+
     #endif // IMPL_LOGGING
 
     /*  Parsing program parameters. */
