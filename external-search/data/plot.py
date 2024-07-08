@@ -121,7 +121,55 @@ class ProjectPlotter(object):
         plt.show()
         return None
 
+    def plot_erbt_ebst(self, r_filename: str) -> None:
+
+        # Parsing the data
+        # ----------------
+
+        method: int
+        samples: int
+        card: int
+        transparent: list[int]
+        c_time: float
+        s_time: float
+
+        data_file: IO = open(r_filename, "r")
+        data_file.readline()
+        data_file.readline()
+
+        ebst_data: list = []
+        for line in data_file:
+            if line == "erbt\n":
+                break
+            line_values: list[str] = line.split(",")
+            method, samples, card, * transparent = map(int, line_values[:-2])
+            c_time, s_time = map(float, line_values[-2:])
+            ebst_data.append([card, transparent, c_time, s_time])
+
+        erbt_data: list = []
+        for line in data_file:
+            line_values: list[str] = line.split(",")
+            method, samples, card, * transparent = map(int, line_values[:-2])
+            c_time, s_time = map(float, line_values[-2:])
+            erbt_data.append([card, transparent, c_time, s_time])
+        data_file.close()
+
+        # Filtering...
+        ebst_data = list(filter(lambda x: 30_000 <= x[0] < 100_000, ebst_data))
+        erbt_data = list(filter(lambda x: 30_000 <= x[0] < 100_000, erbt_data))
+
+        # Plotting the values
+        # -------------------
+
+        entries_dimension_ebst: list[int] = [__list[0] for __list in ebst_data]
+        entries_dimension_erbt: list[int] = [__list[0] for __list in erbt_data]
+        plt.plot(entries_dimension_ebst, [1000 * __list[-2] for __list in ebst_data])
+        plt.plot(entries_dimension_erbt, [__list[-2] for __list in erbt_data])
+
+        plt.show()
+
 
 if __name__ == "__main__":
     p_plotter = ProjectPlotter()
-    p_plotter.plot_avg_methods("samples/all-avg5-ascending-sk-log-1000000.csv")
+    # p_plotter.plot_avg_methods("samples/all-avg5-ascending-sk-log-1000000.csv")
+    p_plotter.plot_erbt_ebst("samples/ebst_erbt-avg5-lin-100000.csv")

@@ -274,7 +274,7 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     from time import time
 
     if filename is None:
-        filename = f"samples/ebst_erbt+-avg{samples}-lin-{bound}.csv"
+        filename = f"samples/ebst_erbt-avg{samples}-lin-{bound}.csv"
 
     file: IO = open(filename, "r+")
     AvgSample.write_file_header(file)
@@ -294,7 +294,6 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
 
     for card in range(start, bound + 1, gap):
         print(f"{filename}: #{card}. ", end='')
-        break
         p_manager.generate_input(registries_qtt=card, file_order="ascending")
 
         last_time = time()
@@ -316,8 +315,7 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     p_manager.rebuild("-D IMPL_ERBT_ONLY=true", debug_mode=None, transparent_mode=True)
     print("ERBT ---\n")
     file.write("erbt\n")
-    # for card in range(start, bound + 1, gap):
-    for card in range(35000, bound + 1, 5_000):
+    for card in range(start, bound + 1, gap):
         print(f"{filename}: #{card}. ", end='')
         p_manager.generate_input(registries_qtt=card, file_order="ascending")
 
@@ -357,7 +355,7 @@ def __official_sampling_1() -> None:
 
 def __official_sampling_2() -> None:
     sample_average_lin_ebst_erbt(
-        start=1_000, gap=1_000, bound=100_000, samples=5
+        start=1_000, gap=1_000, bound=1_000_000, samples=5
     )
 
 
