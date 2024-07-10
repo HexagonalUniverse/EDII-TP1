@@ -11,7 +11,7 @@
 
 dir_drivers		:= cleber/
 dir_src			:= src/
-dir_hdr			:= $(dir_src)
+dir_hdr			:= $(dir_src)/include/
 dir_bin			:= bin/
 dir_lib			:= $(dir_bin)
 dir_obj			:= $(dir_bin)obj/

@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../src/registry.h"
-#include "../src/paging.h"
+#include "../../src/include/registry.h"
+#include "../../src/include/paging.h"
 
 void printRegistry(registry_t* reg){
-    printf("\tkey: %-5d | data1: %-10ld | data2: %.4s | data3: %.4s\n", reg->key, reg->data_1, reg->data_2, reg->data_3);
+    printf("\tkey: %-5d | data1: %-10lld | data2: %.4s | data3: %.4s\n", reg->key, reg->data_1, reg->data_2, reg->data_3);
 }
 
 int main(int argc, char** argv){
@@ -21,7 +21,7 @@ int main(int argc, char** argv){
     }
 
     registry_t reg[REGPAGE_ITENS];
-    int page_index;
+    int page_index = 0;
     int q_itens;
     while((q_itens = fread(&reg, sizeof(registry_t), REGPAGE_ITENS, file))){
         printf("Page read index: %d\n", page_index++);

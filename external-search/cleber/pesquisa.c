@@ -90,7 +90,7 @@ static void output_search_results(const search_result * sr)
 /*  Identifier for each of the searching methods. */
 typedef enum
 {
-    INDEXED_SEQUENTIAL_SEARCH,
+    INDEXED_SEQUENTIAL_SEARCH=1,
     EXTERNAL_BINARY_SEARCH,
     BTREE_SEARCH,
     BSTAR_SEARCH
@@ -111,7 +111,8 @@ struct application_parameters {
     key_t key;                  // Specifies the key that will be searched.
     uint64_t reg_qtt;           // Specifies how many registries is in the data file.
     
-    bool display_help;          // Specifies whether the enter in help mode.
+    bool display_help;          // Specifies whether to enter in help mode.
+    bool display_keys;          // Specifies whether to show the input-file keys. 
 };
 
 
@@ -383,7 +384,7 @@ static bool
 _RedirectSearch(const struct application_parameters * parameters, search_result * result)
 {
     REG_STREAM * input_stream = (REG_STREAM *) fopen(INPUT_DATAFILENAME, "rb");
-    if (input_stream == NULL) { // erro fudido *-*
+    if (input_stream == NULL) {
         _ContextErrorMsgf("(redirect search) ", "Couldn't open registry file <%s>.\n", INPUT_DATAFILENAME);
         return false;
     }
@@ -455,10 +456,8 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
 {
     // * mostly a naive implementation...
 
-    if ((argc == 2) && (! strcmp(argsv[1], "-h")))
+    if ((argc == 2) && ((! strcmp(argsv[1], "-h")) || (! strcmp(argsv[1], "-help"))))
     {
-        // TODO: "-h" menu.
-
         parameters -> display_help = true;
         return true;
     }
@@ -476,6 +475,9 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
             _ContextErrorMsgf("parsing error: ", "Expected \"-p\" but received \"" _ES_FG_RED() "%s" _AEC_RESET "\".\n", argsv[5]);
             printf(">>\t"); _TracebackErrorArg(argc, argsv, 5); putchar('\n');
             return false;
+
+        }else{
+            parameters -> display_keys = true;
         }
     }
 
@@ -561,7 +563,31 @@ int main(int argc, char ** argsv)
     if (parameters.display_help)
     {
         // print help on stdout for "-h"...
-        printf("help yeei\n");
+        printf(_AEC_FG_BLUE "\npesquisa.exe" _AEC_RESET " - help-menu\n\n" );
+        printf("O programa "  "pesquisa.exe" " realiza a construção de estruturas de dados em memória externa "
+        "e a pesquisa de chaves potencialmente presentes no arquivo de registros padrão " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET);
+        printf("\n\nO arquivo " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET " contém uma quantidade arbitrária de registros da forma:\n");
+        printf(_AEC_FG_GREEN "\tchave " _AEC_RESET " - Valor identificador de pesquisa do tipo inteiro.\n"
+                _AEC_FG_GREEN "\tdado_1" _AEC_RESET " - Dado arbitrário do tipo long (int64).\n"
+                _AEC_FG_GREEN "\tdado_2" _AEC_RESET " - Cadeia de 1000 caracteres.\n"
+                _AEC_FG_GREEN "\tdado_3" _AEC_RESET " - Cadeia de 5000 caracteres.\n\n");
+        printf("O arquivo de registros pode ser gerado utilizando a aplicação " _AEC_FG_BLUE "data-gen.exe" _AEC_RESET " disponível em: " 
+        _AEC_FG_CYAN "bin/exe/data-gen.exe\n" _AEC_RESET);
+        printf("\nUso de " _AEC_FG_BLUE "pesquisa.exe" _AEC_RESET ":\nEm external-search, utilize: ./bin/exe/pesquisa.exe [<método>] [<quantidade>] [<situação>] [<chave>] [-p]\n");
+        printf(_AEC_FG_GREEN "\t<método>    " _AEC_RESET " Representa o método de pesquisa externa (Estrutura de dados) a ser executado, podendo "
+        "ser um valor inteiro de 1 a 4*.\n"
+                _AEC_FG_GREEN "\t<quantidade>" _AEC_RESET " Representa a quantidade de registros presentes do arquivo " _AEC_FG_YELLOW INPUT_DATAFILENAME "\n" _AEC_RESET
+                _AEC_FG_GREEN "\t<situação>  " _AEC_RESET " Representa a situação de ordem do arquivo podendo ser um valor inteiro de 1 a 3**\n"
+                _AEC_FG_GREEN "\t<chave>     " _AEC_RESET " Representa a chave de interesse a ser pesquisada.\n"
+                _AEC_FG_GREEN "\t[-p]        " _AEC_RESET " Argumento opicioal que pode ser adicionado quando se deseja a exibição de "
+                "todas as chaves de pesquisa existentes no arquivo " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET ".\n");
+        printf("\n* Métodos de pesquisa:\t[1] Acesso sequêncial Indexado\n"
+                "\t\t\t[2] Árvore binária de pesquisa externa\n"
+                "\t\t\t[3] Árvore B\n"
+                "\t\t\t[4] Árvore B*\n");
+        printf("\n** Situações de ordem:\t[1] Ordenado ascendentemente\n"
+                "\t\t\t[2] Ordenado descendentemente\n"
+                "\t\t\t[3] Desordenado\n\n");
 
         #if IMPL_LOGGING
             FinalizeLogging();
@@ -585,6 +611,33 @@ int main(int argc, char ** argsv)
     
     /* Representing the computation. */
     output_search_results(&result);
+
+    //Temporary - maybe use the frame here.
+    if(parameters.display_keys){
+        REG_STREAM* input_stream;
+        if((input_stream = fopen(INPUT_DATAFILENAME, "rb")) == NULL){
+            _ContextErrorMsgf("(show registries keys) ", "Couldn't open registry file <%s>.\n", INPUT_DATAFILENAME);
+            return 1;
+        }
+
+        registry_t reg[REGPAGE_ITENS];
+        uint32_t page_index = 0, q_itens;
+        printf("\nChaves em " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET ":\n\n");
+        printf("Página\t| Chaves\n");
+        while((q_itens = fread(&reg, sizeof(registry_t), REGPAGE_ITENS, input_stream))){
+            printf("%d\t  <", page_index++);
+            for(uint32_t i = 0; i < q_itens; i++){
+                printf("%d", reg[i].key);
+                if(i < q_itens-1){
+                    printf(",");
+                }
+                printf(" ");
+            }
+            printf(">\n");
+        }
+
+        fclose(input_stream);
+    }
 
     #if IMPL_LOGGING
         FinalizeLogging();
