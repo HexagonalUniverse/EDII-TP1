@@ -485,7 +485,7 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
     parameters -> method = atoi(argsv[1]);
     
     // Validating the method number
-    if (! in_range(0, 3, parameters -> method)) {
+    if (! in_range(1, 4, parameters -> method)) {
         _ContextErrorMsgf("parsing error: ", "The specified method is incorrect. Passed " _ES_FG_RED() "%d" _AEC_RESET ", but actually expected"
             " one in the range 0 to 3, inclusive.\n", parameters -> method);
         printf(">>\t"); _TracebackErrorArg(argc, argsv, 1); putchar('\n');
