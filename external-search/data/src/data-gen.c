@@ -10,7 +10,7 @@
 #include <limits.h>
 #include <string.h>
 #include <time.h>
-#include "../src/registry.h"
+#include "../../src/include/registry.h"
 
 
 #define MIN_ARGS 3

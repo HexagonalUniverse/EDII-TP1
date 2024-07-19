@@ -30,9 +30,9 @@
 	Unsafe in side-effects for x. */
 #define in_range(a, b, x)		(((b) >= (x)) && ((x) >= (a)))
 
-	/*	Returns whether a number x is NOT between a and b.
-		Note that b >= a in order to a valid verification to be done.
-		Unsafe in side-effects for x. */
+/*	Returns whether a number x is NOT between a and b.
+	Note that b >= a in order to a valid verification to be done.
+	Unsafe in side-effects for x. */
 #define nin_range(a, b, x)		(((b) < (x)) || ((x) < (a)))
 
 /*	Returns the ceil of the division between x and y,

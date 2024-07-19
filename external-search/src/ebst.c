@@ -1040,7 +1040,6 @@ static bool mrtStackPop(MRT_Stack * _Stack, struct mrt_stack_item * _ReturnItem)
     return true;
 }
 
-
 bool EBST_MRT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, Frame * _Frame, bool ascending, uint64_t _RegistriesQtt)
 {
     // The pointers in the subfile division of the input-stream.

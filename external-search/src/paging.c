@@ -18,7 +18,7 @@ inline size_t read_regpage(REG_STREAM * _Stream, uint32_t _Index, regpage_t * _R
     #if TRANSPARENT_COUNTER
         transparent_counter.reg.read ++;
     #endif
-
+    
     #if IMPL_LOGGING && DEBUG_PAGE_READING
         DebugPrintf("Reading: <%u>\n",
             (unsigned int) _Index);

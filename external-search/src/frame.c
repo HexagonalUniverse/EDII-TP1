@@ -81,7 +81,6 @@ __print_frame_indexes(const Frame * _Frame)
 }
 #endif
 
-
 /*  Hashes the page's type size. */
 static inline size_t __page_size(page_type _Type)
 {
@@ -358,7 +357,7 @@ bool frame_retrieve_page(FILE * _Stream, Frame * _Frame, uint32_t _PageIndex, vo
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintf("index: %u\n", (unsigned int) _PageIndex);
     #endif
-
+    
     uint32_t frame_index = 0;
     void * page_ptr = NULL;
 

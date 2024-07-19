@@ -64,7 +64,7 @@ typedef struct {
     // A dynamic array of pages of size <PAGES_PER_FRAME>.
     // TODO: needn't be dynamic anymore
     void * pages;
-
+    
     // * page information vv
         uint32_t page_size;
         page_type type;

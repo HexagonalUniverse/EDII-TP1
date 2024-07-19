@@ -7,8 +7,6 @@
 
 
 
-
-
 bool allocateIndexTable(IndexTable * _ReturnTable, const uint32_t _Length)
 {
 	_ReturnTable->length = _Length;
@@ -22,7 +20,6 @@ bool allocateIndexTable(IndexTable * _ReturnTable, const uint32_t _Length)
 	return true;
 }
 
-
 bool deallocateIndexTable(IndexTable * _Table)
 {
 	if (_Table->keys == NULL)
@@ -30,9 +27,6 @@ bool deallocateIndexTable(IndexTable * _Table)
 	free(_Table->keys);
 	return true;
 }
-
-
-
 
 
 /*	*/
