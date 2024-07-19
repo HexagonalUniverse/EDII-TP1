@@ -15,7 +15,6 @@ typedef struct {
 	uint32_t length;
 } IndexTable;
 
-
 bool allocateIndexTable(IndexTable * _ReturnTable, const uint32_t _Length);
 bool deallocateIndexTable(IndexTable * _Table);
 bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * _Stream);

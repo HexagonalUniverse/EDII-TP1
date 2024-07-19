@@ -1,3 +1,8 @@
+/*  <src/include/bstar.h>
+
+    (...) */
+
+
 #ifndef _ES_BSTAR_COMMON_HEADER_
 #define _ES_BSTAR_COMMON_HEADER_
 

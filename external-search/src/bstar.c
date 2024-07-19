@@ -391,11 +391,10 @@ bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStre
     
     // Tracks the index to the pointer to the next node.
     uint8_t i = 0;
-    
     while (! node_buffer.is_leaf) {
         /*  Encontering the next node indirectly via a sequential search. */
         i = 0;
-        while ((node_buffer.inner.keys[i] <= key) && (i < node_buffer.item_count)) 
+        while (cmp_le_search(node_buffer.inner.keys[i], key) && (i < node_buffer.item_count)) 
             i ++;
         
         frame_retrieve_page(_BStarStream, _Frame, node_buffer.inner.children_ptr[i], & node_buffer);
@@ -412,13 +411,13 @@ bool BSTree_Search(key_t key, REG_STREAM * _RegStream, BSTAR_STREAM * _BStarStre
     while (beg <= end) {
         position = ((end - beg) >> 1) + beg;
 
-        if (node_buffer.leaf.reg_ptr[position].key == key)
+        if (cmp_eq_search(node_buffer.leaf.reg_ptr[position].key, key))
             /*  Once the registry-pointer is found, it will attempt 
                 reading it from the registries-file. If it fails, 
                 the whole searching so does. */
             return search_registry(_RegStream, & node_buffer.leaf.reg_ptr[position], target);
 
-        else if (node_buffer.leaf.reg_ptr[position].key > key)
+        else if (cmp_bg_search(node_buffer.leaf.reg_ptr[position].key, key))
             end = position - 1;
 
         else

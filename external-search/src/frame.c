@@ -91,6 +91,7 @@ static inline size_t __page_size(page_type _Type)
     case REG_PAGE:      return sizeof(regpage_t);
     case EBST_PAGE:     return sizeof(ebst_node);
     case ERBT_PAGE:     return sizeof(erbt_node);
+    default:            break;
     }
     return (size_t) (-1);
 }
@@ -216,16 +217,11 @@ static finline void *
 _frame_page_ptr(Frame * _Frame, uint32_t _FrameIndex)
 {
     switch (_Frame -> type) {
-    case REG_PAGE:
-        return & ((regpage_t *) _Frame -> pages)[_FrameIndex];
-    case B_PAGE:
-        return & ((b_node *) _Frame -> pages)[_FrameIndex];
-    case BSTAR_PAGE:
-        return & ((bstar_node *) _Frame -> pages)[_FrameIndex];
-    case EBST_PAGE:
-        return & ((ebst_node *) _Frame -> pages)[_FrameIndex];
-    case ERBT_PAGE:
-        return & ((erbt_node *) _Frame -> pages)[_FrameIndex];
+    case REG_PAGE:      return & ((regpage_t *) _Frame -> pages)[_FrameIndex];
+    case B_PAGE:        return & ((b_node *) _Frame -> pages)[_FrameIndex];
+    case BSTAR_PAGE:    return & ((bstar_node *) _Frame -> pages)[_FrameIndex];
+    case EBST_PAGE:     return & ((ebst_node *) _Frame -> pages)[_FrameIndex];
+    case ERBT_PAGE:     return & ((erbt_node *) _Frame -> pages)[_FrameIndex];
     default:
         break;
     }

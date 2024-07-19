@@ -1,0 +1,148 @@
+/*	<src/iss.c>
+
+*/
+
+#include "iss.h"
+
+
+
+/*	*/
+bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * _Stream)
+{
+	// How many entries will there be on the index table.
+    const uint64_t length = ceil_div(quantity, REGPAGE_ITENS);
+	
+	INTB_STREAM * stream = (INTB_STREAM *) fopen(OUTPUT_ISS_FILENAME, "w+b");
+	if (stream == NULL)
+		return false;
+
+	regpage_t rpage_buffer = { 0 };
+	index_page_t ipage_buffer = { 0 };
+	
+	uint64_t ipage_index = 0;
+	uint64_t i = 0; // 'cause we didn't think of a better name to it **('cause it's the best name ever.)
+	uint64_t reg_index = 0;
+
+	while ((reg_index < length) && read_regpage(_Stream, (uint32_t) reg_index ++, &rpage_buffer)) {
+		// _ReturnTable->keys[i ++] = regpage_key(page_buffer);
+		if (i == INDEXPAGE_ARRAY_SIZE) {
+			if (! write_indexpage(stream, ipage_index ++, &ipage_buffer))
+				return false;
+			i = 0;
+		}
+
+		ipage_buffer.keys[i ++] = regpage_key(rpage_buffer);
+	}
+
+	if (reg_index < length) {
+		fprintf(stderr, "(err) %llu < %llu\n", (unsigned long long) reg_index, (unsigned long long) length);
+		return false;
+	}
+
+	if (! write_indexpage(stream, ipage_index ++, &ipage_buffer))
+		return false;
+
+	fclose(stream);
+
+	_ReturnTable->length = length;
+	return true;
+}
+
+/*	*/
+static inline bool 
+_regpage_binarySearch(regpage_t * _regPageArray, key_t key, uint32_t * _ReturnIndex, bool is_ascending) {
+    long beg = 0, end = REGPAGE_ITENS - 1;
+	long position;
+		
+	if (is_ascending) {
+		while (beg <= end)
+		{
+			position = ((end - beg) >> 1) + beg;
+			if (cmp_eq_search(_regPageArray->reg[position].key, key)){
+				*_ReturnIndex = (uint32_t) position;
+				return true;
+				
+			} else if (cmp_bg_search(_regPageArray->reg[position].key, key))
+				end = position - 1;
+			else
+				beg = position + 1;
+		}
+	}
+	else {
+		while (beg <= end)
+		{
+			position = ((end - beg) >> 1) + beg;
+			if (cmp_eq_search(_regPageArray->reg[position].key, key)) {
+				*_ReturnIndex = (uint32_t) position;
+				return true;
+			}
+			else if (cmp_ls_search(_regPageArray->reg[position].key, key))
+				end = position - 1;
+			else
+				beg = position + 1;
+		}
+	}
+
+    return false;
+}
+
+#if IMPL_LOGGING
+static void 
+printIndexTable(IndexTable * _Table){
+	printf("INDEX TABLE:\n");
+	for (uint32_t i = 0;i < _Table->length; i++){
+		printf("|\t%u\n", (unsigned int) _Table->keys[i]);
+	}
+	printf("\n");
+}
+#endif
+
+
+/*  */
+bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream, 
+    IndexTable * _Table, Frame * _Frame, search_result * _Sr, bool is_ascending)
+{
+	#if IMPL_LOGGING
+		printIndexTable(_Table);
+	#endif
+
+	INTB_STREAM * stream = (INTB_STREAM *) fopen(OUTPUT_ISS_FILENAME, "rb");
+	if (stream == NULL)
+		return false;
+	
+	uint32_t i = 0, target_index = 0, frame_index = 0;
+	index_page_t ipage_buffer = { 0 };
+	if (is_ascending) {
+		uint64_t j = 0, k = 0;
+
+		while (cmp_le_search(ipage_buffer.keys[i ++], _Key) && (k > 0))
+		{
+			if (j == k)
+				k = read_indexpage(stream, (uint32_t) j ++, &ipage_buffer);
+		}
+		i --;
+	}
+	else // Descending order
+		while (cmp_be_search(_Table->keys[i], _Key) && (i < _Table->length)) i ++;
+    
+    if (i == 0) {
+		fprintf(stderr, "iss:err1\n");
+		return false;
+    }
+
+	if (! frame_retrieve_index(_Stream, _Frame, i - 1, & frame_index)) {
+		fprintf(stderr, "iss-oa:err2\n");
+		return false;
+	}
+
+	if (! _regpage_binarySearch(& ((regpage_t *) _Frame->pages)[frame_index], _Key, & target_index, is_ascending))
+	{
+		fprintf(stderr, "iss-oa:err3\n");
+		return false;
+	}
+    
+	_Sr->target = ((regpage_t *) _Frame->pages)[frame_index].reg[target_index];
+    return true;
+}
+
+

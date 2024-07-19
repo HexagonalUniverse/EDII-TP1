@@ -4,6 +4,7 @@
     on "pesquisa.exe".
 """
 
+
 from dataclasses import dataclass
 from typing import IO
 
@@ -34,10 +35,10 @@ class AvgSample(object):
             v[1] += p.construction_time
             v[2] += p.search_time
             l += 1
-
+        
         for j in range(1, 3):
             v[j] /= l
-
+        
         return AvgSample(l, reg_qtt, method, *v)
 
     def write(self, __file: IO) -> None:
@@ -361,11 +362,11 @@ def __official_sampling_2() -> None:
 
 def __official_sampling_3() -> None:
     sample_average_lin_b_bp_tree(
-        start=1_000, gap=1_000, bound=100_000, samples=5
+        start=1_000, gap=1_000, bound=10_000, samples=5
     )
 
 
 if __name__ == "__main__":
     # __official_sampling_1()
-    __official_sampling_2()
-    # __official_sampling_3()
+    # __official_sampling_2()
+    __official_sampling_3()

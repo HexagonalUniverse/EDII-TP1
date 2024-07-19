@@ -17,7 +17,7 @@
 
 # Logging and temporaries
 /external-search/temp/
-*.log
+# *.log
 
 # Specific built data-structures files
 *.btree

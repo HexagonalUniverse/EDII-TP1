@@ -26,7 +26,7 @@
     /*  Defines the size in bytes of a page buffer in the application.
         In other words, the overall size of a page is concretly near this value.
         Default as 32 [kB]. */
-    #define PAGE_BUFFER_SIZE        32768u
+    #define PAGE_BUFFER_SIZE        32768ULL
 #endif
 
 /*  How many itens, at its maximum, holds each page. 
@@ -61,8 +61,9 @@
 typedef FILE REG_STREAM;    // A stream representing the registries file.
 typedef FILE B_STREAM;      // A stream representing the B tree data-structure.
 typedef FILE BSTAR_STREAM;  // A stream representing the B* tree data-structure.
-typedef FILE EBST_STREAM;   // A stream representing the (pure) ebst data-structure.
+typedef FILE EBST_STREAM;   // A stream representing the ebst data-structure.
 typedef FILE ERBT_STREAM;   // A stream representing the erbt data-structure.
+typedef FILE INTB_STREAM;   // A stream representing the iss index-table.
 
 
 // The default registries data file filename. 
@@ -306,6 +307,23 @@ bool read_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, erbt_node * _Return
 /*  */
 bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * _WriteNode);
 
+
+/*  Index Table Paging  
+    ================== */
+
+#define INDEXPAGE_BUFFER_SIZE   32768ULL
+
+#define INDEXPAGE_ARRAY_SIZE    (INDEXPAGE_BUFFER_SIZE / sizeof(key_t))
+
+/*  (...)
+    Structurally, an array. */
+typedef struct {   
+    key_t keys[INDEXPAGE_ARRAY_SIZE];
+} index_page_t;
+
+
+size_t read_indexpage(INTB_STREAM * _Stream, uint32_t _Index, index_page_t * const _ReturnPage);
+size_t write_indexpage(INTB_STREAM * _Stream, uint32_t _Index, const index_page_t * _WritePage);
 
 
 #endif  // _ES_PAGING_HEADER_

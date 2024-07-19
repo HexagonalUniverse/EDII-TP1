@@ -41,11 +41,12 @@ typedef unsigned char byte;
 
 // A type-identifier for the pages in the pagination system.
 typedef enum {
-    B_PAGE,
+    B_PAGE,             
     BSTAR_PAGE,
-    REG_PAGE,
+    REG_PAGE, 
     EBST_PAGE,
-    ERBT_PAGE
+    ERBT_PAGE,
+    INTB_PAGE,  // Indexes Page
 } page_type;
 
 

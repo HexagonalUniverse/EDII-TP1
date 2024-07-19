@@ -518,7 +518,7 @@ bool BTree_Search(key_t key, REG_STREAM * _RegStream, B_STREAM * _BStream, Frame
             break;
         index = node_buffer.children_ptr[i];
     }
-
+    
     return false;
 }
 

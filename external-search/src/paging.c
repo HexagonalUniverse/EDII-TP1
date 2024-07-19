@@ -150,3 +150,13 @@ inline bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_
     l_fseek(_Stream, sizeof(ebst_node) * _NodeIndex, SEEK_SET);
     return fwrite(_WriteNode, sizeof(ebst_node), 1, _Stream) > 0;
 }
+
+
+size_t read_indexpage(INTB_STREAM * _Stream, uint32_t _Index, index_page_t * const _ReturnPage) {
+    fseek(_Stream, _Index * sizeof(index_page_t), SEEK_SET);
+    return fread(_ReturnPage, sizeof(key_t), INDEXPAGE_ARRAY_SIZE, _Stream);
+}
+size_t write_indexpage(INTB_STREAM * _Stream, uint32_t _Index, const index_page_t * _WritePage) {
+    fseek(_Stream, _Index * sizeof(index_page_t), SEEK_SET);
+    return fwrite(_WritePage, sizeof(key_t), INDEXPAGE_ARRAY_SIZE, _Stream);
+}
