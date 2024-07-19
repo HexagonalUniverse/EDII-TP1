@@ -5,6 +5,14 @@
 #include "searching.h"
 
 
+/*  (...) */
+typedef struct {
+    BSTAR_STREAM * file_stream;
+    uint32_t nodes_qtt;
+    Frame frame;
+    bstar_node root;
+} BStar_Builder;
+
 /*	*/
 bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream);
 
@@ -14,13 +22,6 @@ bool BSTree_Search(key_t key, REG_STREAM * _InputStream, BSTAR_STREAM * _OutputS
 /*  */
 bool BSTree_insert(const registry_pointer * _Reg, BStar_Builder * _bs_builder);
 
-/*  (...) */
-typedef struct {
-    BSTAR_STREAM * file_stream;
-    uint32_t nodes_qtt;
-    Frame frame;
-    bstar_node root;
-} BStar_Builder;
 
 
 #endif // _ES_BSTAR_COMMON_HEADER_
