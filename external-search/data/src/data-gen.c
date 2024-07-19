@@ -79,7 +79,7 @@ static void shuffleKeys(FILE* _file, const uint64_t _noReg){
 
 // S = O(N), T = O(N)
 //Creating keys for registries
-void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg, FILE* _file) {
+void createRegistries(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg, FILE* _file) {
     srand(time(NULL));
     key_t aux;
 
@@ -158,11 +158,14 @@ void createKey(registry_t* _reg, const GenMode* _genMode, const uint64_t _noReg,
     }
 }
 
+/*
 static void createRegistries(registry_t* _regs, const GenMode* _genMode, const uint64_t _noReg, FILE* _file){
     //createData(_regs, _noReg);
     createKey(_regs, _genMode, _noReg, _file);
 }
+*/
 
+/*
 static void 
 __AEIOU(int argc, char ** argsv) {
 #define _TEMPORARY_FILENAME     "destruidor.bin"
@@ -184,7 +187,7 @@ __AEIOU(int argc, char ** argsv) {
 
     fclose(reg_file);
 }
-
+*/
 
 static bool 
 interpretArguments(int argsc, char** argsv, GenMode* _returnGenMode, uint64_t* _returnNoRegistries, char* _returnFileName){
@@ -227,13 +230,15 @@ interpretArguments(int argsc, char** argsv, GenMode* _returnGenMode, uint64_t* _
 // S = O(N), T = O(N).
 int main(int argc, char ** argsv) {
     srand(time(NULL));
-
+    
+    /*
     if (argc > 1) {
         if(!strcmp(argsv[1], "AEIOU")){
             __AEIOU(argc, argsv);
             return 0;
         }
     }
+    */
 
     GenMode genMode; uint64_t noRegistries; char fileName[MAX_FILE_NAME];
     if(!interpretArguments(argc, argsv, &genMode, &noRegistries, fileName)){
