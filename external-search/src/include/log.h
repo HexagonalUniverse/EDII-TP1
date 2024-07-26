@@ -1,4 +1,4 @@
-/*  <src/log.h>
+/*  <src/include/log.h>
 
     Definition of the logging system for the implementations. */
 
@@ -47,10 +47,6 @@ void _TracebackErrorArg(int argc, char ** argsv, int problematic_argument);
 
 
 
-
-// #define IMPL_LOGGING              true
-
-
 #if IMPL_LOGGING
 #include <inttypes.h>
 
@@ -71,8 +67,6 @@ void FinalizeLogging(void);
 #endif // STDERR_DEBUG_LOGGING
 
 
-
-
 // Debugging
 // ---------
 
@@ -86,22 +80,19 @@ void FinalizeLogging(void);
 #define DEBUG_FRAME_REFRESH                 true
 
 
-
+// Some debug functions...
 bool __debug_true_inline_printf(const char * _FormatMsg, ...);
-
 void __debug_func_in(const char * _FunctionName);
 void __debug_func_out(const char * _FunctionName);
 void __printDebugSpacing(void);
 
-
+// And defines
 #define fallDebug()         __debug_func_out(__func__)
 #define raiseDebug()        __debug_func_in(__func__)
 #define printDebugSpacing() __printDebugSpacing()
 
 extern FILE * debug_stream;
 
-
-// below old
 
 void _DebugPrintf(const char * _FunctionName, uint8_t _Color, const char * _FormatMsg, ...);
 void _DebugPrint(const char * _FunctionName, uint8_t _Color, const char * _Msg);
@@ -124,17 +115,6 @@ void _DebugPrint(const char * _FunctionName, uint8_t _Color, const char * _Msg);
 #define DebugFuncMark()                 DebugPrintf(NULL, NULL); fputc('\n', stderr);
 
 
-
-
-
-
-
-
-
-
-
-
 #endif // IMPL_LOGGING
-
 
 #endif // _ES_LOG_HEADER_

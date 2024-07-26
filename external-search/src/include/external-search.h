@@ -1,4 +1,4 @@
-/*	<src/external-search.h>
+/*	<src/include/external-search.h>
 
 	The entry point for the library. This should be included in the headers that uses it.  */
 
@@ -7,7 +7,7 @@
 #define _EXTERNAL_SEARCHING_HEADER_
 
 
-/*	Includes here all methods of search. */
+//	Includes here all methods of search.
 
 #include "iss.h"
 #include "btree.h"

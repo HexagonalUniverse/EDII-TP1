@@ -91,6 +91,7 @@ static inline size_t __page_size(page_type _Type)
     case REG_PAGE:      return sizeof(regpage_t);
     case EBST_PAGE:     return sizeof(ebst_node);
     case ERBT_PAGE:     return sizeof(erbt_node);
+    case INTB_PAGE:     return sizeof(index_page_t);
     default:            break;
     }
     return (size_t) (-1);
@@ -197,18 +198,13 @@ bool frame_remove(Frame * _Frame) {
 static finline bool
 _frame_last_read_page(uint32_t _PageIndex, Frame * _Frame, FILE * _Stream) {
     switch (_Frame -> type) {
-    case REG_PAGE:
-        return read_regpage((REG_STREAM *) _Stream, _PageIndex, & ((regpage_t *) _Frame -> pages)[_Frame -> last]) > 0;
-    case B_PAGE:
-        return read_bnode((B_STREAM *) _Stream, _PageIndex, & ((b_node *) _Frame -> pages)[_Frame -> last]);
-    case BSTAR_PAGE:
-        return read_bstar((BSTAR_STREAM *) _Stream, _PageIndex, & ((bstar_node *) _Frame -> pages)[_Frame -> last]);
-    case EBST_PAGE:
-        return read_ebstnode((EBST_STREAM *) _Stream, _PageIndex, & ((ebst_node *) _Frame -> pages)[_Frame -> last]);
-    case ERBT_PAGE:
-        return read_erbtnode((ERBT_STREAM *) _Stream, _PageIndex, & ((erbt_node *) _Frame -> pages)[_Frame -> last]);
-    default:
-        break;
+    case REG_PAGE:      return read_regpage((REG_STREAM *) _Stream, _PageIndex, & ((regpage_t *) _Frame -> pages)[_Frame -> last]) > 0;
+    case B_PAGE:        return read_bnode((B_STREAM *) _Stream, _PageIndex, & ((b_node *) _Frame -> pages)[_Frame -> last]);
+    case BSTAR_PAGE:    return read_bstar((BSTAR_STREAM *) _Stream, _PageIndex, & ((bstar_node *) _Frame -> pages)[_Frame -> last]);
+    case EBST_PAGE:     return read_ebstnode((EBST_STREAM *) _Stream, _PageIndex, & ((ebst_node *) _Frame -> pages)[_Frame -> last]);
+    case ERBT_PAGE:     return read_erbtnode((ERBT_STREAM *) _Stream, _PageIndex, & ((erbt_node *) _Frame -> pages)[_Frame -> last]);
+    case INTB_PAGE:     return read_indexpage((INTB_STREAM *) _Stream, _PageIndex, & ((index_page_t *) _Frame->pages)[_Frame->last]);
+    default:            break;
     }
     return false;
 }
@@ -222,10 +218,9 @@ _frame_page_ptr(Frame * _Frame, uint32_t _FrameIndex)
     case BSTAR_PAGE:    return & ((bstar_node *) _Frame -> pages)[_FrameIndex];
     case EBST_PAGE:     return & ((ebst_node *) _Frame -> pages)[_FrameIndex];
     case ERBT_PAGE:     return & ((erbt_node *) _Frame -> pages)[_FrameIndex];
-    default:
-        break;
+    case INTB_PAGE:     return & ((index_page_t *) _Frame -> pages)[_FrameIndex];
+    default:            break;
     }
-
     return NULL;
 }
 
@@ -295,9 +290,6 @@ frame_add_directly(uint32_t _PageIndex, const void * _WritePage, Frame * _Frame)
     return true;
 }
 
-/*
-
-*/
 static inline bool
 _frame_refresh(Frame * _Frame, uint32_t _FrameIndex)
 {
@@ -423,34 +415,25 @@ inline bool frame_retrieve_index(FILE * _Stream, Frame * _Frame, uint32_t _PageI
     return true;
 }
 
-/*
-
-*/
 static finline bool
 _universal_write_page(FILE * _Stream, uint32_t _PageIndex, const void * _WriteNode, page_type _Type) {
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT
         DebugPrintf("Writing page: <%u>, type: %d)\n",
             (unsigned int) _PageIndex, _Type);
     #endif
-    
+        
     switch (_Type) {
-    case REG_PAGE:
-        return write_regpage((REG_STREAM *) _Stream, _PageIndex, (regpage_t *) _WriteNode) > 0;
-    case B_PAGE:
-        return write_bnode((B_STREAM *) _Stream, _PageIndex, (b_node *) _WriteNode);
-    case BSTAR_PAGE:
-        return write_bstar((BSTAR_STREAM *) _Stream, _PageIndex, (bstar_node *) _WriteNode);
-    case EBST_PAGE:
-        return write_ebstnode((EBST_STREAM *) _Stream, _PageIndex, (ebst_node *) _WriteNode);
-    case ERBT_PAGE:
-        return write_erbtnode((ERBT_STREAM *) _Stream, _PageIndex, (erbt_node *) _WriteNode);
-    default:
-        break;
+    case REG_PAGE:      return write_regpage((REG_STREAM *) _Stream, _PageIndex, (regpage_t *) _WriteNode) > 0;
+    case B_PAGE:        return write_bnode((B_STREAM *) _Stream, _PageIndex, (b_node *) _WriteNode);
+    case BSTAR_PAGE:    return write_bstar((BSTAR_STREAM *) _Stream, _PageIndex, (bstar_node *) _WriteNode);
+    case EBST_PAGE:     return write_ebstnode((EBST_STREAM *) _Stream, _PageIndex, (ebst_node *) _WriteNode);
+    case ERBT_PAGE:     return write_erbtnode((ERBT_STREAM *) _Stream, _PageIndex, (erbt_node *) _WriteNode);
+    case INTB_PAGE:     return write_indexpage((INTB_STREAM *) _Stream, _PageIndex, (index_page_t *) _WriteNode);
+    default:            break;
     }
     return false;
 }
 
-/*  */
 inline bool frame_update_page(FILE * _Stream, Frame * _Frame, uint32_t _PageIndex, const void * _WritePage)
 {
     #if IMPL_LOGGING && DEBUG_FRAME_PAGE_MANAGEMENT

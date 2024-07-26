@@ -1,4 +1,4 @@
-/*  <src/searching.h> 
+/*  <src/include/searching.h> 
 	
 	The entry for the searching methods. 
 	

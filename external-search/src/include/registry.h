@@ -1,4 +1,4 @@
-/*	<src/registry.h>
+/*	<src/include/registry.h>
 
 	Define the registry data-type. */
 

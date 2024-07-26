@@ -1,4 +1,4 @@
-/*	<src/commons.h>
+/*	<src/include/commons.h>
 	
 	Where common, universal definitions are given, and dependencies imported,
 	for the external-search project. */

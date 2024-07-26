@@ -1,4 +1,4 @@
-/*  <src/paging.h>
+/*  <src/include/paging.h>
     
     Where the all "pages" and their fundamental IO operations are defined. */
 
@@ -51,6 +51,11 @@
         Default as 344 [B]. */
     #define BSNODE_BUFFER_SIZE      344u
 #endif
+
+#if ! defined(INDEXPAGE_BUFFER_SIZE)
+    #define INDEXPAGE_BUFFER_SIZE   32768ULL
+#endif
+
 
 
 // Files and Streams
@@ -311,19 +316,16 @@ bool write_erbtnode(ERBT_STREAM * _Stream, size_t _NodeIndex, const erbt_node * 
 /*  Index Table Paging  
     ================== */
 
-#define INDEXPAGE_BUFFER_SIZE   32768ULL
-
 #define INDEXPAGE_ARRAY_SIZE    (INDEXPAGE_BUFFER_SIZE / sizeof(key_t))
 
-/*  (...)
+/*  A page of indexes (on the ISS).
     Structurally, an array. */
 typedef struct {   
     key_t keys[INDEXPAGE_ARRAY_SIZE];
 } index_page_t;
 
-
-size_t read_indexpage(INTB_STREAM * _Stream, uint32_t _Index, index_page_t * const _ReturnPage);
-size_t write_indexpage(INTB_STREAM * _Stream, uint32_t _Index, const index_page_t * _WritePage);
+size_t read_indexpage(INTB_STREAM * const _Stream, uint32_t _Index, index_page_t * const _ReturnPage);
+size_t write_indexpage(INTB_STREAM * const _Stream, uint32_t _Index, const index_page_t * _WritePage);
 
 
 #endif  // _ES_PAGING_HEADER_

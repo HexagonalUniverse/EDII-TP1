@@ -9,7 +9,7 @@
 # Directories
 # -----------
 
-dir_drivers		:= cleber/
+dir_drivers		:= drivers/
 dir_src			:= src/
 dir_hdr			:= $(dir_src)/include/
 dir_bin			:= bin/

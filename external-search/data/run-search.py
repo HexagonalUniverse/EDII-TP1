@@ -143,7 +143,7 @@ class PesquisaProfiler(object):
                 self.run_methods(registries_qtt=registries_qtt, ordering=file_order,
                                  key=randint(0, registries_qtt - 1))
             )
-
+            
         avg_samples: list[AvgSample] = list()
         for i in range(4):
             avg_samples.append(
@@ -170,11 +170,13 @@ class PesquisaProfiler(object):
         from random import randint
 
         ebst_data: list[PesquisaProfile] = []
+        method: int = 2
 
         for _ in range(samples):
             key: int = randint(0, registries_qtt - 1)
-            ebst_data.append(self.__run_instance(method=1, qtt=registries_qtt, situation=1, key=key))
-        return AvgSample.get(1, registries_qtt, ebst_data)
+            ebst_data.append(self.__run_instance(method=method, qtt=registries_qtt, situation=1, key=key))
+        print("ebst-data:", ebst_data)
+        return AvgSample.get(method, registries_qtt, ebst_data)
 
 
 def sample_average_same_key_log_scale(file_order: str = "ascending", limit: int = 1_000, base: int = 10,
@@ -277,7 +279,7 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     if filename is None:
         filename = f"samples/ebst_erbt-avg{samples}-lin-{bound}.csv"
 
-    file: IO = open(filename, "r+")
+    file: IO = open(filename, "w+")
     AvgSample.write_file_header(file)
 
     profiler = PesquisaProfiler()
@@ -312,7 +314,7 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
               f"({'+' if time_incr_per > 0 else ''}{time_incr_per}%).")
 
         avg_sample.write(file)
-
+    
     p_manager.rebuild("-D IMPL_ERBT_ONLY=true", debug_mode=None, transparent_mode=True)
     print("ERBT ---\n")
     file.write("erbt\n")
@@ -356,7 +358,7 @@ def __official_sampling_1() -> None:
 
 def __official_sampling_2() -> None:
     sample_average_lin_ebst_erbt(
-        start=1_000, gap=1_000, bound=1_000_000, samples=5
+        start=1_000, gap=1_000, bound=10_000, samples=5
     )
 
 
@@ -368,5 +370,5 @@ def __official_sampling_3() -> None:
 
 if __name__ == "__main__":
     # __official_sampling_1()
-    # __official_sampling_2()
-    __official_sampling_3()
+    __official_sampling_2()
+    # __official_sampling_3()

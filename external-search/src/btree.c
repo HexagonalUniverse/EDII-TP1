@@ -379,7 +379,7 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
     return true;
 }
 
-
+//Inserts a registry in the BTree file
 bool BTree_insert(const registry_pointer * _reg, B_Builder * _builder)
 {
     #if IMPL_LOGGING
@@ -405,18 +405,20 @@ bool BTree_insert(const registry_pointer * _reg, B_Builder * _builder)
     #endif
 }
 
+//Builds the Btree
 bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
 {
     #if IMPL_LOGGING
         raiseDebug();
     #endif
 
-    // The handler in the B-tree building process.
+    // The handler in the B-tree building process. Initializing our b_builder struct
     B_Builder b_builder = { 0 };
     b_builder.file_stream = _OutputStream;
     b_builder.root.is_leaf = true;
     b_builder.nodes_qtt = 1;
 
+    //loading the frame
     if (! frame_make(& b_builder.frame, B_PAGE))
     {
         #if IMPL_LOGGING
@@ -480,6 +482,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream)
     return ! insert_failure;
 }
 
+//Search for a key in the BTree file
 bool BTree_Search(key_t key, REG_STREAM * _RegStream, B_STREAM * _BStream, Frame * _Frame, registry_t * target)
 {
     // Tracks the tree node we're at.
