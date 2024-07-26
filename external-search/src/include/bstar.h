@@ -18,7 +18,7 @@ typedef struct {
 } BStar_Builder;
 
 // Builds the B*-Tree in the outputstream (B_STREAM)
-bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream);
+bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream, uint64_t _qtt);
 
 // Search for a key in the B*-Tree
 bool BSTree_Search(key_t key, REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream, Frame * _Frame, registry_t * target);

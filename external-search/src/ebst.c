@@ -856,7 +856,7 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
 /*  Generates the external data-structure of the red-black tree.
     Functionally reads page per page from the input stream and inserts,
     balacing afterwards the tree, registry per registry in it. */
-bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
+bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, uint64_t _qtt) {
     #if IMPL_LOGGING
         raiseDebug();
 
@@ -897,18 +897,18 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
     // Sinalizes whether there was an error in inserting a registry data into the tree.
     bool insert_failure = false;
 
-
-    while ((! insert_failure) &&
+    uint64_t iterator = 0;
+    while ((! insert_failure) && 
         ((regs_read = read_regpage(_InputStream, currentPage ++, & page_buffer)) > 0))
     {
-        for (uint32_t i = 0; i < regs_read; i ++) {
+        for (uint32_t i = 0; (i < regs_read) && ((iterator ++) < _qtt); i ++) {
             reg_ptr.key = page_buffer.reg[i].key;
 
-        #if IMPL_LOGGING
-            DebugPrintf("Inserting #%u: %d\n",
-                (unsigned int) reg_ptr.original_pos,
-                reg_ptr.key);
-        #endif
+            #if IMPL_LOGGING
+                DebugPrintf("Inserting #%u: %d\n",
+                    (unsigned int) reg_ptr.original_pos,
+                    reg_ptr.key);
+            #endif
 
             if (! ERBT_insert(& builder, & reg_ptr)) {
                 insert_failure = false;
@@ -917,29 +917,32 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream) {
 
             ERBT_Balance(& builder, builder.registries_written - 1);
 
-        #if IMPL_LOGGING
-            fprintf(debug_stream, "\n");
-            DebugPrintf("After balacing:\n", NULL);
-        #if 0
-            printRedBlackTree(builder.file_stream);
-        #endif
-            fprintf(debug_stream, "\n\n");
-        #endif
+            #if IMPL_LOGGING
+                fprintf(debug_stream, "\n");
+                DebugPrintf("After balacing:\n", NULL);
+            #if 0
+                printRedBlackTree(builder.file_stream);
+            #endif
+                fprintf(debug_stream, "\n\n");
+            #endif
 
             reg_ptr.original_pos ++;
         }
+
+        if (iterator == _qtt)
+            break;
     }
 
     frame_free(& builder.frame);
 
-#if IMPL_LOGGING
-    fallDebug();
+    #if IMPL_LOGGING
+        fallDebug();
 
-#if RECORD_ERBT
-    __RBT_WRITE(builder.file_stream, builder.registries_written);
-    fclose(RBT_PRINTING_STREAM);
-#endif // RECORD_ERBT
-#endif // IMPL_LOGGING
+    #if RECORD_ERBT
+        __RBT_WRITE(builder.file_stream, builder.registries_written);
+        fclose(RBT_PRINTING_STREAM);
+    #endif // RECORD_ERBT
+    #endif // IMPL_LOGGING
 
     return ! insert_failure;
 }
@@ -1106,12 +1109,10 @@ bool EBST_Search(EBST_STREAM * _Stream, REG_STREAM * _InputStream, const key_t _
         if (cmp_eq_search(_Key, current_node.reg_ptr.key))
             return search_registry(_InputStream, & current_node.reg_ptr, _Target);
        
-        else if (cmp_ls_search(_Key, current_node.reg_ptr.key))
-            node_index = current_node.left;
+        else if (cmp_ls_search(_Key, current_node.reg_ptr.key)) node_index = current_node.left;
         
         // _Key > current_node.reg_ptr.key
-        else
-            node_index = current_node.right;
+        else node_index = current_node.right;
     }
     return false;
 }

@@ -12,7 +12,7 @@
 
 #if ! defined(ISS_PAGING)
 	/*	Toggles the paging for the ISS. */
-	#define ISS_PAGING	true
+	#define ISS_PAGING	false
 
 #endif // defined(ISS_PAGING)
 

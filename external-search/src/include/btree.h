@@ -19,8 +19,8 @@ typedef struct {
     b_node root; //root of the tree
 } B_Builder;
 
-/* Builds the B-Tree in the outputstream (B_STREAM) */
-bool BTree_Build(REG_STREAM *, B_STREAM *);
+/* Builds the B-Tree in the outputstreamIn (B_STREAM) */
+bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream, uint64_t _qtt);
 
 /* Search for a key in the B-Tree */
 bool BTree_Search(key_t key, REG_STREAM * _InputStream, B_STREAM * _OutputStream, Frame * _Frame, registry_t * target);

@@ -38,7 +38,7 @@
 /*	Returns the ceil of the division between x and y,
 	where x and y are either of integer or natural type.
 	ceil{x / y}. */
-#define ceil_div(x, y)			((x / y) + ((x % y) ? 1 : 0))
+#define ceil_div(x, y)			(((x) / (y)) + (((x) % (y)) ? 1 : 0))
 
 /*  Modular increment. */
 #define mod_incr(x, m)			((x + 1) % m)

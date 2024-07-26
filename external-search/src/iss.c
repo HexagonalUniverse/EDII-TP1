@@ -6,7 +6,11 @@
 #include "iss.h"
 
 
-#if ! ISS_PAGING
+#if ISS_PAGING
+	static inline bool open_index_table_r(IndexTable * const _Table) { return (_Table->file = (INTB_STREAM *) fopen(OUTPUT_ISS_FILENAME, "rb")) != NULL; }
+	static inline void close_index_table(IndexTable * const _Table) { fclose(_Table->file); _Table->file = NULL;  }
+
+#else
 // Allocate the index table to be used on build function.
 bool allocateIndexTable(IndexTable * _ReturnTable, const uint32_t _Length)
 {
@@ -30,11 +34,10 @@ bool deallocateIndexTable(IndexTable * _Table)
 	free(_Table->keys);
 	return true;
 }
+
 #endif // ! ISS_PAGING
 
 
-static inline void close_index_table(IndexTable * const _Table) { fclose(_Table->file); _Table->file = NULL;  }
-static inline boo''l open_index_table_r(IndexTable * const _Table) { return (_Table->file = (INTB_STREAM *) fopen(OUTPUT_ISS_FILENAME, "rb")) != NULL; }
 
 // Build the index table, in order to easy the search.
 bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * _Stream)
@@ -52,12 +55,13 @@ bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * 
 	index_page_t ipage_buffer = { 0 };
 
 	uint32_t ipage_index = 0;
-	uint64_t i = 0;
-	uint64_t reg_index = 0;
-	size_t qtt_read;
+	uint64_t i = 0; // ipage_buffer keys counter
+	uint32_t regpage_index = 0;
+	size_t qtt_read; // how many registries were read on the last read_regpage
 
-	while ((reg_index < length) && (qtt_read = read_regpage(_Stream, (uint32_t) reg_index, &rpage_buffer))) {
-		reg_index += qtt_read;
+	size_t index_qtt = 0;
+
+	while (((index_qtt ++) < length) && (qtt_read = read_regpage(_Stream, regpage_index ++, &rpage_buffer))) {
 
 		if (i == INDEXPAGE_ARRAY_SIZE) {
 			if (! write_indexpage(_ReturnTable->file, ipage_index ++, &ipage_buffer))
@@ -66,12 +70,12 @@ bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * 
 			i = 0;
 			ipage_buffer = (index_page_t) { 0 };
 		}
-		
+			
 		ipage_buffer.keys[i ++] = regpage_key(rpage_buffer);
 	}
 
-	if (reg_index < length) {
-		fprintf(stderr, "(err) %llu < %llu\n", (unsigned long long) reg_index, (unsigned long long) length);
+	if (index_qtt < length) {
+		fprintf(stderr, "(err) %llu < %llu\n", (unsigned long long) ipage_index, (unsigned long long) length);
 		return false;
 	}
 
@@ -201,7 +205,7 @@ bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream,
 	index_page_t ipage_buffer = { 0 };
 	uint32_t page_index = 0;
 	
-	size_t qtt_read;
+	size_t qtt_read; // 8 192
 	int64_t index = -1;
 	while ((qtt_read = read_indexpage(_Table->file, page_index ++, &ipage_buffer)) > 0)
 	{
@@ -218,6 +222,9 @@ bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream,
 			close_index_table(_Table);
 			return false;
 		}
+
+		printf(">>> index: %lld, frame-index: %lld\n", (signed long long) index, (signed long long) frame_index);
+		fflush(stdout);
 
 		// Doing the search...
 		if (! _regpage_binarySearch(& ((regpage_t *) _Frame->pages)[frame_index], _Key, &target_index, is_ascending))

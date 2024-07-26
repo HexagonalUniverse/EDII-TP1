@@ -25,7 +25,7 @@ typedef struct {
 
 
 // Generates the file of the red-black tree + calls the balance function
-bool ERBT_Build(REG_STREAM *, ERBT_STREAM *);
+bool ERBT_Build(REG_STREAM *, ERBT_STREAM *, uint64_t);
 
 //  Inserts a registry in the ERBT data-structure. Returns success.
 bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry);

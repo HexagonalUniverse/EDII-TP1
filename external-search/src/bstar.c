@@ -345,7 +345,7 @@ BSTree_insert(const registry_pointer * _Reg, BStar_Builder * _bs_builder)
 } 
 
 //Builds the BSTree
-bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream) 
+bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream, uint64_t qtt) 
 {
     #if IMPL_LOGGING
         raiseDebug();
@@ -377,6 +377,8 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
     // Tracks if there happened an error on the last registry insertion.
     bool insert_failure = false;
 
+    size_t iterator = 0;
+
     /*  While there are no insertion failure and the number of registries read is greater than 0,
         the pages are continuously being read, and each registry in the page being inserted in the tree. */
     while (
@@ -384,7 +386,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
         ((regs_read = read_regpage(_InputStream, page_index ++, & page_buffer)) > 0))
     {
         // Iterating over the registries...
-        for (size_t j = 0; j < regs_read; j ++) {
+        for (size_t j = 0; (j < regs_read) && ((iterator ++) < qtt); j ++) {
             #if IMPL_LOGGING && DEBUG_REG_INDEX_IN_BUILD
                 printf("reg [%u]\n", (unsigned int) reg_index);
             #endif
@@ -401,6 +403,9 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
                 PrintBSFile(_OutputStream, bs_builder.nodes_qtt);
             #endif
         }
+
+        if (iterator == qtt)
+            break;
     }
     
     // Free the frame
@@ -411,7 +416,7 @@ bool BSTree_Build(REG_STREAM * _InputStream, BSTAR_STREAM * _OutputStream)
             DebugPrintf("bs:err2\n", NULL);
         fallDebug();
     #endif
-
+    
     return ! insert_failure;
 }
 

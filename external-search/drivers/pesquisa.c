@@ -148,7 +148,7 @@ __ERBT(const struct application_parameters * parameters, search_result * result,
     {   // Building the ERBT.
 
         gettimeofday(&start_time, NULL);
-        if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream)) {
+        if (! ERBT_Build(input_stream, (ERBT_STREAM *) output_stream, parameters->reg_qtt)) {
             fclose(output_stream);
             return _SE_ERBTBUILD;
         }
@@ -256,7 +256,7 @@ __BTREE(const struct application_parameters * parameters, search_result * result
     {   // Building the data-structure.
 
         gettimeofday(&start_time, NULL);
-        if (! BTree_Build(input_stream, output_stream))
+        if (! BTree_Build(input_stream, output_stream, parameters->reg_qtt))
         {
             fclose(output_stream);
             return _SE_BBUILD;
@@ -305,11 +305,11 @@ __BSTAR(const struct application_parameters * parameters, search_result * result
     BSTAR_STREAM * output_stream = fopen(_OutputFilename, "w+b");
     if (output_stream == NULL)
         return _SE_BSTARFILE;
-
+    
     {   // Building the data-structure.
 
         gettimeofday(&start_time, NULL);
-        if (! BSTree_Build(input_stream, output_stream))
+        if (! BSTree_Build(input_stream, output_stream, parameters->reg_qtt))
         {
             fclose(output_stream);
             return _SE_BSTARBUILD;
