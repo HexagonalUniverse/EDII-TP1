@@ -7,7 +7,6 @@
 
 from dataclasses import dataclass
 from typing import IO
-
 from project_manager import ProjectManager
 from cstructures import PesquisaProfile, TransparentCounter, SearchingRegistry, IntTuple
 
@@ -319,6 +318,7 @@ def sample_average_lin_ebst_erbt(start: int = 100, gap: int = 100, bound: int = 
     print("ERBT ---\n")
     file.write("erbt\n")
     for card in range(start, bound + 1, gap):
+        break
         print(f"{filename}: #{card}. ", end='')
         p_manager.generate_input(registries_qtt=card, file_order="ascending")
 
@@ -369,6 +369,12 @@ def __official_sampling_3() -> None:
 
 
 if __name__ == "__main__":
-    # __official_sampling_1()
-    __official_sampling_2()
-    # __official_sampling_3()
+    if False:
+        __official_sampling_1()
+        
+    if True:
+        __official_sampling_2()
+    
+    if False: 
+        __official_sampling_3()
+        

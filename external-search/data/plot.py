@@ -166,11 +166,17 @@ class PlotAvgLogMethods(GraphRenderer):
         self.d_total_io: dict[str, list[int]] = dict()
         for key in self.data:
             self.d_total_io[key] = lmap(lambda l: sum(l[3][:-2]), self.data[key])
-
+        
         self.d_regpage_io: dict[str, list[int]] = dict()
         for key in self.data:
             self.d_regpage_io[key] = lmap(lambda l: sum(l[3][0:2]), self.data[key])
     
+        self.d_self_io: dict[str, list[int]] = dict()
+        self.d_self_io["ISS"] = lmap(lambda l: sum(l[3][0:2]), self.data["ISS"])
+        self.d_self_io["EBST"] = lmap(lambda l: sum(l[3][2:4]), self.data["EBST"])
+        self.d_self_io["B"] = lmap(lambda l: sum(l[3][6:8]), self.data["B"])
+        self.d_self_io["B*"] = lmap(lambda l: sum(l[3][8:10]), self.data["B*"])
+
     def __dual_graph(self, y1: dict[str, list[int | float]], y2: dict[str, list[int | float]], log_x: bool = True):
         fig = plt.figure(figsize=(18, 8))
         spec = fig.add_gridspec(1, 2)
@@ -181,17 +187,17 @@ class PlotAvgLogMethods(GraphRenderer):
             
         for key in self.data:
             axes[1].plot(self.entries_dimension, y2[key], alpha=self.alpha_values[key], label=key, color=self.curve_colors[key])
-           
+        
         # Stylizing
         for axis in axes:
             axis.grid()
-            axis.legend(list(self.data))
+            axis.legend()
             axis.set_xlabel("$N$: Registries Qtt [u.]")
 
             if log_x:
                 axis.set_xscale("log")
             
-        fig.suptitle(f"Avg. {self.samples} Log-Sampling $10$ - $10^6$\nfor External Searching Data Structures")
+        fig.suptitle(f"Avg. {self.samples} Log-Sampling $10 \\to 10^6$\nfor External Searching Data Structures")
         return fig, axes
 
     def __common_graph(self, y: dict[str, list[int | float]], log_x: bool = True):
@@ -203,13 +209,13 @@ class PlotAvgLogMethods(GraphRenderer):
 
         # Stylizing
         axis.grid()
-        axis.legend(list(self.data))
+        axis.legend()
         axis.set_xlabel("$N$: Registries Qtt [u.]")
         
         if log_x:
             axis.set_xscale("log")
             
-        fig.suptitle(f"Avg. {self.samples} Log-Sampling $10$ - $10^6$\nfor External Searching Data Structures")
+        fig.suptitle(f"Avg. {self.samples} Log-Sampling $10 \\to 10^6$\nfor External Searching Data Structures")
         return fig, axis
 
     def graph(self, log_x: bool = True) -> None:
@@ -250,12 +256,38 @@ class PlotAvgLogMethods(GraphRenderer):
         if True:
             fig, axis = self.__common_graph(self.d_searching_cmp, log_x)
 
-            axis.set_title("$(\\log \\times \\log)$ Comparisons Counting in the Search")
+            axis.set_title("$(\\log \\times \\mathtt{lin})$ Comparisons Counting in the Search")
             axis.set_ylabel("$\\phi_S$: Comparison Count in Searching [u.]")
 
             self._figures.append(fig)
             self._fig_names.append("avglog-searching-cmp.pgf")
         
+        # Searching Comparisons (w/o ISS)
+        if True:
+            fig = plt.figure(figsize=(8,8))
+            axis = fig.add_subplot()
+                
+            for key in self.data:
+                if key == "ISS":
+                    continue
+                axis.plot(self.entries_dimension, self.d_searching_cmp[key], alpha=self.alpha_values[key], label=key, color=self.curve_colors[key])
+            
+            if log_x:
+                axis.set_xscale("log")
+
+            # Stylizing
+            axis.grid()
+            axis.legend()
+            axis.set_xlabel("$N$: Registries Qtt [u.]")
+            
+            fig.suptitle(f"Avg. {self.samples} Log-Sampling $10 \\to 10^6$\nfor External Searching Data Structures")
+            
+            axis.set_title("$(\\log \\times \\mathtt{lin})$ Comparisons Counting in the Search (w/o ISS)")
+            axis.set_ylabel("$\\phi_S$: Comparison Count in Searching [u.]")
+
+            self._figures.append(fig)
+            self._fig_names.append("avglog-searching-cmp2.pgf")
+
         # Total IO Transferences
         if True:
             fig, axis = self.__common_graph(self.d_total_io, log_x)
@@ -271,11 +303,21 @@ class PlotAvgLogMethods(GraphRenderer):
         if True:
             fig, axis = self.__common_graph(self.d_regpage_io, log_x)
             
-            axis.set_title("$(\\log \\times \\mathtt{lin})$ Total registries-page IO Transferences")
+            axis.set_title("$(\\log \\times \\mathtt{lin})$ Total Registries-Page IO Transferences")
             axis.set_ylabel("$\\xi_{\\mathcal{R}}$: (Total) Registries-page Transferences [u.]")
             
             self._figures.append(fig)
             self._fig_names.append("avglog-total-reg-io.pgf")
+            
+        # Self IO Transferences
+        if True:
+            fig, axis = self.__common_graph(self.d_self_io, log_x)
+            
+            axis.set_title("$(\\log \\times \\mathtt{lin})$ Self-IO Page Transferences")
+            axis.set_ylabel("$\\xi$: (Self) Page Transferences [u.]")
+
+            self._figures.append(fig)
+            self._fig_names.append("avglog-selfio.pgf")
             
         return None
 
@@ -355,6 +397,9 @@ class PlotEbstErbt(GraphRenderer):
         self.d_ebst_searching_time: list[float] = lmap(lambda l: l[-1] * (10 ** 6), self.ebst_data)
         self.d_erbt_searching_time: list[float] = lmap(lambda l: l[-1] * (10 ** 6), self.erbt_data)
 
+        self.d_ebst_scmp: list[int] = lmap(lambda l: l[1][10], self.ebst_data)
+        self.d_erbt_scmp: list[int] = lmap(lambda l: l[1][10], self.erbt_data)
+
     def __common_double_graph(self, y1: tuple[str, list[int | float]], y2: tuple[str, list[int | float]]):
         fig = plt.figure(figsize=self._fig_size)
         axis = fig.add_subplot()
@@ -366,7 +411,7 @@ class PlotEbstErbt(GraphRenderer):
         axis.legend()
         axis.set_xlabel("$N$: Registries Qtt [u.]")
         
-        fig.suptitle(f"Avg. 5 Lin-Sampling $10^3$ ~ $10^5$\nfor External Searching Data Structures")
+        fig.suptitle(f"Avg. 5 Lin-Sampling $1000 \\to 10^5$\nfor External Searching Data Structures")
         return fig, axis
 
     def graph(self) -> None:
@@ -374,7 +419,7 @@ class PlotEbstErbt(GraphRenderer):
         if True:
             fig, axis = self.__common_double_graph(self.d_ebst_total_cmp, self.d_erbt_total_cmp)
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Total Comparisons")
-            axis.set_ylabel("$C_T$: Total of Comparisons")
+            axis.set_ylabel("$\\phi$: Total of Comparisons [u.]")
 
             self._figures.append(fig)
             self._fig_names.append("avglin-EBSTs-lin-cmp.pgf")
@@ -384,11 +429,21 @@ class PlotEbstErbt(GraphRenderer):
             fig, axis = self.__common_double_graph(self.d_ebst_total_cmp, self.d_erbt_total_cmp)
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{log})$ Total Comparisons")
             axis.set_yscale("log")
-            axis.set_ylabel("$C_T$: Total of Comparisons")
+            axis.set_ylabel("$\\phi$: Total of Comparisons [u.]")
         
             self._figures.append(fig)
             self._fig_names.append("avglin-EBSTs-log-cmp.pgf")
+        
+        # Searching Comparisons
+        if True:
+            fig, axis = self.__common_double_graph(self.d_ebst_scmp, self.d_erbt_scmp)
+            
+            axis.set_title("$(\\mathtt{lin} \\times \\mathtt{log})$ Searching Comparisons")
+            axis.set_ylabel("$\\phi_S$: Searching Comparisons [u.]")
 
+            self._figures.append(fig)
+            self._fig_names.append("avglin-EBSTs-scmp.pgf")
+        
         # Construction Time Ratio
         if True:
             fig = plt.figure(figsize=self._fig_size)
@@ -402,7 +457,7 @@ class PlotEbstErbt(GraphRenderer):
             axis.set_xlabel("$N$: Registries Qtt [u.]")
             axis.set_ylabel("$\\kappa_C$: Ratio of Construction Times [u.]")
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Construction Time Ratio")
-            fig.suptitle(f"Avg. 5 Lin-Sampling $10^3$ ~ $10^5$\nfor External Searching Data Structures")
+            fig.suptitle(f"Avg. 5 Lin-Sampling $1000 \\to 10^5$\nfor External Searching Data Structures")
 
             self._figures.append(fig)
             self._fig_names.append("avglin-EBSTs-construction-time-ratio.pgf")
@@ -428,7 +483,7 @@ class PlotEbstErbt(GraphRenderer):
             axis.legend()
             axis.set_xlabel("$N$: Registries Qtt [u.]")
             axis.set_ylabel("$\\kappa_S:$ Ratio of Searching Times [u.]")
-            fig.suptitle(f"Avg. 5 Lin-Sampling $10^3$ ~ $10^5$\nfor External Searching Data Structures")
+            fig.suptitle(f"Avg. 5 Lin-Sampling $1000 \\to 10^5$\nfor External Searching Data Structures")
 
             self._figures.append(fig)
             self._fig_names.append("avglin-EBSTs-searching-time-ratio.pgf")
@@ -518,6 +573,10 @@ class PlotBTrees(GraphRenderer):
         self.d_b_write: list[int] = lmap(lambda l: l[1][7], self.b_data)
         self.d_bs_write: list[int] = lmap(lambda l: l[1][9], self.bs_data)
 
+        print("Avg. B / B* searching time: ", 
+              sum(self.d_searching_time_b) / len(self.entries_b),
+              sum(self.d_searching_time_bs) / len(self.entries_bs))
+
     def __common_dual_graph(self, y_b: list[int | float], y_bs: list[int | float]):
         fig = plt.figure(figsize=(8,8))
         axis = fig.add_subplot()
@@ -536,9 +595,9 @@ class PlotBTrees(GraphRenderer):
     def graph(self) -> None:
         
         # Construction Comparisons
-        if False:
+        if True:
             fig, axis = self.__common_dual_graph(self.d_construction_cmp_b, self.d_construction_cmp_bs)
-
+           
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Avg. Comparisons in Construction")
             axis.set_ylabel("$\\phi_C$: Construction Comparisons [u.]")
 
@@ -546,7 +605,7 @@ class PlotBTrees(GraphRenderer):
             self._fig_names.append("avglinb-construction-cmp.pgf")
         
         # Searching Comparisons
-        if False:
+        if True:
             fig, axis = self.__common_dual_graph(self.d_searching_cmp_b, self.d_searching_cmp_bs)
             
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Avg. Comparisons in Searching")
@@ -556,7 +615,7 @@ class PlotBTrees(GraphRenderer):
             self._fig_names.append("avglinb-searching-cmp.pgf")
         
         # Construction Time
-        if False:
+        if True:
             fig, axis = self.__common_dual_graph(self.d_construction_time_b, self.d_construction_time_bs)    
 
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Avg. Time took in Construction")
@@ -566,7 +625,7 @@ class PlotBTrees(GraphRenderer):
             self._fig_names.append("avglinb-construction-time.pgf")
         
         # Searching Time
-        if False:
+        if True:
             fig, axis = self.__common_dual_graph(self.d_searching_time_b, self.d_searching_time_bs)
 
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Avg. Time took in Searching")
@@ -575,44 +634,44 @@ class PlotBTrees(GraphRenderer):
             self._figures.append(fig)
             self._fig_names.append("avglinb-searching-time.pgf")
         
-        # (Self) Read / Write Transferences
+        # Self Read Transferences
         if True:
-            fig = plt.figure(figsize=(8,18))
-            spec = fig.add_gridspec(2, 1)
-            axis_read = fig.add_subplot(spec[0, 0])
-            axis_write = fig.add_subplot(spec[1, 0])
-
-            axis_read.plot(self.entries_b, self.d_b_read, alpha=self.alpha_values["B"], label="$B$ (Read)", color=self.curve_colors["B"])
-            axis_read.plot(self.entries_bs, self.d_bs_read, alpha=self.alpha_values["BS"], label="$B^{*}$ (Read)", color=self.curve_colors["BS"])    
-
-            # axis_write.plot(self.entries_b, self.d_b_write, alpha=self.alpha_values["B"], label="B (Write)", color=self.curve_colors["B"])
-            # axis_write.plot(self.entries_bs, self.d_bs_write, alpha=self.alpha_values["BS"], label="B* (Write)", color=self.curve_colors["BS"])
-            axis_write.plot(self.entries_b, [x - y for x, y in zip(self.d_b_write, self.d_bs_write)], 
-                            label="$\\xi_O\\{B\\} - \\xi_O\\{B^{*}\\}$ (Write)", color="#34B8FF")
-
-            # Style
-            axis_read.grid()
-            axis_write.grid()
+            fig, axis = self.__common_dual_graph(self.d_b_read, self.d_bs_read)
             
-            axis_read.legend()
-            axis_write.legend()
-            
-            axis_read.set_xlabel("$N$: Registries Qtt [u.]")
-            axis_write.set_xlabel("$N$: Registries Qtt [u.]")
-
-            fig.suptitle("Avg. 5\tB / B* $(t = 21)$")
-
-            axis_read.set_title("$\\mathtt{lin} \\times \\mathtt{lin}$ Avg. Number of B / B* Pages Reading")
-            axis_write.set_title("$\\mathtt{lin} \\times \\mathtt{lin}$ Avg. Number of B / B* Pages Writing")
-            
-            axis_read.set_ylabel("$\\xi_I$: Read Transferences [u.]")
-            axis_write.set_ylabel("$\\xi_O$: Write Transferences [u.]")
+            axis.set_title("$\\mathtt{lin} \\times \\mathtt{lin}$ Avg. Number of B / B* Pages Reading")
+            axis.set_ylabel("$\\xi_I$: Read Transferences [u.]")
             
             self._figures.append(fig)
-            self._fig_names.append("avglinb-readwrite.pgf")
+            self._fig_names.append("avglinb-read.pgf")
+
+        # Self Write Transferences
+        if True:
+            fig = plt.figure(figsize=(18,8))
+            spec = fig.add_gridspec(1, 2)
+            axes = [fig.add_subplot(spec[0, 0]), fig.add_subplot(spec[0, 1])]
+
+            axes[0].plot(self.entries_b, [x / y for x, y in zip(self.d_b_write, self.d_bs_write)], label="$\\xi_O\\{B\\} - \\xi_O\\{B^{*}\\}$ (Write)", color="#34B8FF")
+            axes[1].plot(self.entries_b, [x - y for x, y in zip(self.d_b_write, self.d_bs_write)], label="$\\xi_O\\{B\\} - \\xi_O\\{B^{*}\\}$ (Write)", color="#34B8FF")
+
+            # Style
+            for axis in axes:
+                axis.grid()
+                axis.legend()
+                axis.set_xlabel("$N$: Registries Qtt [u.]")
+            
+            fig.suptitle("Avg. 5\tB / B* $(t = 21)$")
+
+            axes[0].set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Ratio Between B / B* Pages Writing")
+            axes[0].set_ylabel("$\\kappa_O$: Write Transferences Ratio [u.]")
+            
+            axes[1].set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Difference Between B / B* Pages Writing")
+            axes[1].set_ylabel("Write Transferences Difference [u.]")
+
+            self._figures.append(fig)
+            self._fig_names.append("avglinb-write.pgf")
 
         # Total IO Transferences
-        if False:
+        if True:
             fig, axis = self.__common_dual_graph(self.d_total_IO_transferences_b, self.d_total_IO_transferences_bs)
             
             axis.set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Avg. Number of Total IO Transferecnes")
@@ -626,7 +685,7 @@ if __name__ == "__main__":
     
     if False:
         avg_log_plot = PlotAvgLogMethods("samples/archived/all-avg5-ascending-sk-log-1000000.csv")
-        avg_log_plot.render(True)
+        avg_log_plot.render(False)
     
     if False:
         avg_ebsts_plot = PlotEbstErbt("samples/archived/ebst_erbt-avg5-lin-100000.csv")

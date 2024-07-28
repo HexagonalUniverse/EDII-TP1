@@ -486,7 +486,7 @@ bool BTree_Build(REG_STREAM * _InputStream, B_STREAM * _OutputStream, uint64_t q
     return ! insert_failure;
 }
 
-//Search for a key in the BTree file
+// Search for a key in the BTree file
 bool BTree_Search(key_t key, REG_STREAM * _RegStream, B_STREAM * _BStream, Frame * _Frame, registry_t * target)
 {
     // Tracks the tree node we're at.

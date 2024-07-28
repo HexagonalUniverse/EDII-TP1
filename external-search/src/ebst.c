@@ -966,8 +966,7 @@ bool ERBT_Search(ERBT_STREAM * _Stream, REG_STREAM * _InputStream, Frame * _Fram
             node_index = current_node.left;
 
         // _Key > current_node.reg_ptr.key.
-        else
-            node_index = current_node.right;
+        else node_index = current_node.right;
     }
     return false;
 }
