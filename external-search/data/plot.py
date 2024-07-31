@@ -501,7 +501,7 @@ class PlotEbstErbt(GraphRenderer):
 
 
 class PlotBTrees(GraphRenderer):
-    def __init__(self, read_filename: str, output_dir: str = "pgfs/") -> None:
+    def __init__(self, read_filename: str, output_dir: str = "pgfs/", page_buffersize: int = None) -> None:
         self.r_filename: str = read_filename
         super().__init__(output_dir)
 
@@ -519,7 +519,16 @@ class PlotBTrees(GraphRenderer):
         }
 
         self._fig_size: tuple[int, int] = (8, 8)
-    
+
+        if page_buffersize is None:
+            self.figures_title: str = "Avg. 5\tB / B* $(t = 21)$"
+        
+        else:
+            t_b: int = (page_buffersize - 8) // 12
+            t_bs: int = (page_buffersize - 8) // 8
+
+            self.figures_title: str = "Avg. 5\tB / B* $(t_{\\beta} = " + str(t_b) + ", t_{\\beta^{*}} = " + str(t_bs) + ")$"
+
     def __parse_data(self) -> None:
         method: int
         
@@ -589,7 +598,7 @@ class PlotBTrees(GraphRenderer):
         axis.legend()
         axis.set_xlabel("$N$: Registries Qtt [u.]")
         
-        fig.suptitle("Avg. 5\tB / B* $(t = 21)$")
+        fig.suptitle(self.figures_title)
         return fig, axis
 
     def graph(self) -> None:
@@ -659,7 +668,7 @@ class PlotBTrees(GraphRenderer):
                 axis.legend()
                 axis.set_xlabel("$N$: Registries Qtt [u.]")
             
-            fig.suptitle("Avg. 5\tB / B* $(t = 21)$")
+            fig.suptitle(self.figures_title)
 
             axes[0].set_title("$(\\mathtt{lin} \\times \\mathtt{lin})$ Ratio Between B / B* Pages Writing")
             axes[0].set_ylabel("$\\kappa_O$: Write Transferences Ratio [u.]")
@@ -689,12 +698,18 @@ if __name__ == "__main__":
     
     if False:
         avg_ebsts_plot = PlotEbstErbt("samples/archived/ebst_erbt-avg5-lin-100000.csv")
-        avg_ebsts_plot.render(False)
+        avg_ebsts_plot.render(True)
     
     if True:
-        avg_btrees_plot = PlotBTrees("samples/archived/bb+-avg5-lin-100000.csv")
-        avg_btrees_plot.render(False)
-    
+        if False:
+            avg_btrees_plot = PlotBTrees("samples/archived/bb+-avg5-lin-100000.csv")
+            avg_btrees_plot.render(True)
+
+        if True:
+            avg_btrees_plot = PlotBTrees("samples/archived/bbs-avg5-lin-100000-1024.csv", output_dir="pgfs/bseq/bseq-",
+                                         page_buffersize = 1024)
+            avg_btrees_plot.render(True)
+
     # p_plotter = ES_Plotter()
     # p_plotter.plot_avg_methods("samples/archived/all-avg5-ascending-sk-log-1000000.csv")
     # p_plotter.plot_erbt_ebst("samples/archived/ebst_erbt-avg5-lin-100000.csv")
