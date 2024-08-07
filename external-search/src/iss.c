@@ -100,7 +100,7 @@ bool buildIndexTable(IndexTable * _ReturnTable, uint64_t quantity, REG_STREAM * 
 	uint64_t i = 0;
 	while ((i < length) && read_regpage(_Stream, (uint32_t) i, &page_buffer))
 		_ReturnTable->keys[i ++] = regpage_key(page_buffer);
-
+	
 	if (i < length) {
 		fprintf(stderr, "(err) %llu < %llu\n", (unsigned long long) i, (unsigned long long) length);
 		deallocateIndexTable(_ReturnTable);
@@ -248,8 +248,13 @@ bool indexedSequencialSearch(const key_t _Key, REG_STREAM * _Stream,
 
 	uint32_t i = 0, target_index = 0, frame_index = 0;
 	
-	if		(is_ascending)	while (cmp_le_search(_Table->keys[i], _Key) && (i < _Table->length)) i ++;	// Ascending order
-	else					while (cmp_be_search(_Table->keys[i], _Key) && (i < _Table->length)) i ++;	// Descending order
+	if (is_ascending)
+		while (cmp_le_search(_Table->keys[i], _Key) && (i < _Table->length)) 
+			i ++;
+
+	else 
+		while (cmp_be_search(_Table->keys[i], _Key) && (i < _Table->length)) 
+			i ++;
     
 	// There was no iteration, return error.
     if (i == 0) {

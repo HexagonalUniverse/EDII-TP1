@@ -277,7 +277,6 @@ BTree_insertNonFull(b_node * x, size_t _XIndex, const registry_pointer * _reg, B
         for (; (i >= 0) && cmp_ls_build(_reg -> key, x -> reg_ptr[i].key); i--);
         i ++;
 
-
         // Reading the child node indexed from i from Disk.
         frame_retrieve_page(_builder -> file_stream, & _builder -> frame, x -> children_ptr[i], & c);
 

@@ -161,7 +161,7 @@ bool ERBT_insert(ERBT_Builder * _builder, const registry_pointer * _Entry) {
     #if IMPL_LOGGING
         raiseDebug();
     #endif
-
+    
     // In case of first entry on the binary search tree (root node).
     if (_builder->registries_written == 0) {
     #if IMPL_LOGGING
@@ -737,7 +737,7 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
         raiseDebug();
         DebugPrintf("_XLine: %u\n", (unsigned int) _NodeIndex);
     #endif 
-
+    
     /*  The balancing process manager. */
     struct ERBT_Balancer balancer = _initializeBalancer(_builder, _NodeIndex);
 
@@ -852,11 +852,10 @@ void ERBT_Balance(ERBT_Builder * _builder, ebst_ptr _NodeIndex) {
     #endif
 }
 
-
 /*  Generates the external data-structure of the red-black tree.
     Functionally reads page per page from the input stream and inserts,
     balacing afterwards the tree, registry per registry in it. */
-bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, uint64_t _qtt) {
+bool ERBT_Build(REG_STREAM * _InputStream, ERBT_STREAM * _OutputStream, uint64_t _qtt) {
     #if IMPL_LOGGING
         raiseDebug();
 
@@ -867,7 +866,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, uint64_t
         #endif
 
     #endif // IMPL_LOGGING
-
+    
     // Where pages from _InputStream are lied down.
     regpage_t page_buffer = { 0 };
 
@@ -909,7 +908,7 @@ bool ERBT_Build(REG_STREAM * _InputStream, EBST_STREAM * _OutputStream, uint64_t
                     (unsigned int) reg_ptr.original_pos,
                     reg_ptr.key);
             #endif
-
+            
             if (! ERBT_insert(& builder, & reg_ptr)) {
                 insert_failure = false;
                 break;

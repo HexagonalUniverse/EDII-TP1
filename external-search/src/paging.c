@@ -44,6 +44,7 @@ inline size_t write_regpage(REG_STREAM * _Stream, uint32_t _Index, const regpage
     return fwrite(_Page -> reg, sizeof(registry_t), REGPAGE_ITENS, _Stream);
 }
 
+
 inline bool search_registry(REG_STREAM * _Stream, const registry_pointer * _Reference, registry_t * _ReturnRegistry) {
     regpage_t page_buffer = { 0 };
 
@@ -150,7 +151,6 @@ inline bool write_ebstnode(EBST_STREAM * _Stream, size_t _NodeIndex, const ebst_
     l_fseek(_Stream, sizeof(ebst_node) * _NodeIndex, SEEK_SET);
     return fwrite(_WriteNode, sizeof(ebst_node), 1, _Stream) > 0;
 }
-
 
 inline size_t read_indexpage(INTB_STREAM * const _Stream, uint32_t _Index, index_page_t * const _ReturnPage) {
     l_fseek(_Stream, _Index * sizeof(index_page_t), SEEK_SET);

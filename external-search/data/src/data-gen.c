@@ -2,9 +2,12 @@
     
     (...) */  
 
+
 #define _FILE_OFFSET_BITS   64
 #define _LARGEFILE_SOURCE  
 #define _LARGEFILE64_SOURCE
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -17,6 +20,7 @@
 #define MAX_FILE_NAME 31
 #define CONST_GAP_RANGE     2146
 
+
 #define DATA_FILES_PATH "./temp/"
 
 typedef enum{
@@ -26,10 +30,13 @@ typedef enum{
     ORDERED_DESCENDING_GAP,
     DISORDERED,
     DISORDERED_GAP
-}GenMode;
+} GenMode;
 
 
-#define large_fseek(_Stream, _Offset, _Origin)  fseeko64(_Stream, _Offset, _Origin)
+#ifndef large_fseek
+#   define large_fseek(_Stream, _Offset, _Origin)  fseeko64(_Stream, _Offset, _Origin)
+#endif 
+
 
 static inline bool readRegistry(FILE* _file, uint64_t _pos, registry_t* _returnRegistry){
     large_fseek(_file, _pos * sizeof(registry_t), SEEK_SET);
@@ -64,7 +71,11 @@ static void shuffleKeys(FILE* _file, const uint64_t _noReg){
     key_t aux;
     registry_t reg_1, reg_2;
 
-    for(uint64_t i = 0; i < _noReg; i++){
+    /*  At least half of the data will be shuffled. */
+    uint64_t m = _noReg >> 1;
+    uint64_t times = (rand() % m) + m;
+
+    for (uint64_t i = 0; i < times; i++){
         rand_pos = rand() % _noReg;
         readRegistry(_file, i, &reg_1);
         readRegistry(_file, rand_pos, &reg_2);

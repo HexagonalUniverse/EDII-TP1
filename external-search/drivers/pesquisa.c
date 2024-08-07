@@ -3,11 +3,6 @@
     Main driver for searching. */
 
 
-#include <external-search.h>
-#include <sys/time.h>   // For <gettimeofday>.
-#include <string.h>     // for strcmp
-
-
 /*  The return-code for the application. */
 typedef enum {
     ES_DISPLAY_REGISTRIES_ERROR = -5,   // Couldn't print the entire reg. file.
@@ -17,6 +12,13 @@ typedef enum {
     ES_PARSING_ERROR,                   // Had an error while parsing args.
     ES_SUCCESS                          // The application could exit successfully.
 } ESRETURN_CODE;
+
+
+#include <external-search.h>
+#include "pesquisa-ui.h"
+#include <sys/time.h>   // For <gettimeofday>.
+#include <string.h>     // for strcmp
+#include <locale.h>
 
 
 #if ! defined(IMPL_ERBT_ONLY)
@@ -553,97 +555,6 @@ _ParseArgs(int argc, char ** argsv, struct application_parameters * parameters)
     return true;
 }
 
-static void _DisplayHelpInfo(void) {
-    printf(_AEC_FG_BLUE "\npesquisa.exe" _AEC_RESET " - help-menu\n\n" );
-    printf("O programa "  "pesquisa.exe" " realiza a construção de estruturas de dados em memória externa "
-    "e a pesquisa de chaves potencialmente presentes no arquivo de registros padrão " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET);
-    printf("\n\nO arquivo " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET " contém uma quantidade arbitrária de registros da forma:\n");
-    printf(_AEC_FG_GREEN "\tchave " _AEC_RESET " - Valor identificador de pesquisa do tipo inteiro.\n"
-            _AEC_FG_GREEN "\tdado_1" _AEC_RESET " - Dado arbitrário do tipo long (int64).\n"
-            _AEC_FG_GREEN "\tdado_2" _AEC_RESET " - Cadeia de 1000 caracteres.\n"
-            _AEC_FG_GREEN "\tdado_3" _AEC_RESET " - Cadeia de 5000 caracteres.\n\n");
-    printf("O arquivo de registros pode ser gerado utilizando a aplicação " _AEC_FG_BLUE "data-gen.exe" _AEC_RESET " disponível em: " 
-    _AEC_FG_CYAN "bin/exe/data-gen.exe\n" _AEC_RESET);
-    printf("\nUso de " _AEC_FG_BLUE "pesquisa.exe" _AEC_RESET ":\nEm external-search, utilize: ./bin/exe/pesquisa.exe [<método>] [<quantidade>] [<situação>] [<chave>] [-p]\n");
-    printf(_AEC_FG_GREEN "\t<método>    " _AEC_RESET " Representa o método de pesquisa externa (Estrutura de dados) a ser executado, podendo "
-    "ser um valor inteiro de 1 a 4*.\n"
-            _AEC_FG_GREEN "\t<quantidade>" _AEC_RESET " Representa a quantidade de registros presentes do arquivo " _AEC_FG_YELLOW INPUT_DATAFILENAME "\n" _AEC_RESET
-            _AEC_FG_GREEN "\t<situação>  " _AEC_RESET " Representa a situação de ordem do arquivo podendo ser um valor inteiro de 1 a 3**\n"
-            _AEC_FG_GREEN "\t<chave>     " _AEC_RESET " Representa a chave de interesse a ser pesquisada.\n"
-            _AEC_FG_GREEN "\t[-p]        " _AEC_RESET " Argumento opicioal que pode ser adicionado quando se deseja a exibição de "
-            "todas as chaves de pesquisa existentes no arquivo " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET ".\n");
-    printf("\n* Métodos de pesquisa:\t[1] Acesso Sequêncial Indexado\n"
-            "\t\t\t[2] Árvore binária de pesquisa externa\n"
-            "\t\t\t[3] Árvore B\n"
-            "\t\t\t[4] Árvore B*\n");
-    printf("\n** Situações de ordem:\t[1] Ordenado ascendentemente\n"
-            "\t\t\t[2] Ordenado descendentemente\n"
-            "\t\t\t[3] Desordenado\n\n");
-}
-
-static int _DisplayRegistryKeys(const uint64_t qtt) {
-    // UI for confirmation on printing...
-    printf("Deseja prosseguir com a impressão? [y/n]\n");
-    fflush(stdin); fflush(stdout);
-
-    int c; bool entry_input = false;
-    while ((! entry_input) && ((c = getchar()) != EOF))
-    {
-        switch (c)
-        {
-        case (int) 'y':
-        case (int) 'Y':
-        case (int) 'n':
-        case (int) 'N':
-            entry_input = true;
-            break;
-        
-        default: 
-            break;
-        }
-    }
-
-    if ((c == (int) 'n') || (c == (int) 'N'))
-        return ES_SUCCESS;
-
-    REG_STREAM * input_stream;
-    if ((input_stream = fopen(INPUT_DATAFILENAME, "rb")) == NULL){
-        _ContextErrorMsgf("(show registries keys) ", "Couldn't open registry file <%s>.\n", INPUT_DATAFILENAME);
-        return ES_REG_FILE_WONT_OPEN;
-    }
-
-    registry_t reg[REGPAGE_ITENS];
-    size_t page_index = 0, q_itens;
-    uint64_t itt = 0;
-    const size_t regpage_item_maximum = REGPAGE_ITENS;
-
-    printf("\nChaves em " _AEC_FG_YELLOW INPUT_DATAFILENAME _AEC_RESET ":\n\n");
-    printf("Página\t| Chaves\n");
-    while ((q_itens = fread(&reg, sizeof(registry_t), regpage_item_maximum, input_stream))) {
-        printf("%d\t  <", (int) page_index++);
-        for(uint32_t i = 0; i < q_itens; i++) {
-            printf("%d", reg[i].key);
-            if(i < q_itens-1){
-                printf(",");
-            }
-            printf(" ");
-        }
-        printf(">\n");
-    }
-
-    fclose(input_stream);
-    
-    if (itt < qtt) 
-    {
-        fprintf(stderr, "Couldn't print the entire registry-file: (%llu of %llu)\n",
-            (unsigned long long) itt, (unsigned long long) qtt);
-        fflush(stderr);
-        return ES_DISPLAY_REGISTRIES_ERROR;
-    }
-
-    return 0;
-}
-
 /*  SPECS.
     
     $ pesquisa method register-quantity-in-file file-order-situation searching-key <-P> 
@@ -662,6 +573,8 @@ int main(int argc, char ** argsv)
 
     #endif // IMPL_LOGGING
 
+    setlocale(LC_ALL, "portuguese");
+
     /*  Parsing program parameters. */
     struct application_parameters parameters = { 0 };
     if (! _ParseArgs(argc, argsv, &parameters))
@@ -675,7 +588,7 @@ int main(int argc, char ** argsv)
     
     if (parameters.display_help)
     {   // printing help on stdout for "-h"...
-        _DisplayHelpInfo();
+        DisplayHelpInfo();
 
         #if IMPL_LOGGING
             FinalizeLogging();
@@ -703,7 +616,7 @@ int main(int argc, char ** argsv)
 
     int returncode = ES_SUCCESS;
     if (parameters.display_keys)
-        returncode = _DisplayRegistryKeys(parameters.reg_qtt);
+        returncode = DisplayRegistryKeys(parameters.reg_qtt);
 
     #if IMPL_LOGGING
         FinalizeLogging();

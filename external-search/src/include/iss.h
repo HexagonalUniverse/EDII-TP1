@@ -25,7 +25,7 @@
 	} IndexTable;
 
 #else // ISS_PAGING
-
+	
 	typedef struct {
 		key_t * keys;
 		size_t length;

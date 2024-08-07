@@ -17,7 +17,7 @@
 
 // ERBT Struct
 typedef struct {
-	EBST_STREAM * file_stream;
+	ERBT_STREAM * file_stream;
 	uint32_t registries_written;
 	ERBT_Header header;
 	Frame frame;

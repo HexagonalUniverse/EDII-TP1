@@ -195,7 +195,6 @@ bool BSTree_SplitChild(bstar_node * x, const size_t _Index, BStar_Builder * _bs_
     return true;
 }
 
-
 /*  Treats the case in which the root is a full-node in the tree.
     Returns success, failing in case of failure of a frame atomic operation, essentially.
     Undefined state in case of failure. */
@@ -229,7 +228,6 @@ BSTree_SplitRoot(BStar_Builder * _bs_builder)
         fallDebug();
     #endif
 }
-
 
 // A iterative method to operate a binary search in a registry array. Returns true if the registry is found and false otherwise
 static inline bool 
